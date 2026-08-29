@@ -36,6 +36,9 @@ enum Cmd {
         target: String,
         /// Hunk ids (when target is "hunk").
         ids: Vec<String>,
+        /// Explicit base revision (defaults to merge-base with the trunk).
+        #[arg(long)]
+        base: Option<String>,
     },
     /// Emit the reorganization raw material as JSON (index level by default).
     Inspect {
@@ -148,12 +151,12 @@ fn run() -> Result<(), IsmError> {
             }
             Ok(())
         }
-        Cmd::Show { target, ids } => {
+        Cmd::Show { target, ids, base } => {
             if target == "hunk" {
                 if ids.is_empty() {
                     return Err(IsmError::Usage("ism show hunk <id>...".into()));
                 }
-                let analysis = ism_core::analyze::analyze(&git, None, false)?;
+                let analysis = ism_core::analyze::analyze(&git, base.as_deref(), false)?;
                 let mut out = Vec::new();
                 for id in &ids {
                     let idx = analysis
@@ -172,7 +175,7 @@ fn run() -> Result<(), IsmError> {
                 return Ok(());
             }
             // Change mode: resolve by trailer id or by metadata name.
-            let analysis = ism_core::analyze::analyze(&git, None, false)?;
+            let analysis = ism_core::analyze::analyze(&git, base.as_deref(), false)?;
             let snap = &analysis.snapshot;
             let resolved: Option<(String, Option<String>)> = snap
                 .commits
