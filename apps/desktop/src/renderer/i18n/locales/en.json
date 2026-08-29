@@ -1,0 +1,53 @@
+{
+  "app": { "title": "Isomer" },
+  "projects": {
+    "add": "Add project",
+    "empty": "No projects yet.",
+    "notARepo": "That directory is not a git repository."
+  },
+  "stack": {
+    "title": "Stack",
+    "empty": "The branch is at the trunk — nothing to organize.",
+    "untracked": "untracked",
+    "anomalies": "Anomalies",
+    "lastOp": "Last operation"
+  },
+  "review": {
+    "title": "Review",
+    "empty": "Select a change to review.",
+    "sideBySide": "Side by side",
+    "unified": "Unified",
+    "hunks": "{{count}} hunks"
+  },
+  "inspector": {
+    "title": "Details",
+    "comments": "Comments",
+    "noComments": "No comments on this change.",
+    "resolve": "Resolve",
+    "reply": "Reply",
+    "addComment": "Comment",
+    "unresolvedOnly": "Unresolved only",
+    "fixWithAgent": "Fix with agent"
+  },
+  "terminal": {
+    "title": "Terminal",
+    "open": "Open terminal",
+    "close": "Close"
+  },
+  "verify": {
+    "proof": "Tree proof: {{old}} == {{new}}",
+    "copyCommands": "Copy bare-git verification commands"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": "Theme",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "language": "Language"
+  },
+  "errors": {
+    "generic": "Something failed",
+    "hint": "Hint"
+  }
+}

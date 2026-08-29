@@ -1,0 +1,53 @@
+{
+  "app": { "title": "Isomer" },
+  "projects": {
+    "add": "添加项目",
+    "empty": "还没有项目。",
+    "notARepo": "该目录不是 git 仓库。"
+  },
+  "stack": {
+    "title": "变更栈",
+    "empty": "分支与主干一致——没有可整理的内容。",
+    "untracked": "未跟踪",
+    "anomalies": "异常",
+    "lastOp": "最近操作"
+  },
+  "review": {
+    "title": "评审",
+    "empty": "选择一个 change 开始评审。",
+    "sideBySide": "左右对比",
+    "unified": "单栏",
+    "hunks": "{{count}} 个改动块"
+  },
+  "inspector": {
+    "title": "详情",
+    "comments": "评论",
+    "noComments": "这个 change 还没有评论。",
+    "resolve": "解决",
+    "reply": "回复",
+    "addComment": "评论",
+    "unresolvedOnly": "只看未解决",
+    "fixWithAgent": "让 agent 修复"
+  },
+  "terminal": {
+    "title": "终端",
+    "open": "打开终端",
+    "close": "关闭"
+  },
+  "verify": {
+    "proof": "树哈希证明：{{old}} == {{new}}",
+    "copyCommands": "复制裸 git 验证命令"
+  },
+  "settings": {
+    "title": "设置",
+    "theme": "主题",
+    "themeSystem": "跟随系统",
+    "themeLight": "浅色",
+    "themeDark": "深色",
+    "language": "语言"
+  },
+  "errors": {
+    "generic": "操作失败",
+    "hint": "提示"
+  }
+}
