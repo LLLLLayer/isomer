@@ -181,6 +181,13 @@ fn full_loop_apply_verify_undo() {
         assert!(c["id"].as_str().unwrap().starts_with("i-"));
     }
 
+    // The branch actually moved — otherwise tree equality is vacuous
+    // (lesson from a false-pass during verification: a rejected plan leaves
+    // HEAD in place and the tree check "passes" trivially).
+    let head_after = r.git(&["rev-parse", "HEAD"]);
+    assert_ne!(head_after, head_before, "apply did not move HEAD");
+    assert_eq!(outcome["new_head"].as_str().unwrap(), head_after);
+
     // Tree invariance, for real.
     let tree_after = r.git(&["rev-parse", "HEAD^{tree}"]);
     assert_eq!(tree_before, tree_after);
@@ -435,4 +442,224 @@ fn status_and_show_work() {
     assert_eq!(code, 0);
     let arr = json.unwrap();
     assert!(arr[0]["patch"].as_str().unwrap().contains("+s1"));
+}
+
+#[test]
+fn crlf_content_roundtrips_bit_for_bit() {
+    let r = Repo::new();
+    r.git(&["config", "core.autocrlf", "false"]);
+    r.write("win.txt", "one\r\ntwo\r\nthree\r\n");
+    r.commit_all("base");
+    r.git(&["checkout", "-q", "-b", "feat"]);
+    r.write("win.txt", "one\r\nTWO\r\nthree\r\n");
+    r.commit_all("edit two");
+    r.write("more.txt", "m1\r\nm2\r\n");
+    r.commit_all("add more");
+
+    let snap = inspect(&r);
+    let win = hunks_of(&snap, "win.txt");
+    let more = hunks_of(&snap, "more.txt");
+    assert_eq!((win.len(), more.len()), (1, 1));
+
+    // Swap the two commits; CRLF bytes must survive untouched.
+    let plan = serde_json::json!({
+        "version": 1, "snapshot_digest": snap["snapshot_digest"],
+        "nodes": [
+            {"name": "more", "from": more, "summary": "Add more"},
+            {"name": "win-edit", "from": win, "summary": "Edit two"}
+        ],
+        "order": ["more", "win-edit"]
+    });
+    let p = r.write_plan(&plan);
+    let head_before = r.git(&["rev-parse", "HEAD"]);
+    let tree_before = r.git(&["rev-parse", "HEAD^{tree}"]);
+    let (code, _, out) = r.ism(&["apply", p.to_str().unwrap()]);
+    assert_eq!(code, 0, "apply failed: {out}");
+    assert_ne!(r.git(&["rev-parse", "HEAD"]), head_before);
+    assert_eq!(r.git(&["rev-parse", "HEAD^{tree}"]), tree_before);
+    // Intermediate commit carries the CRLF bytes exactly.
+    let blob = Command::new("git")
+        .arg("-C")
+        .arg(r.path())
+        .args(["show", "HEAD~1:win.txt"])
+        .output()
+        .unwrap();
+    assert_eq!(blob.stdout, b"one\r\ntwo\r\nthree\r\n");
+}
+
+#[test]
+fn signing_failure_is_e050_and_leaves_everything_untouched() {
+    let r = messy_repo();
+    r.git(&["config", "commit.gpgsign", "true"]);
+    r.git(&["config", "gpg.program", "false"]); // a program that always fails
+
+    let snap = inspect(&r);
+    let all: Vec<String> = snap["hunks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|h| h["id"].as_str().unwrap().to_string())
+        .collect();
+    let plan = serde_json::json!({
+        "version": 1, "snapshot_digest": snap["snapshot_digest"],
+        "nodes": [{"name": "all", "from": all, "summary": "everything"}],
+        "order": ["all"]
+    });
+    let p = r.write_plan(&plan);
+    let head_before = r.git(&["rev-parse", "HEAD"]);
+    let (code, json, _) = r.ism(&["apply", p.to_str().unwrap()]);
+    assert_eq!(code, 1);
+    assert_eq!(json.unwrap()["errors"][0]["code"], "E050");
+    // Branch untouched, and the failure happened before journaling: no data ref.
+    assert_eq!(r.git(&["rev-parse", "HEAD"]), head_before);
+    let refs = r.git(&["for-each-ref", "refs/isomer"]);
+    assert_eq!(
+        refs, "",
+        "data ref must not exist after a pre-journal failure"
+    );
+}
+
+#[test]
+fn dangling_op_is_voided_and_rerun_succeeds() {
+    let r = messy_repo();
+    let snap = inspect(&r);
+    let all: Vec<String> = snap["hunks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|h| h["id"].as_str().unwrap().to_string())
+        .collect();
+    let plan = serde_json::json!({
+        "version": 1, "snapshot_digest": snap["snapshot_digest"],
+        "nodes": [{"name": "all", "from": all, "summary": "everything"}],
+        "order": ["all"]
+    });
+    let p = r.write_plan(&plan);
+    let head_before = r.git(&["rev-parse", "HEAD"]);
+    let (code, _, out) = r.ism(&["apply", p.to_str().unwrap()]);
+    assert_eq!(code, 0, "apply failed: {out}");
+
+    // Simulate the journal-first crash window: the op is journaled but the
+    // branch flip "never landed" (equivalently: an external rewind to old head).
+    r.git(&["update-ref", "refs/heads/feat", &head_before]);
+
+    // status reconciles the books and surfaces the voided op.
+    let (code, json, _) = r.ism(&["status", "--json"]);
+    assert_eq!(code, 0);
+    let snap2 = json.unwrap();
+    assert!(
+        snap2["anomalies"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|a| a["kind"] == "dangling_op_voided"),
+        "anomalies: {}",
+        snap2["anomalies"]
+    );
+
+    // The voided op no longer counts as branch state: undo has nothing to do.
+    let (code, json, _) = r.ism(&["undo"]);
+    assert_eq!(code, 3);
+    assert_eq!(json.unwrap()["errors"][0]["code"], "E101");
+
+    // The same plan is valid again (branch is back at the inspected head).
+    let (code, _, out) = r.ism(&["apply", p.to_str().unwrap()]);
+    assert_eq!(code, 0, "re-apply failed: {out}");
+    assert_ne!(r.git(&["rev-parse", "HEAD"]), head_before);
+    let (code, json, _) = r.ism(&["verify"]);
+    assert_eq!(code, 0);
+    assert_eq!(json.unwrap()["ok"], true);
+}
+
+#[test]
+fn comment_lifecycle_add_reply_resolve_list() {
+    let r = messy_repo();
+    let snap = inspect(&r);
+    let app = hunks_of(&snap, "app.py");
+    let service = hunks_of(&snap, "service.py");
+    let util = hunks_of(&snap, "util.py");
+    let plan = serde_json::json!({
+        "version": 1, "snapshot_digest": snap["snapshot_digest"],
+        "nodes": [
+            {"name": "util-fix", "from": util, "summary": "Fix util label"},
+            {"name": "app-changes", "from": app, "summary": "Adjust app flow"},
+            {"name": "service", "from": service, "summary": "Add service module"}
+        ],
+        "order": ["util-fix", "app-changes", "service"]
+    });
+    let p = r.write_plan(&plan);
+    let (code, _, out) = r.ism(&["apply", p.to_str().unwrap()]);
+    assert_eq!(code, 0, "apply failed: {out}");
+
+    // Comments target changes before any comment exists: unknown change is E002.
+    let (code, json, _) = r.ism(&["comment", "add", "--change", "nope", "-m", "x"]);
+    assert_eq!(code, 1);
+    assert_eq!(json.unwrap()["errors"][0]["code"], "E002");
+    // --line without --path is a usage error.
+    let (code, json, _) = r.ism(&[
+        "comment", "add", "--change", "util-fix", "--line", "2", "-m", "x",
+    ]);
+    assert_eq!(code, 2);
+    assert_eq!(json.unwrap()["errors"][0]["code"], "E100");
+
+    // Add by node name with a file anchor.
+    let (code, json, raw) = r.ism(&[
+        "comment",
+        "add",
+        "--change",
+        "util-fix",
+        "--path",
+        "util.py",
+        "--line",
+        "2",
+        "-m",
+        "Rename the label instead of uppercasing?",
+    ]);
+    assert_eq!(code, 0, "comment add failed: {raw}");
+    let c1 = json.unwrap();
+    let c1_id = c1["id"].as_str().unwrap().to_string();
+    assert!(c1_id.starts_with("c-"));
+    assert!(c1["change"].as_str().unwrap().starts_with("i-"));
+    assert_eq!(c1["resolved"], false);
+
+    // Threaded reply on the same change.
+    let (code, json, raw) = r.ism(&[
+        "comment",
+        "add",
+        "--change",
+        "util-fix",
+        "--reply-to",
+        &c1_id,
+        "-m",
+        "Agreed, will do.",
+    ]);
+    assert_eq!(code, 0, "reply failed: {raw}");
+    let c2_id = json.unwrap()["id"].as_str().unwrap().to_string();
+
+    // List: both present, reply linked to its parent.
+    let (code, json, _) = r.ism(&["comment", "list"]);
+    assert_eq!(code, 0);
+    let list = json.unwrap();
+    let arr = list.as_array().unwrap();
+    assert_eq!(arr.len(), 2);
+    let reply = arr.iter().find(|c| c["id"] == c2_id.as_str()).unwrap();
+    assert_eq!(reply["parent"], c1_id.as_str());
+
+    // Resolve the first; unresolved filter leaves only the reply.
+    let (code, json, _) = r.ism(&["comment", "resolve", &c1_id]);
+    assert_eq!(code, 0);
+    assert_eq!(json.unwrap()["resolved"], true);
+    let (code, json, _) = r.ism(&["comment", "list", "--unresolved"]);
+    assert_eq!(code, 0);
+    let arr = json.unwrap();
+    let arr = arr.as_array().unwrap().clone();
+    assert_eq!(arr.len(), 1);
+    assert_eq!(arr[0]["id"], c2_id.as_str());
+
+    // Comments ride the data ref: carried forward across later operations.
+    let (code, _, _) = r.ism(&["undo"]);
+    assert_eq!(code, 0);
+    let (code, json, _) = r.ism(&["comment", "list"]);
+    assert_eq!(code, 0);
+    assert_eq!(json.unwrap().as_array().unwrap().len(), 2);
 }
