@@ -1,98 +1,48 @@
 {
   "kind": "apply",
   "branch": "main",
-  "old_head": "dcce58e107a39023e13eaf4bc45ffcf82dfea62f",
-  "new_head": "952fa22d4c0f7cc7bf5750b2fee2d2bd894bb252",
-  "base": "c0427a10353bf15e5627f6429cd8d4bb0a7f1910",
-  "old_tree": "e0dce14e54ac89c79fd5251ff2278a40630d86b4",
-  "new_tree": "e0dce14e54ac89c79fd5251ff2278a40630d86b4",
-  "plan_digest": "sha256:62c5eaa0bd9a65b54ba8724129eb4aa6655c1a21417e34ec18ac958e277e1e66",
-  "snapshot_digest": "sha256:8a67e0904086ab591f3c7abb1d691af042ddbb23f7a8db626cf26125755cf2d6",
+  "old_head": "1e704be268cd9ee7dca19e20d2e98dcfd5494230",
+  "new_head": "ee3e2489c5179ccfda84bed30a75407c7063e9d2",
+  "base": "952fa22d4c0f7cc7bf5750b2fee2d2bd894bb252",
+  "old_tree": "3718c9fb8b0ad7d3afad0bd2da5beb8ed83258bb",
+  "new_tree": "3718c9fb8b0ad7d3afad0bd2da5beb8ed83258bb",
+  "plan_digest": "sha256:89c7d8fe785327254beaf4a3b4d298375aebf1b831f9b94f0f5f0e59bec138fd",
+  "snapshot_digest": "sha256:f868dbeb82b7dc9fb2f7d792e6968583646c04291b71732b72caf7f54f755bd4",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:8a67e0904086ab591f3c7abb1d691af042ddbb23f7a8db626cf26125755cf2d6",
-    "base": "c0427a10353bf15e5627f6429cd8d4bb0a7f1910",
+    "snapshot_digest": "sha256:f868dbeb82b7dc9fb2f7d792e6968583646c04291b71732b72caf7f54f755bd4",
+    "base": "952fa22d4c0f7cc7bf5750b2fee2d2bd894bb252",
     "nodes": [
       {
-        "name": "claude-md",
-        "summary": "Add CLAUDE.md agent guide for this repository",
-        "body": "Build/test commands, the core-module pipeline, invariants to preserve,\nand repo conventions (embed-source sync, append-only ADR log, E2E plan\nplacement) — everything a future agent needs before touching the code.",
+        "name": "show-base",
+        "summary": "Let `ism show` take --base like inspect",
+        "body": "Without it, hunk contents were unreadable when organizing commits on\nthe trunk itself (the default anchor collapses to an empty stack).\nFound while dogfooding ism on its own repository.",
         "from": [
-          "CLAUDE.md:1#d2e6"
+          "crates/ism-cli/src/main.rs:39#ecea",
+          "crates/ism-cli/src/main.rs:174#40f1",
+          "crates/ism-cli/src/main.rs:179#d102",
+          "crates/ism-cli/src/main.rs:198#4c49"
         ]
       },
       {
-        "name": "crash-protocol",
-        "summary": "Adopt journal-first crash bookkeeping with void ops",
-        "body": "The old order (flip the branch, then record the op) had an unfixable\ncrash window: a flip without a record leaves nothing to repair from.\nApply now journals the op on refs/isomer/data first and flips second;\na crash leaves the books one step ahead, which reconcile() detects and\ncancels with an appended `void` op — the log never claims a state the\nbranch does not have. Op walks skip void entries and their targets;\nstatus/apply/undo reconcile on entry, and a raced ref flip voids its\nown journal entry (E101). The data-ref writer is generalized to\ncarried-forward subtrees with an optional op payload along the way.\nDesign: D21.",
+        "name": "agent-skill",
+        "summary": "Ship the paired agent skill, embedded and self-installing",
+        "body": "SKILL.md teaches an agent the full loop: inspect, plan, check, apply,\nverify, plus error recovery by stable code and the review-comment fix\nloop. It ships inside the binary (include_str!) so `ism skill install`\nalways writes the skill matching this ism version — project scope by\ndefault (.claude/skills/ism/), user scope with --user; `ism skill show`\nprints it. Root copy stays byte-identical via scripts/check-sync.sh.\nDesign: D19/D20.",
         "from": [
-          "crates/ism-cli/src/main.rs:113#6ef3",
-          "crates/ism-core/src/engine.rs:14#48ee",
-          "crates/ism-core/src/engine.rs:56#dcde",
-          "crates/ism-core/src/engine.rs:60#0673",
-          "crates/ism-core/src/engine.rs:197#f91f",
-          "crates/ism-core/src/engine.rs:214#5b82",
-          "crates/ism-core/src/engine.rs:216#b366",
-          "crates/ism-core/src/engine.rs:248#c821",
-          "crates/ism-core/src/engine.rs:275#0444",
-          "crates/ism-core/src/engine.rs:277#b5ed",
-          "crates/ism-core/src/model.rs:28#cb62",
-          "crates/ism-core/src/model.rs:121#cc55",
-          "crates/ism-core/src/model.rs:238#6cbb",
-          "crates/ism-core/src/oplog.rs:4#58c2",
-          "crates/ism-core/src/oplog.rs:17#d81b",
-          "crates/ism-core/src/oplog.rs:22#347d",
-          "crates/ism-core/src/oplog.rs:39#eab5",
-          "crates/ism-core/src/oplog.rs:48#3873",
-          "crates/ism-core/src/oplog.rs:64#84a3",
-          "crates/ism-core/src/oplog.rs:66#1a0e",
-          "crates/ism-core/src/oplog.rs:71#dab1",
-          "crates/ism-core/src/oplog.rs:112#8f9a",
-          "crates/ism-core/src/oplog.rs:117#aebe",
-          "crates/ism-core/src/oplog.rs:131#d8e9",
-          "crates/ism-core/src/oplog.rs:134#486f",
-          "crates/ism-core/src/oplog.rs:168#708e",
-          "crates/ism-core/src/oplog.rs:175#6847"
-        ]
-      },
-      {
-        "name": "comments",
-        "summary": "Add review comments anchored to change identities",
-        "body": "`ism comment add/list/resolve`: comments live as comments/<c-id>.json\non the data ref, anchored to change ids (never commit shas — those are\nrewritten by reorganization). Comment-only data commits carry no ops/\ntree, so op walks skip them naturally. Threading via `parent`; resolve\nis idempotent. `comment list` emits the full set as JSON — one channel\nshared by the desktop app (rendering) and coding agents (fix loop).\nDesign: D22.",
-        "from": [
-          "crates/ism-cli/src/main.rs:61#b0f1",
-          "crates/ism-cli/src/main.rs:249#cf6a",
-          "crates/ism-core/src/comment.rs:1#c5d5",
-          "crates/ism-core/src/lib.rs:9#21f8",
-          "crates/ism-core/src/model.rs:180#37fb",
-          "crates/ism-core/src/oplog.rs:233#9f2d",
-          "crates/ism-core/src/oplog.rs:260#6de0"
-        ],
-        "deps": [
-          "crash-protocol"
-        ]
-      },
-      {
-        "name": "e2e-hardening",
-        "summary": "Harden the E2E suite: moved-HEAD, CRLF, signing, crash, comments",
-        "body": "Tree equality is only evidence when HEAD actually moved — assert it\n(lesson from a false-pass during manual verification). New coverage:\nCRLF bytes round-trip bit-for-bit, signing failure is E050 and leaves\nbranch and data ref untouched, a dangling op is voided and the same\nplan re-applies cleanly, and the full comment lifecycle.",
-        "from": [
-          "crates/ism-cli/tests/e2e.rs:184#f2a2",
-          "crates/ism-cli/tests/e2e.rs:446#74d7"
-        ],
-        "deps": [
-          "crash-protocol",
-          "comments"
+          "crates/ism-cli/skill/SKILL.md:1#86e0",
+          "crates/ism-cli/src/main.rs:69#d7e2",
+          "crates/ism-cli/src/main.rs:88#8163",
+          "crates/ism-cli/src/main.rs:272#7d46",
+          "crates/ism-cli/tests/e2e.rs:666#fee8",
+          "skills/ism/SKILL.md:1#4c9c"
         ]
       }
     ],
     "order": [
-      "claude-md",
-      "crash-protocol",
-      "comments",
-      "e2e-hardening"
+      "show-base",
+      "agent-skill"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788028801"
+  "timestamp": "1788029012"
 }

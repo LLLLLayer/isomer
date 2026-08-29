@@ -1,0 +1,6 @@
+{
+  "id": "i-juoo6i2x",
+  "name": "agent-skill",
+  "summary": "Ship the paired agent skill, embedded and self-installing",
+  "body": "SKILL.md teaches an agent the full loop: inspect, plan, check, apply,\nverify, plus error recovery by stable code and the review-comment fix\nloop. It ships inside the binary (include_str!) so `ism skill install`\nalways writes the skill matching this ism version — project scope by\ndefault (.claude/skills/ism/), user scope with --user; `ism skill show`\nprints it. Root copy stays byte-identical via scripts/check-sync.sh.\nDesign: D19/D20."
+}

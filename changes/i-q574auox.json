@@ -1,0 +1,6 @@
+{
+  "id": "i-q574auox",
+  "name": "show-base",
+  "summary": "Let `ism show` take --base like inspect",
+  "body": "Without it, hunk contents were unreadable when organizing commits on\nthe trunk itself (the default anchor collapses to an empty stack).\nFound while dogfooding ism on its own repository."
+}
