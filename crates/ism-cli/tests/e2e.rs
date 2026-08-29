@@ -663,3 +663,35 @@ fn comment_lifecycle_add_reply_resolve_list() {
     assert_eq!(code, 0);
     assert_eq!(json.unwrap().as_array().unwrap().len(), 2);
 }
+
+#[test]
+fn skill_install_project_and_user() {
+    let r = Repo::new();
+    r.write("f.txt", "x\n");
+    r.commit_all("base");
+
+    // Project scope: lands inside the repo's .claude/skills/ism/.
+    let (code, json, raw) = r.ism(&["skill", "install"]);
+    assert_eq!(code, 0, "skill install failed: {raw}");
+    let out = json.unwrap();
+    assert_eq!(out["ok"], true);
+    assert_eq!(out["scope"], "project");
+    let installed = r.path().join(".claude/skills/ism/SKILL.md");
+    let content = std::fs::read_to_string(&installed).unwrap();
+    assert!(
+        content.starts_with("---\nname: ism\n"),
+        "frontmatter missing"
+    );
+    assert!(content.contains("ism check"), "loop not documented");
+
+    // User scope: honors $HOME.
+    let home = tempfile::tempdir().unwrap();
+    let out = Command::new(env!("CARGO_BIN_EXE_ism"))
+        .current_dir(r.path())
+        .env("HOME", home.path())
+        .args(["skill", "install", "--user"])
+        .output()
+        .unwrap();
+    assert!(out.status.success());
+    assert!(home.path().join(".claude/skills/ism/SKILL.md").exists());
+}

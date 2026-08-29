@@ -66,7 +66,27 @@ enum Cmd {
         #[command(subcommand)]
         action: CommentCmd,
     },
+    /// The paired agent skill (embedded in this binary, version-locked).
+    Skill {
+        #[command(subcommand)]
+        action: SkillCmd,
+    },
 }
+
+#[derive(Subcommand)]
+enum SkillCmd {
+    /// Write SKILL.md to .claude/skills/ism/ (project) or ~/.claude/skills/ism/.
+    Install {
+        /// Install user-wide instead of into the current project.
+        #[arg(long)]
+        user: bool,
+    },
+    /// Print the embedded SKILL.md to stdout.
+    Show,
+}
+
+/// The skill shipped inside the binary — always matches this ism version.
+const SKILL_MD: &str = include_str!("../skill/SKILL.md");
 
 #[derive(Subcommand)]
 enum CommentCmd {
@@ -249,6 +269,43 @@ fn run() -> Result<(), IsmError> {
             println!("{}", serde_json::to_string_pretty(&outcome)?);
             Ok(())
         }
+        Cmd::Skill { action } => match action {
+            SkillCmd::Install { user } => {
+                let root = if user {
+                    let home = std::env::var("HOME")
+                        .or_else(|_| std::env::var("USERPROFILE"))
+                        .map_err(|_| {
+                            IsmError::Precondition("cannot resolve the home directory".into())
+                        })?;
+                    PathBuf::from(home).join(".claude")
+                } else {
+                    let top = git.out(&["rev-parse", "--show-toplevel"]).map_err(|_| {
+                        IsmError::Precondition(
+                            "project install requires a worktree; use --user".into(),
+                        )
+                    })?;
+                    PathBuf::from(top.trim()).join(".claude")
+                };
+                let dir = root.join("skills").join("ism");
+                std::fs::create_dir_all(&dir)?;
+                let path = dir.join("SKILL.md");
+                std::fs::write(&path, SKILL_MD)?;
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "ok": true,
+                        "path": path.display().to_string(),
+                        "scope": if user { "user" } else { "project" },
+                        "version": ism_core::VERSION,
+                    })
+                );
+                Ok(())
+            }
+            SkillCmd::Show => {
+                print!("{SKILL_MD}");
+                Ok(())
+            }
+        },
         Cmd::Comment { action } => match action {
             CommentCmd::Add {
                 change,
