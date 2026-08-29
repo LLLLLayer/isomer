@@ -1,0 +1,6 @@
+{
+  "id": "i-trk6vah3",
+  "name": "ci-node-24",
+  "summary": "Run the app CI job on Node 24",
+  "body": "npm 10 (Node 22) died inside `npm ci` with its internal\n\"Exit handler never called\" bug against this lockfile; Node 24 ships\nnpm 11, matching the toolchain the lockfile was generated with."
+}

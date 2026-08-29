@@ -1,32 +1,31 @@
 {
   "kind": "apply",
   "branch": "main",
-  "old_head": "c8e599232ec539f2ae7e786d5f68d1f8ac893a04",
-  "new_head": "6d1ada872eb821012694c5b6e7cd082ff4d13254",
-  "base": "58d8d93ce0787ea6f40ee3d85631f68f87bcab58",
-  "old_tree": "8fd7f474a4a56f9e9d0fd5437e3ad526865ba729",
-  "new_tree": "8fd7f474a4a56f9e9d0fd5437e3ad526865ba729",
-  "plan_digest": "sha256:cc8a2e681d6d2b5a6e33634a50203413397c5d9e813b99cb51205e6c2edcb959",
-  "snapshot_digest": "sha256:8d4ab9b7245df555cfe7dd281d315283a8140da7a27fee4fabd12602a1367e8d",
+  "old_head": "d3707aff248ee7b88272b861ce77b68e653150cd",
+  "new_head": "6fc9de277d057a1ee34f9fb5737429b8518e986d",
+  "base": "6d1ada872eb821012694c5b6e7cd082ff4d13254",
+  "old_tree": "e76c69a1defc483661ca9d380b4633a009b0e400",
+  "new_tree": "e76c69a1defc483661ca9d380b4633a009b0e400",
+  "plan_digest": "sha256:71c77de87289e69b5b965ba9388d15541c7065c33e919b20d238df81af8df368",
+  "snapshot_digest": "sha256:44c33bf6fd00db2b31bf2d991d2b0b7b5e770eadffac8109e6a21efcb1f7750a",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:8d4ab9b7245df555cfe7dd281d315283a8140da7a27fee4fabd12602a1367e8d",
-    "base": "58d8d93ce0787ea6f40ee3d85631f68f87bcab58",
+    "snapshot_digest": "sha256:44c33bf6fd00db2b31bf2d991d2b0b7b5e770eadffac8109e6a21efcb1f7750a",
+    "base": "6d1ada872eb821012694c5b6e7cd082ff4d13254",
     "nodes": [
       {
-        "name": "clippy-slice-from-ref",
-        "summary": "Appease newest clippy: slice::from_ref over one-item clone",
-        "body": "CI's stable clippy is newer than the local toolchain and flags\n`&[x.clone()]`; `std::slice::from_ref` borrows instead of cloning.\nCaught by the first red CI run — local clippy stayed silent.",
+        "name": "ci-node-24",
+        "summary": "Run the app CI job on Node 24",
+        "body": "npm 10 (Node 22) died inside `npm ci` with its internal\n\"Exit handler never called\" bug against this lockfile; Node 24 ships\nnpm 11, matching the toolchain the lockfile was generated with.",
         "from": [
-          "crates/ism-core/src/comment.rs:102#39bc",
-          "crates/ism-core/src/comment.rs:112#a3de"
+          ".github/workflows/ci.yml:29#297e"
         ]
       }
     ],
     "order": [
-      "clippy-slice-from-ref"
+      "ci-node-24"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788030399"
+  "timestamp": "1788030559"
 }
