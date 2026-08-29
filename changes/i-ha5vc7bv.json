@@ -1,0 +1,6 @@
+{
+  "id": "i-ha5vc7bv",
+  "name": "public-lockfile",
+  "summary": "Re-resolve the app lockfile against the public npm registry",
+  "body": "The original lockfile was generated behind an internal registry\nmirror (bnpm.byted.org), unreachable from CI runners — npm ci died on\nENOTFOUND (and tripped npm 10's exit-handler bug on the way). The\nlockfile now pins registry.npmjs.org URLs with integrity hashes for\nevery package; versions are unchanged."
+}
