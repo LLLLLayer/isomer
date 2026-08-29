@@ -177,6 +177,35 @@ pub struct ChangeMeta {
     pub deps: Vec<String>,
 }
 
+// -- review comments (refs/isomer/data, `comments/` tree) --------------------
+
+/// A review comment anchored to a change identity (never to a commit sha,
+/// which reorganization rewrites). Stored as `comments/<id>.json` on the data
+/// ref; readable with bare `git cat-file`. Agents consume the full list via
+/// `ism comment list` and act on unresolved items.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Comment {
+    /// `c-` + 8 chars of the change-id alphabet.
+    pub id: String,
+    /// Target change id. Comments survive reorganizations with the change.
+    pub change: String,
+    /// Optional file anchor (repo-relative path, as in hunk ids).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+    /// Optional 1-based line in the change's post-image at comment time.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub line: Option<u32>,
+    /// Threading: id of the comment this one replies to.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent: Option<String>,
+    pub body: String,
+    pub author_name: String,
+    pub author_email: String,
+    pub created_at: String,
+    #[serde(default)]
+    pub resolved: bool,
+}
+
 // -- operation log -----------------------------------------------------------
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

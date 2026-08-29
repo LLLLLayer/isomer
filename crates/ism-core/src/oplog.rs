@@ -230,12 +230,61 @@ pub fn load(git: &Git, op_sha: &str) -> Result<(String, Op)> {
     Ok((sha, serde_json::from_slice(&bytes)?))
 }
 
+/// All change metadata entries on the data ref.
+pub fn change_metas(git: &Git) -> Result<Vec<ChangeMeta>> {
+    if !git.ref_exists(DATA_REF) {
+        return Ok(Vec::new());
+    }
+    let mut out = Vec::new();
+    for (mode, _sha, name) in git.ls_tree(DATA_REF, "changes")? {
+        if mode != "100644" {
+            continue;
+        }
+        if let Some(bytes) = git.blob_at(DATA_REF, &format!("changes/{name}"))? {
+            out.push(serde_json::from_slice(&bytes)?);
+        }
+    }
+    Ok(out)
+}
+
 /// Read change metadata by id.
 pub fn change_meta(git: &Git, id: &str) -> Result<Option<ChangeMeta>> {
     if !git.ref_exists(DATA_REF) {
         return Ok(None);
     }
     match git.blob_at(DATA_REF, &format!("changes/{id}.json"))? {
+        Some(bytes) => Ok(Some(serde_json::from_slice(&bytes)?)),
+        None => Ok(None),
+    }
+}
+
+/// All comments, oldest-first by created_at (stable for agents).
+pub fn comments(git: &Git) -> Result<Vec<Comment>> {
+    if !git.ref_exists(DATA_REF) {
+        return Ok(Vec::new());
+    }
+    let mut out: Vec<Comment> = Vec::new();
+    for (mode, _sha, name) in git.ls_tree(DATA_REF, "comments")? {
+        if mode != "100644" {
+            continue;
+        }
+        if let Some(bytes) = git.blob_at(DATA_REF, &format!("comments/{name}"))? {
+            out.push(serde_json::from_slice(&bytes)?);
+        }
+    }
+    out.sort_by(|a, b| {
+        (a.created_at.parse::<u64>().unwrap_or(0), a.id.clone())
+            .cmp(&(b.created_at.parse::<u64>().unwrap_or(0), b.id.clone()))
+    });
+    Ok(out)
+}
+
+/// Read one comment by id.
+pub fn comment(git: &Git, id: &str) -> Result<Option<Comment>> {
+    if !git.ref_exists(DATA_REF) {
+        return Ok(None);
+    }
+    match git.blob_at(DATA_REF, &format!("comments/{id}.json"))? {
         Some(bytes) => Ok(Some(serde_json::from_slice(&bytes)?)),
         None => Ok(None),
     }

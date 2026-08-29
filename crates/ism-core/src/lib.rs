@@ -6,6 +6,7 @@
 
 pub mod algebra;
 pub mod analyze;
+pub mod comment;
 pub mod engine;
 pub mod error;
 pub mod gitio;

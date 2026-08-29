@@ -58,6 +58,44 @@ enum Cmd {
     },
     /// Revert the latest ism operation on this branch (append-only op log).
     Undo,
+    /// Review comments anchored to changes (stored on refs/isomer/data).
+    Comment {
+        #[command(subcommand)]
+        action: CommentCmd,
+    },
+}
+
+#[derive(Subcommand)]
+enum CommentCmd {
+    /// Add a comment (or a threaded reply) to a change.
+    Add {
+        /// Change id (i-xxxxxxxx) or node name.
+        #[arg(long)]
+        change: String,
+        /// Optional file anchor (repo-relative path).
+        #[arg(long)]
+        path: Option<String>,
+        /// Optional 1-based line in the change's post-image (requires --path).
+        #[arg(long)]
+        line: Option<u32>,
+        /// Comment id this replies to (threading).
+        #[arg(long)]
+        reply_to: Option<String>,
+        /// Comment body.
+        #[arg(short, long)]
+        message: String,
+    },
+    /// List comments as JSON, oldest first.
+    List {
+        /// Filter to one change (id or name).
+        #[arg(long)]
+        change: Option<String>,
+        /// Only unresolved comments.
+        #[arg(long)]
+        unresolved: bool,
+    },
+    /// Mark a comment resolved (idempotent).
+    Resolve { id: String },
 }
 
 fn read_plan(path: &PathBuf) -> Result<Plan, IsmError> {
@@ -208,6 +246,38 @@ fn run() -> Result<(), IsmError> {
             println!("{}", serde_json::to_string_pretty(&outcome)?);
             Ok(())
         }
+        Cmd::Comment { action } => match action {
+            CommentCmd::Add {
+                change,
+                path,
+                line,
+                reply_to,
+                message,
+            } => {
+                let comment = ism_core::comment::add(
+                    &git,
+                    ism_core::comment::NewComment {
+                        change: &change,
+                        path,
+                        line,
+                        reply_to,
+                        body: message,
+                    },
+                )?;
+                println!("{}", serde_json::to_string_pretty(&comment)?);
+                Ok(())
+            }
+            CommentCmd::List { change, unresolved } => {
+                let comments = ism_core::comment::list(&git, change.as_deref(), unresolved)?;
+                println!("{}", serde_json::to_string_pretty(&comments)?);
+                Ok(())
+            }
+            CommentCmd::Resolve { id } => {
+                let comment = ism_core::comment::resolve(&git, &id)?;
+                println!("{}", serde_json::to_string_pretty(&comment)?);
+                Ok(())
+            }
+        },
     }
 }
 
