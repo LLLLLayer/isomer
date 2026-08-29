@@ -1,0 +1,9 @@
+{
+  "id": "i-f4jo6rli",
+  "name": "diff-algebra",
+  "summary": "U0 diff parser and line-identity dependency algebra",
+  "body": "Zero-context hunks as reorganization atoms; conservative whole-file degradation; commutation realized via line identity, so subset replay needs no offset arithmetic.",
+  "deps": [
+    "core-foundation"
+  ]
+}

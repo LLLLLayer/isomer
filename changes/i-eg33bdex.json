@@ -1,0 +1,9 @@
+{
+  "id": "i-eg33bdex",
+  "name": "cli",
+  "summary": "ism CLI: seven commands over the core",
+  "body": "status/show/inspect/check/apply/verify/undo; JSON on stdout, structured errors with stable exit codes, never interactive.",
+  "deps": [
+    "write-side"
+  ]
+}

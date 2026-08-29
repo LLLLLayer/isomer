@@ -1,0 +1,133 @@
+{
+  "kind": "apply",
+  "branch": "phase-1",
+  "old_head": "90eea45c0ae078607978918d2c9f81e2cf3491f1",
+  "new_head": "c0427a10353bf15e5627f6429cd8d4bb0a7f1910",
+  "base": "5e0e431ac61c6273f1ab751f1943959888287e9b",
+  "old_tree": "85768bac86be836efc291c8098b6630711d3e42e",
+  "new_tree": "85768bac86be836efc291c8098b6630711d3e42e",
+  "plan_digest": "sha256:b21403bdd88efcdb0d1a3d7c5105b78c32c710f363bb1ad4e69b58f83bbfa4c2",
+  "snapshot_digest": "sha256:ddd088606319030e604f07111573716d2e445af2aeb56165e725408808264e72",
+  "plan": {
+    "version": 1,
+    "snapshot_digest": "sha256:ddd088606319030e604f07111573716d2e445af2aeb56165e725408808264e72",
+    "base": "5e0e431ac61c6273f1ab751f1943959888287e9b",
+    "head": "90eea45c0ae078607978918d2c9f81e2cf3491f1",
+    "nodes": [
+      {
+        "name": "scaffolding",
+        "summary": "Set up cargo workspace: ism-core + ism-cli",
+        "body": "Workspace-level dependency pinning; core carries the domain logic, the CLI stays a shell (design rule: apps and CLI are both shells over ism-core).",
+        "from": [
+          "Cargo.toml:1#4856",
+          "Cargo.lock:1#092b",
+          "crates/ism-core/Cargo.toml:1#86aa",
+          "crates/ism-cli/Cargo.toml:1#4451"
+        ]
+      },
+      {
+        "name": "core-foundation",
+        "summary": "Core foundation: error codes, domain model, git plumbing IO",
+        "body": "Stable error codes with agent-facing hints; serde types that ARE the JSON contract; a plumbing-only git wrapper (temp-index writes, CAS ref flips, never the worktree).",
+        "from": [
+          "crates/ism-core/src/error.rs:1#e580",
+          "crates/ism-core/src/model.rs:1#b942",
+          "crates/ism-core/src/gitio.rs:1#80af",
+          "crates/ism-core/src/lib.rs:1#a849"
+        ],
+        "deps": [
+          "scaffolding"
+        ]
+      },
+      {
+        "name": "diff-algebra",
+        "summary": "U0 diff parser and line-identity dependency algebra",
+        "body": "Zero-context hunks as reorganization atoms; conservative whole-file degradation; commutation realized via line identity, so subset replay needs no offset arithmetic.",
+        "from": [
+          "crates/ism-core/src/parse.rs:1#b877",
+          "crates/ism-core/src/algebra.rs:1#8eaa"
+        ],
+        "deps": [
+          "core-foundation"
+        ]
+      },
+      {
+        "name": "read-side",
+        "summary": "Inspect pipeline and plan validation R1-R8",
+        "body": "Snapshot with self-describing hunk ids, hard deps and anomalies; R8 is a constructive proof: full in-memory replay compared against head, so check passing guarantees apply succeeds.",
+        "from": [
+          "crates/ism-core/src/analyze.rs:1#562f",
+          "crates/ism-core/src/plancheck.rs:1#5a3d"
+        ],
+        "deps": [
+          "diff-algebra"
+        ]
+      },
+      {
+        "name": "write-side",
+        "summary": "Apply engine, append-only op log, independent verify",
+        "body": "Forge commits invisibly, assert tree invariance inside the write path, flip one CAS ref; undo appends (never rewinds); verify shares no code with apply.",
+        "from": [
+          "crates/ism-core/src/engine.rs:1#0133",
+          "crates/ism-core/src/oplog.rs:1#3382",
+          "crates/ism-core/src/verify.rs:1#84b4"
+        ],
+        "deps": [
+          "read-side"
+        ]
+      },
+      {
+        "name": "cli",
+        "summary": "ism CLI: seven commands over the core",
+        "body": "status/show/inspect/check/apply/verify/undo; JSON on stdout, structured errors with stable exit codes, never interactive.",
+        "from": [
+          "crates/ism-cli/src/main.rs:1#22a9"
+        ],
+        "deps": [
+          "write-side"
+        ]
+      },
+      {
+        "name": "e2e-tests",
+        "summary": "End-to-end tests: real repos, real binary, full loop",
+        "body": "inspect-plan-check-apply-verify-undo round trip, error-code paths, degraded files, dirty-worktree immunity.",
+        "from": [
+          "crates/ism-cli/tests/e2e.rs:1#bae6"
+        ],
+        "deps": [
+          "cli"
+        ]
+      },
+      {
+        "name": "contract-infra",
+        "summary": "Plan schema, same-source check, CI, README and placeholders",
+        "body": "plan.v1.json is the public contract (embed source inside the crate, convention copy at root, CI-checked identical).",
+        "from": [
+          "schema/plan.v1.json:1#48fa",
+          "crates/ism-core/schema/plan.v1.json:1#c62a",
+          "scripts/check-sync.sh:1#d0f6",
+          ".github/workflows/ci.yml:1#3565",
+          "README.md:1#7efb",
+          "apps/README.md:1#f7fa",
+          "skills/ism/README.md:1#c374",
+          "packaging/npm/README.md:1#8e02"
+        ],
+        "deps": [
+          "cli"
+        ]
+      }
+    ],
+    "order": [
+      "scaffolding",
+      "core-foundation",
+      "diff-algebra",
+      "read-side",
+      "write-side",
+      "cli",
+      "e2e-tests",
+      "contract-infra"
+    ]
+  },
+  "tool_version": "0.1.0",
+  "timestamp": "1788026918"
+}

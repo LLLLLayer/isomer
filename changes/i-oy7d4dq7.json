@@ -1,0 +1,9 @@
+{
+  "id": "i-oy7d4dq7",
+  "name": "e2e-tests",
+  "summary": "End-to-end tests: real repos, real binary, full loop",
+  "body": "inspect-plan-check-apply-verify-undo round trip, error-code paths, degraded files, dirty-worktree immunity.",
+  "deps": [
+    "cli"
+  ]
+}

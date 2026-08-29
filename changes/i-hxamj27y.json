@@ -1,0 +1,9 @@
+{
+  "id": "i-hxamj27y",
+  "name": "read-side",
+  "summary": "Inspect pipeline and plan validation R1-R8",
+  "body": "Snapshot with self-describing hunk ids, hard deps and anomalies; R8 is a constructive proof: full in-memory replay compared against head, so check passing guarantees apply succeeds.",
+  "deps": [
+    "diff-algebra"
+  ]
+}

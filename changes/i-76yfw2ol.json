@@ -1,0 +1,9 @@
+{
+  "id": "i-76yfw2ol",
+  "name": "core-foundation",
+  "summary": "Core foundation: error codes, domain model, git plumbing IO",
+  "body": "Stable error codes with agent-facing hints; serde types that ARE the JSON contract; a plumbing-only git wrapper (temp-index writes, CAS ref flips, never the worktree).",
+  "deps": [
+    "scaffolding"
+  ]
+}

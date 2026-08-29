@@ -1,0 +1,9 @@
+{
+  "id": "i-oyjjvt4r",
+  "name": "write-side",
+  "summary": "Apply engine, append-only op log, independent verify",
+  "body": "Forge commits invisibly, assert tree invariance inside the write path, flip one CAS ref; undo appends (never rewinds); verify shares no code with apply.",
+  "deps": [
+    "read-side"
+  ]
+}

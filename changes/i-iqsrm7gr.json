@@ -1,0 +1,6 @@
+{
+  "id": "i-iqsrm7gr",
+  "name": "scaffolding",
+  "summary": "Set up cargo workspace: ism-core + ism-cli",
+  "body": "Workspace-level dependency pinning; core carries the domain logic, the CLI stays a shell (design rule: apps and CLI are both shells over ism-core)."
+}

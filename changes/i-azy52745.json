@@ -1,0 +1,9 @@
+{
+  "id": "i-azy52745",
+  "name": "contract-infra",
+  "summary": "Plan schema, same-source check, CI, README and placeholders",
+  "body": "plan.v1.json is the public contract (embed source inside the crate, convention copy at root, CI-checked identical).",
+  "deps": [
+    "cli"
+  ]
+}
