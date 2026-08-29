@@ -25,6 +25,23 @@ pub fn is_valid_node_name(s: &str) -> bool {
 /// The trailer key stamped into materialized commits.
 pub const TRAILER_KEY: &str = "Isomer-Change";
 
+/// Seconds since the Unix epoch, as a string (op/comment timestamps).
+pub fn now_epoch() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs().to_string())
+        .unwrap_or_default()
+}
+
+pub fn is_valid_comment_id(s: &str) -> bool {
+    s.len() == 10
+        && s.starts_with("c-")
+        && s.as_bytes()[2..]
+            .iter()
+            .all(|b| CHANGE_ID_ALPHABET.contains(b))
+}
+
 // -- snapshot (inspect output) ----------------------------------------------
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -101,6 +118,9 @@ pub enum Anomaly {
     Orphan { change_id: String },
     /// A merge commit inside base..head; reorganization is undefined across it.
     MergeInStack { commit: String },
+    /// A recorded op's new_head never landed on the branch; the op was voided
+    /// during bookkeeping reconciliation (journal-first crash protocol).
+    DanglingOpVoided { op: String },
 }
 
 // -- plan (agent input) ------------------------------------------------------
@@ -186,6 +206,10 @@ pub struct Op {
 pub enum OpKind {
     Apply,
     Undo,
+    /// Bookkeeping correction: the referenced op's `new_head` never became
+    /// the branch tip (crash between journal and ref flip, or an external
+    /// rewind). Void entries and their targets are skipped by op walks.
+    Void,
 }
 
 // -- apply output ------------------------------------------------------------

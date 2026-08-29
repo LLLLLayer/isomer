@@ -72,7 +72,13 @@ fn run() -> Result<(), IsmError> {
 
     match cli.command {
         Cmd::Status { json } => {
-            let analysis = ism_core::analyze::analyze(&git, None, false)?;
+            let mut analysis = ism_core::analyze::analyze(&git, None, false)?;
+            if let Some(voided) = ism_core::oplog::reconcile(&git, &analysis.snapshot.branch)? {
+                analysis
+                    .snapshot
+                    .anomalies
+                    .push(ism_core::model::Anomaly::DanglingOpVoided { op: voided });
+            }
             let snap = &analysis.snapshot;
             if json {
                 println!("{}", serde_json::to_string_pretty(snap)?);

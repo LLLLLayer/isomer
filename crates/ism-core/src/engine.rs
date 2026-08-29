@@ -12,14 +12,6 @@ use crate::plancheck::{check, CheckedPlan};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 
-fn now_epoch() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_secs().to_string())
-        .unwrap_or_default()
-}
-
 /// Deterministic change-id mint: stable for the same (base, head, node, summary),
 /// so a re-run of the same plan mints the same ids (idempotency-friendly).
 fn mint_change_id(base: &str, head: &str, node_index: usize, summary: &str) -> String {
@@ -62,12 +54,14 @@ pub fn validate(git: &Git, plan: &Plan) -> Result<ApplyContext> {
 }
 
 pub fn apply(git: &Git, plan: &Plan) -> Result<ApplyOutcome> {
-    let ctx = validate(git, plan)?;
-    let snap = &ctx.analysis.snapshot;
-    let alg = ctx.analysis.alg.as_ref().expect("checked");
     let branch = git.current_branch()?.ok_or_else(|| {
         IsmError::Precondition("apply requires a branch checkout (detached HEAD)".into())
     })?;
+    // Correct the books first (journal-first crash protocol, design/05).
+    oplog::reconcile(git, &branch)?;
+    let ctx = validate(git, plan)?;
+    let snap = &ctx.analysis.snapshot;
+    let alg = ctx.analysis.alg.as_ref().expect("checked");
     let branch_ref = format!("refs/heads/{branch}");
     let old_head = snap.head.clone();
     let old_tree = git.tree_of(&old_head)?;
@@ -200,9 +194,10 @@ pub fn apply(git: &Git, plan: &Plan) -> Result<ApplyOutcome> {
         )));
     }
 
-    // -- flip the switch ------------------------------------------------------
-    git.update_ref_cas(&branch_ref, &parent_commit, Some(&old_head))?;
-
+    // -- journal first, then flip the switch ---------------------------------
+    // The op record lands on the data ref *before* the branch moves. If the
+    // flip never happens (crash or a raced ref), `reconcile` voids the entry;
+    // the books never claim a state the branch does not have.
     let op = Op {
         kind: OpKind::Apply,
         branch: branch.clone(),
@@ -216,9 +211,18 @@ pub fn apply(git: &Git, plan: &Plan) -> Result<ApplyOutcome> {
         snapshot_digest: Some(snap.snapshot_digest.clone()),
         plan: Some(plan.clone()),
         tool_version: env!("CARGO_PKG_VERSION").to_string(),
-        timestamp: now_epoch(),
+        timestamp: crate::model::now_epoch(),
     };
-    let op_sha = oplog::append(git, &op, &change_metas, &ctx.analysis.trunk)?;
+    let op_sha = oplog::append(git, &op, &change_metas, Some(&ctx.analysis.trunk))?;
+    if let Err(e) = git.update_ref_cas(&branch_ref, &parent_commit, Some(&old_head)) {
+        // Void the journaled op explicitly: the branch moved while we worked,
+        // so its entry must not stand as the branch's latest state.
+        oplog::append_void(git, &op_sha, &op)?;
+        return Err(IsmError::Precondition(format!(
+            "branch {branch} moved during apply (ref update refused: {e}); \
+the journaled op was voided — re-run `ism inspect` and rebuild the plan"
+        )));
+    }
 
     Ok(ApplyOutcome {
         new_head: parent_commit,
@@ -241,6 +245,7 @@ pub fn undo(git: &Git) -> Result<UndoOutcome> {
     let branch = git
         .current_branch()?
         .ok_or_else(|| IsmError::Precondition("undo requires a branch checkout".into()))?;
+    oplog::reconcile(git, &branch)?;
     let (op_sha, op) = oplog::latest_for_branch(git, &branch)?.ok_or_else(|| {
         IsmError::Precondition(format!("no ism operations recorded for branch {branch}"))
     })?;
@@ -267,9 +272,9 @@ pub fn undo(git: &Git) -> Result<UndoOutcome> {
         snapshot_digest: None,
         plan: None,
         tool_version: env!("CARGO_PKG_VERSION").to_string(),
-        timestamp: now_epoch(),
+        timestamp: crate::model::now_epoch(),
     };
-    let new_op = oplog::append(git, &undo_op, &[], "")?;
+    let new_op = oplog::append(git, &undo_op, &[], None)?;
 
     let hint = git.upstream_of(&branch).map(|up| {
         format!("branch has upstream {up}; if the undone commits were pushed, you will need `git push --force-with-lease`")
