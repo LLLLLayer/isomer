@@ -1,0 +1,13 @@
+[
+  {
+    "id": "c-wrsqmub3",
+    "change": "i-x5dc6igh",
+    "path": "service.py",
+    "line": 2,
+    "body": "Consider a clearer name.",
+    "author_name": "Fixture",
+    "author_email": "fix@example.com",
+    "created_at": "1788029606",
+    "resolved": false
+  }
+]
