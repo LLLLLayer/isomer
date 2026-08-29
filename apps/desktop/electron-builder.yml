@@ -1,0 +1,14 @@
+appId: dev.isomer.desktop
+productName: Isomer
+directories:
+  buildResources: build
+files:
+  - out/**
+  - package.json
+mac:
+  category: public.app-category.developer-tools
+linux:
+  target: [AppImage]
+win:
+  target: [nsis]
+npmRebuild: true
