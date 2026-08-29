@@ -99,7 +99,7 @@ pub fn add(git: &Git, new: NewComment<'_>) -> Result<Comment> {
         created_at,
         resolved: false,
     };
-    oplog::append_comments(git, &[comment.clone()])?;
+    oplog::append_comments(git, std::slice::from_ref(&comment))?;
     Ok(comment)
 }
 
@@ -109,7 +109,7 @@ pub fn resolve(git: &Git, id: &str) -> Result<Comment> {
         .ok_or_else(|| IsmError::UnknownRef(format!("unknown comment: {id}")))?;
     if !c.resolved {
         c.resolved = true;
-        oplog::append_comments(git, &[c.clone()])?;
+        oplog::append_comments(git, std::slice::from_ref(&c))?;
     }
     Ok(c)
 }
