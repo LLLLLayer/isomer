@@ -1,0 +1,20 @@
+[package]
+name = "ism-cli"
+description = "Isomer CLI (`ism`): agent-native git change reorganization with tree-hash proof"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "ism"
+path = "src/main.rs"
+
+[dependencies]
+ism-core = { path = "../ism-core" }
+serde.workspace = true
+serde_json.workspace = true
+clap.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

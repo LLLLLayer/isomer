@@ -1,0 +1,17 @@
+[workspace]
+resolver = "2"
+members = ["crates/ism-core", "crates/ism-cli"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/LLLLLayer/isomer"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+thiserror = "2"
+clap = { version = "4", features = ["derive"] }
+tempfile = "3"
