@@ -1,0 +1,9 @@
+{
+  "id": "i-ec4x5bdu",
+  "name": "app-shell",
+  "summary": "Desktop app: Electron shell, preload bridge, toolchain",
+  "body": "electron-vite + TypeScript strict + vitest (node & happy-dom\nprojects). The preload exposes exactly the IsomerApi contract via\ncontextBridge — contextIsolation on, no node in the renderer. A\nheadless ISOMER_SMOKE=1 boot path prints a marker after all three\nprocesses load, for CI and scripted proof.",
+  "deps": [
+    "app-services"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "id": "i-5bf2ixqa",
+  "name": "app-ui",
+  "summary": "Desktop app: renderer shell in the Codex-minimal style",
+  "body": "Four-column layout (project rail / stack / review / inspector) plus a\nterminal drawer wired to the pty bridge (@xterm/xterm + fit). Design\ntokens as CSS variables with light/dark parity enforced by test;\ni18next with en and zh-CN locales kept key-identical by test; zustand\nstore with the IPC bridge faked in unit tests. Design: D25/09.",
+  "deps": [
+    "app-contracts"
+  ]
+}

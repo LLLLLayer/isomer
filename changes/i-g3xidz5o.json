@@ -1,0 +1,10 @@
+{
+  "id": "i-g3xidz5o",
+  "name": "app-ci",
+  "summary": "Wire the desktop app into CI and document apps/",
+  "body": "Ubuntu job: npm ci (electron binary download skipped), typecheck,\nvitest, electron-vite build. apps/README reflects the D23 decision:\nElectron over the CLI JSON contract, replacing the old Tauri note.",
+  "deps": [
+    "app-shell",
+    "app-ui"
+  ]
+}

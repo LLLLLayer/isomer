@@ -1,0 +1,9 @@
+{
+  "id": "i-a2kgexb7",
+  "name": "app-services",
+  "summary": "Desktop app: privileged main-process services",
+  "body": "Injectable exec wrapper; git service (porcelain v2 + trailer-aware log\nparsers, exported pure for tests); ism service mapping CLI JSON and\nstable error codes onto the app's uniform Result; pty sessions with\nHyper-style 16ms/200KB batching and 36-char id-prefixed payloads;\nproject registry and settings persisted under userData. All IPC\nhandlers register through the typed contract table.",
+  "deps": [
+    "app-contracts"
+  ]
+}

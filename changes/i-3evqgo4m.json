@@ -1,0 +1,6 @@
+{
+  "id": "i-3evqgo4m",
+  "name": "app-contracts",
+  "summary": "Desktop app: shared IPC and ism type contracts",
+  "body": "The typed IPC channel table (invoke + push, with compile-time coverage\nassertions, gitify-style) and a hand-written mirror of ism's serde\ntypes. Fixtures captured from the real ism binary guard the mirror\nagainst contract drift. Design: D23/D24."
+}
