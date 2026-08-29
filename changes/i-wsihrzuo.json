@@ -1,0 +1,6 @@
+{
+  "id": "i-wsihrzuo",
+  "name": "crash-protocol",
+  "summary": "Adopt journal-first crash bookkeeping with void ops",
+  "body": "The old order (flip the branch, then record the op) had an unfixable\ncrash window: a flip without a record leaves nothing to repair from.\nApply now journals the op on refs/isomer/data first and flips second;\na crash leaves the books one step ahead, which reconcile() detects and\ncancels with an appended `void` op — the log never claims a state the\nbranch does not have. Op walks skip void entries and their targets;\nstatus/apply/undo reconcile on entry, and a raced ref flip voids its\nown journal entry (E101). The data-ref writer is generalized to\ncarried-forward subtrees with an optional op payload along the way.\nDesign: D21."
+}

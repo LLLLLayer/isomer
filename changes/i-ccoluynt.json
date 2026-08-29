@@ -1,0 +1,9 @@
+{
+  "id": "i-ccoluynt",
+  "name": "comments",
+  "summary": "Add review comments anchored to change identities",
+  "body": "`ism comment add/list/resolve`: comments live as comments/<c-id>.json\non the data ref, anchored to change ids (never commit shas — those are\nrewritten by reorganization). Comment-only data commits carry no ops/\ntree, so op walks skip them naturally. Threading via `parent`; resolve\nis idempotent. `comment list` emits the full set as JSON — one channel\nshared by the desktop app (rendering) and coding agents (fix loop).\nDesign: D22.",
+  "deps": [
+    "crash-protocol"
+  ]
+}

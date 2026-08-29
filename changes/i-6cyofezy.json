@@ -1,0 +1,10 @@
+{
+  "id": "i-6cyofezy",
+  "name": "e2e-hardening",
+  "summary": "Harden the E2E suite: moved-HEAD, CRLF, signing, crash, comments",
+  "body": "Tree equality is only evidence when HEAD actually moved — assert it\n(lesson from a false-pass during manual verification). New coverage:\nCRLF bytes round-trip bit-for-bit, signing failure is E050 and leaves\nbranch and data ref untouched, a dangling op is voided and the same\nplan re-applies cleanly, and the full comment lifecycle.",
+  "deps": [
+    "crash-protocol",
+    "comments"
+  ]
+}

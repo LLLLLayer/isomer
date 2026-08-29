@@ -1,0 +1,6 @@
+{
+  "id": "i-eqaooem7",
+  "name": "claude-md",
+  "summary": "Add CLAUDE.md agent guide for this repository",
+  "body": "Build/test commands, the core-module pipeline, invariants to preserve,\nand repo conventions (embed-source sync, append-only ADR log, E2E plan\nplacement) — everything a future agent needs before touching the code."
+}
