@@ -1,124 +1,32 @@
 {
   "kind": "apply",
   "branch": "main",
-  "old_head": "7f4720018295970cdca47d391b20a4fcf0f3d5d0",
-  "new_head": "58d8d93ce0787ea6f40ee3d85631f68f87bcab58",
-  "base": "ee3e2489c5179ccfda84bed30a75407c7063e9d2",
-  "old_tree": "269950ce65a64c7423eebb28e9bff07f1f133d1a",
-  "new_tree": "269950ce65a64c7423eebb28e9bff07f1f133d1a",
-  "plan_digest": "sha256:50c46d87619f81e6d116544a478b9823954b5cfbb37f60d95abe3068b4917497",
-  "snapshot_digest": "sha256:691c13388ebc4ab627f69ce57550bf1cec72fb7c1ce1fdf3930fd0ebec2fd66d",
+  "old_head": "c8e599232ec539f2ae7e786d5f68d1f8ac893a04",
+  "new_head": "6d1ada872eb821012694c5b6e7cd082ff4d13254",
+  "base": "58d8d93ce0787ea6f40ee3d85631f68f87bcab58",
+  "old_tree": "8fd7f474a4a56f9e9d0fd5437e3ad526865ba729",
+  "new_tree": "8fd7f474a4a56f9e9d0fd5437e3ad526865ba729",
+  "plan_digest": "sha256:cc8a2e681d6d2b5a6e33634a50203413397c5d9e813b99cb51205e6c2edcb959",
+  "snapshot_digest": "sha256:8d4ab9b7245df555cfe7dd281d315283a8140da7a27fee4fabd12602a1367e8d",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:691c13388ebc4ab627f69ce57550bf1cec72fb7c1ce1fdf3930fd0ebec2fd66d",
-    "base": "ee3e2489c5179ccfda84bed30a75407c7063e9d2",
+    "snapshot_digest": "sha256:8d4ab9b7245df555cfe7dd281d315283a8140da7a27fee4fabd12602a1367e8d",
+    "base": "58d8d93ce0787ea6f40ee3d85631f68f87bcab58",
     "nodes": [
       {
-        "name": "app-contracts",
-        "summary": "Desktop app: shared IPC and ism type contracts",
-        "body": "The typed IPC channel table (invoke + push, with compile-time coverage\nassertions, gitify-style) and a hand-written mirror of ism's serde\ntypes. Fixtures captured from the real ism binary guard the mirror\nagainst contract drift. Design: D23/D24.",
+        "name": "clippy-slice-from-ref",
+        "summary": "Appease newest clippy: slice::from_ref over one-item clone",
+        "body": "CI's stable clippy is newer than the local toolchain and flags\n`&[x.clone()]`; `std::slice::from_ref` borrows instead of cloning.\nCaught by the first red CI run — local clippy stayed silent.",
         "from": [
-          "apps/desktop/src/shared/__fixtures__/comments.json:1#676c",
-          "apps/desktop/src/shared/__fixtures__/snapshot.json:1#fd8d",
-          "apps/desktop/src/shared/ipc.ts:1#9deb",
-          "apps/desktop/src/shared/ism-types.test.ts:1#f77b",
-          "apps/desktop/src/shared/ism-types.ts:1#45f7",
-          "apps/desktop/src/shared/result.ts:1#e5e4",
-          "apps/desktop/src/shared/theme.ts:1#1d5a"
-        ]
-      },
-      {
-        "name": "app-services",
-        "summary": "Desktop app: privileged main-process services",
-        "body": "Injectable exec wrapper; git service (porcelain v2 + trailer-aware log\nparsers, exported pure for tests); ism service mapping CLI JSON and\nstable error codes onto the app's uniform Result; pty sessions with\nHyper-style 16ms/200KB batching and 36-char id-prefixed payloads;\nproject registry and settings persisted under userData. All IPC\nhandlers register through the typed contract table.",
-        "from": [
-          "apps/desktop/src/main/index.ts:1#a8c4",
-          "apps/desktop/src/main/ipc.ts:1#5b95",
-          "apps/desktop/src/main/services/exec.ts:1#4005",
-          "apps/desktop/src/main/services/git.test.ts:1#6bb2",
-          "apps/desktop/src/main/services/git.ts:1#844a",
-          "apps/desktop/src/main/services/ism.test.ts:1#2b12",
-          "apps/desktop/src/main/services/ism.ts:1#56e2",
-          "apps/desktop/src/main/services/projects.ts:1#9c60",
-          "apps/desktop/src/main/services/pty.test.ts:1#374f",
-          "apps/desktop/src/main/services/pty.ts:1#d024",
-          "apps/desktop/src/main/services/settings.ts:1#40f9"
-        ],
-        "deps": [
-          "app-contracts"
-        ]
-      },
-      {
-        "name": "app-shell",
-        "summary": "Desktop app: Electron shell, preload bridge, toolchain",
-        "body": "electron-vite + TypeScript strict + vitest (node & happy-dom\nprojects). The preload exposes exactly the IsomerApi contract via\ncontextBridge — contextIsolation on, no node in the renderer. A\nheadless ISOMER_SMOKE=1 boot path prints a marker after all three\nprocesses load, for CI and scripted proof.",
-        "from": [
-          "apps/desktop/.gitignore:1#2dd8",
-          "apps/desktop/electron-builder.yml:1#251d",
-          "apps/desktop/electron.vite.config.ts:1#d956",
-          "apps/desktop/package-lock.json:1#47ea",
-          "apps/desktop/package.json:1#4c12",
-          "apps/desktop/src/preload/index.ts:1#6ccb",
-          "apps/desktop/src/renderer/index.html:1#af6e",
-          "apps/desktop/tsconfig.json:1#bc21",
-          "apps/desktop/vitest.config.ts:1#236f"
-        ],
-        "deps": [
-          "app-services"
-        ]
-      },
-      {
-        "name": "app-ui",
-        "summary": "Desktop app: renderer shell in the Codex-minimal style",
-        "body": "Four-column layout (project rail / stack / review / inspector) plus a\nterminal drawer wired to the pty bridge (@xterm/xterm + fit). Design\ntokens as CSS variables with light/dark parity enforced by test;\ni18next with en and zh-CN locales kept key-identical by test; zustand\nstore with the IPC bridge faked in unit tests. Design: D25/09.",
-        "from": [
-          "apps/desktop/src/renderer/App.tsx:1#f195",
-          "apps/desktop/src/renderer/app.css:1#7395",
-          "apps/desktop/src/renderer/components/Inspector.tsx:1#92fb",
-          "apps/desktop/src/renderer/components/ProjectRail.tsx:1#3104",
-          "apps/desktop/src/renderer/components/ReviewView.tsx:1#d565",
-          "apps/desktop/src/renderer/components/StackView.tsx:1#efc8",
-          "apps/desktop/src/renderer/components/TerminalDrawer.tsx:1#c99f",
-          "apps/desktop/src/renderer/i18n/i18n.test.ts:1#3fca",
-          "apps/desktop/src/renderer/i18n/index.ts:1#1b44",
-          "apps/desktop/src/renderer/i18n/locales/en.json:1#51c3",
-          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:1#ff1e",
-          "apps/desktop/src/renderer/index.tsx:1#1721",
-          "apps/desktop/src/renderer/store/store.test.ts:1#912a",
-          "apps/desktop/src/renderer/store/store.ts:1#e4e0",
-          "apps/desktop/src/renderer/theme/theme.test.ts:1#872e",
-          "apps/desktop/src/renderer/theme/tokens.css:1#b5af",
-          "apps/desktop/src/renderer/theme/useTheme.ts:1#a37e",
-          "apps/desktop/src/renderer/window.d.ts:1#7417"
-        ],
-        "deps": [
-          "app-contracts"
-        ]
-      },
-      {
-        "name": "app-ci",
-        "summary": "Wire the desktop app into CI and document apps/",
-        "body": "Ubuntu job: npm ci (electron binary download skipped), typecheck,\nvitest, electron-vite build. apps/README reflects the D23 decision:\nElectron over the CLI JSON contract, replacing the old Tauri note.",
-        "from": [
-          ".github/workflows/ci.yml:18#10b6",
-          "apps/README.md:1#40c7",
-          "apps/README.md:3#4650",
-          "apps/README.md:5#3516"
-        ],
-        "deps": [
-          "app-shell",
-          "app-ui"
+          "crates/ism-core/src/comment.rs:102#39bc",
+          "crates/ism-core/src/comment.rs:112#a3de"
         ]
       }
     ],
     "order": [
-      "app-contracts",
-      "app-services",
-      "app-shell",
-      "app-ui",
-      "app-ci"
+      "clippy-slice-from-ref"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788030336"
+  "timestamp": "1788030399"
 }

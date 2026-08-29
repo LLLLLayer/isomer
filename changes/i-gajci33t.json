@@ -1,0 +1,6 @@
+{
+  "id": "i-gajci33t",
+  "name": "clippy-slice-from-ref",
+  "summary": "Appease newest clippy: slice::from_ref over one-item clone",
+  "body": "CI's stable clippy is newer than the local toolchain and flags\n`&[x.clone()]`; `std::slice::from_ref` borrows instead of cloning.\nCaught by the first red CI run — local clippy stayed silent."
+}
