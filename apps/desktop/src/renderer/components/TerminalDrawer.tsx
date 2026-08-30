@@ -18,8 +18,21 @@ export function TerminalDrawer(): React.JSX.Element | null {
   const toggle = useAppStore((s) => s.toggleTerminal)
   const projectId = useAppStore((s) => s.currentProjectId)
   const containerRef = useRef<HTMLDivElement>(null)
+  const sessionRef = useRef<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
+  const [ready, setReady] = useState(0)
+  const pendingInput = useAppStore((s) => s.pendingTerminalInput)
+  const clearPendingInput = useAppStore((s) => s.clearPendingTerminalInput)
+
+  // Queued input (agent summon) is typed into the shell, never executed —
+  // the user reviews the command and presses Enter.
+  useEffect(() => {
+    const id = sessionRef.current
+    if (!pendingInput || !id) return
+    void window.isomer.invoke('pty:input', { id, data: pendingInput })
+    clearPendingInput()
+  }, [pendingInput, ready, clearPendingInput])
 
   useEffect(() => {
     if (!open || !projectId || !containerRef.current) return
@@ -66,6 +79,8 @@ export function TerminalDrawer(): React.JSX.Element | null {
           return
         }
         sessionId = r.data.id
+        sessionRef.current = sessionId
+        setReady((n) => n + 1)
         for (const payload of early.splice(0)) {
           if (payload.slice(0, ID_LEN) === sessionId) term.write(payload.slice(ID_LEN))
         }
@@ -90,6 +105,7 @@ export function TerminalDrawer(): React.JSX.Element | null {
       dataSub.dispose()
       resizeObserver.disconnect()
       for (const u of unsubs) u()
+      sessionRef.current = null
       if (sessionId) void window.isomer.invoke('pty:kill', { id: sessionId })
       term.dispose()
     }

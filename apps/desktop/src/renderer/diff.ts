@@ -105,9 +105,9 @@ export function parseUnifiedDiff(raw: string): FileDiff[] {
     }
     const header = line.match(/^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/)
     if (header) {
-      if (cur.rows.length > 0) {
-        cur.rows.push({ kind: 'gap', oldNo: null, newNo: null, text: '' })
-      }
+      // Hunk boundary: a gap row that carries the header text (incl. the
+      // function context git appends after the second @@).
+      cur.rows.push({ kind: 'gap', oldNo: null, newNo: null, text: line })
       oldNo = Number(header[1])
       newNo = Number(header[2])
       continue
@@ -130,6 +130,8 @@ export function parseUnifiedDiff(raw: string): FileDiff[] {
 export interface SplitRow {
   left: (DiffCell & { kind: 'context' | 'del' }) | null
   right: (DiffCell & { kind: 'context' | 'add' }) | null
+  /** Set on hunk-boundary rows: the @@ header text. */
+  gap?: string
 }
 
 /** Align unified rows into two columns: context lines pair with themselves,
@@ -140,7 +142,7 @@ export function splitRows(rows: UnifiedRow[]): SplitRow[] {
   while (i < rows.length) {
     const r = rows[i]
     if (r.kind === 'gap') {
-      out.push({ left: null, right: null })
+      out.push({ left: null, right: null, gap: r.text })
       i++
       continue
     }
@@ -168,6 +170,61 @@ export function splitRows(rows: UnifiedRow[]): SplitRow[] {
             ? { kind: 'add', lineNo: adds[k].newNo as number, text: adds[k].text }
             : null,
       })
+    }
+  }
+  return out
+}
+
+/* ==== intraline (word-level) emphasis ==================================== */
+
+export type EmphRange = [number, number]
+
+/**
+ * Emphasis ranges for a del/add line pair: strip the common prefix and
+ * suffix, emphasize what actually changed. Returns null when the whole
+ * line changed (emphasis would just repaint the row) or nothing did.
+ */
+export function intraline(a: string, b: string): { a: EmphRange; b: EmphRange } | null {
+  if (a === b) return null
+  let p = 0
+  const max = Math.min(a.length, b.length)
+  while (p < max && a[p] === b[p]) p++
+  let sa = a.length
+  let sb = b.length
+  while (sa > p && sb > p && a[sa - 1] === b[sb - 1]) {
+    sa--
+    sb--
+  }
+  // Whitespace-only common ground (indentation) → the pair is a rewrite,
+  // not an edit; emphasizing everything after the indent is just noise.
+  const common = a.slice(0, p) + a.slice(sa)
+  if (common.trim() === '') return null
+  return { a: [p, sa], b: [p, sb] }
+}
+
+/**
+ * Pair del/add runs of a unified row list index-by-index (the same pairing
+ * splitRows uses) and compute each paired row's own emphasis range.
+ */
+export function emphasisRanges(rows: UnifiedRow[]): Map<number, EmphRange> {
+  const out = new Map<number, EmphRange>()
+  let i = 0
+  while (i < rows.length) {
+    if (rows[i].kind !== 'del') {
+      i++
+      continue
+    }
+    const dels: number[] = []
+    while (i < rows.length && rows[i].kind === 'del') dels.push(i++)
+    const adds: number[] = []
+    while (i < rows.length && rows[i].kind === 'add') adds.push(i++)
+    const n = Math.min(dels.length, adds.length)
+    for (let k = 0; k < n; k++) {
+      const e = intraline(rows[dels[k]].text, rows[adds[k]].text)
+      if (e) {
+        out.set(dels[k], e.a)
+        out.set(adds[k], e.b)
+      }
     }
   }
   return out

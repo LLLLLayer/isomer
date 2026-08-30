@@ -1,88 +1,297 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { FileDiff } from '../diff'
-import { splitRows } from '../diff'
-import { highlightLine, langFor } from '../highlight'
+import { ChevronDown, ChevronRight, Copy, MessageSquarePlus } from 'lucide-react'
+import type { Comment } from '../../shared/ism-types'
+import type { EmphRange, FileDiff, UnifiedRow } from '../diff'
+import { emphasisRanges, intraline, splitRows } from '../diff'
+import { highlightLineEmph, langFor } from '../highlight'
+import { useAppStore } from '../store/store'
 
-/** Shared renderer for full unified diffs (working tree and commits):
- * per-file cards, side-by-side or unified, context rows included. */
-export function DiffView({ files }: { files: FileDiff[] }): React.JSX.Element {
+/** Review affordances threaded into the diff: line anchoring for new
+ * comments plus inline threads under commented lines. */
+export interface ReviewHooks {
+  anchor: { path: string; line: number } | null
+  onAnchor: (path: string, line: number) => void
+  comments: Comment[]
+  onResolve: (id: string) => void
+  onReply: (parent: Comment, body: string) => void
+}
+
+/** The one diff renderer: split or unified (persisted preference), hunk
+ * header bars, intraline emphasis, selectable code, optional review hooks. */
+export function DiffView({
+  files,
+  review,
+}: {
+  files: FileDiff[]
+  review?: ReviewHooks
+}): React.JSX.Element {
   const { t } = useTranslation()
-  const [sideBySide, setSideBySide] = useState(true)
+  const layout = useAppStore((s) => s.settings.diffLayout)
+  const updateSettings = useAppStore((s) => s.updateSettings)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Threads keyed by path:line — top-level comments only; replies render
+  // inside their parent's thread wherever it is anchored.
+  const threads = useMemo(() => {
+    const map = new Map<string, Comment[]>()
+    for (const c of review?.comments ?? []) {
+      if (c.parent || !c.path || typeof c.line !== 'number') continue
+      const key = `${c.path}:${c.line}`
+      map.set(key, [...(map.get(key) ?? []), c])
+    }
+    return map
+  }, [review?.comments])
+
+  // Bring the anchored line into view (set from a comment or a click).
+  const anchorKey = review?.anchor ? `${review.anchor.path}:${review.anchor.line}` : null
+  useEffect(() => {
+    if (!anchorKey) return
+    containerRef.current
+      ?.querySelector(`[data-anchor="${CSS.escape(anchorKey)}"]`)
+      ?.scrollIntoView({ block: 'center' })
+  }, [anchorKey])
 
   if (files.length === 0) {
     return <p className="empty">{t('diff.empty')}</p>
   }
   return (
-    <div className="diff-view">
+    <div className="diff-view" ref={containerRef}>
       <div className="diff-toolbar">
         <span className="muted">{t('diff.files', { count: files.length })}</span>
         <span className="spacer" />
         <div className="segmented">
-          <button className={sideBySide ? 'active' : ''} onClick={() => setSideBySide(true)}>
+          <button
+            className={layout === 'split' ? 'active' : ''}
+            onClick={() => void updateSettings({ diffLayout: 'split' })}
+          >
             {t('review.sideBySide')}
           </button>
-          <button className={sideBySide ? '' : 'active'} onClick={() => setSideBySide(false)}>
+          <button
+            className={layout === 'unified' ? 'active' : ''}
+            onClick={() => void updateSettings({ diffLayout: 'unified' })}
+          >
             {t('review.unified')}
           </button>
         </div>
       </div>
-      {files.map((f) => {
-        const lang = langFor(f.path)
-        const hl = (text: string): { __html: string } => ({ __html: highlightLine(text, lang) })
+      {files.map((f) => (
+        <FileCard key={f.path} file={f} split={layout === 'split'} review={review} threads={threads} />
+      ))}
+    </div>
+  )
+}
+
+function FileCard({
+  file: f,
+  split,
+  review,
+  threads,
+}: {
+  file: FileDiff
+  split: boolean
+  review?: ReviewHooks
+  threads: Map<string, Comment[]>
+}): React.JSX.Element {
+  const [collapsed, setCollapsed] = useState(false)
+  const lang = langFor(f.path)
+  const emph = useMemo(() => emphasisRanges(f.rows), [f.rows])
+  const stat = useMemo(() => {
+    let add = 0
+    let del = 0
+    for (const r of f.rows) {
+      if (r.kind === 'add') add++
+      else if (r.kind === 'del') del++
+    }
+    return { add, del }
+  }, [f.rows])
+
+  const anchored = (line: number | null): boolean =>
+    review?.anchor?.path === f.path && review?.anchor?.line === line
+
+  const html = (text: string, range: EmphRange | null): { __html: string } => ({
+    __html: highlightLineEmph(text, lang, range),
+  })
+
+  /** The inline thread under a post-image line, if any. */
+  const threadAt = (line: number | null): Comment[] | null => {
+    if (line === null || !review) return null
+    return threads.get(`${f.path}:${line}`) ?? null
+  }
+
+  const linenoBtn = (line: number | null, key?: string): React.JSX.Element =>
+    review && line !== null ? (
+      <button
+        key={key}
+        className={`lineno clickable${anchored(line) ? ' anchored' : ''}`}
+        data-anchor={`${f.path}:${line}`}
+        onClick={() => review.onAnchor(f.path, line)}
+      >
+        <span className="lineno-num">{line}</span>
+        <MessageSquarePlus className="lineno-bubble" size={12} strokeWidth={2} />
+      </button>
+    ) : (
+      <span key={key} className="lineno">
+        {line ?? ''}
+      </span>
+    )
+
+  const inline = (line: number | null): React.JSX.Element | null => {
+    const thread = threadAt(line)
+    if (!thread || !review) return null
+    return (
+      <div className="inline-threads">
+        {thread.map((parent) => (
+          <InlineThread key={parent.id} parent={parent} review={review} />
+        ))}
+      </div>
+    )
+  }
+
+  const unifiedRow = (row: UnifiedRow, i: number): React.JSX.Element => {
+    if (row.kind === 'gap') {
+      return (
+        <div key={i} className="hunk-head mono">
+          {row.text}
+        </div>
+      )
+    }
+    const kind = row.kind === 'context' ? 'ctx' : row.kind
+    return (
+      <div key={i}>
+        <div className={`diff-row uni ${kind}${anchored(row.newNo) ? ' anchored' : ''}`}>
+          <span className="lineno">{row.oldNo ?? ''}</span>
+          {linenoBtn(row.newNo)}
+          <span className={`marker ${kind}`}>
+            {row.kind === 'add' ? '+' : row.kind === 'del' ? '-' : ''}
+          </span>
+          <span
+            className="code"
+            dangerouslySetInnerHTML={html(row.text, emph.get(i) ?? null)}
+          />
+        </div>
+        {inline(row.newNo)}
+      </div>
+    )
+  }
+
+  const splitBody = (): React.JSX.Element => (
+    <div className="diff-table split">
+      {splitRows(f.rows).map((row, i) => {
+        if (row.gap !== undefined) {
+          return (
+            <div key={i} className="hunk-head mono">
+              {row.gap}
+            </div>
+          )
+        }
+        const pair =
+          row.left?.kind === 'del' && row.right?.kind === 'add'
+            ? intraline(row.left.text, row.right.text)
+            : null
+        const line = row.right?.lineNo ?? null
         return (
-        <article key={f.path} className="diff-hunk">
-          <header className="diff-file">
-            <span className="hunk-id">{f.path}</span>
-          </header>
-          {f.note && <p className="diff-note muted">{f.note}</p>}
-          {!f.note && sideBySide && (
-            <div className="diff-table split">
-              {splitRows(f.rows).map((row, i) =>
-                row.left === null && row.right === null ? (
-                  <div key={i} className="diff-gap" />
-                ) : (
-                <div key={i} className="diff-split-row">
-                  <span className="lineno">{row.left?.lineNo ?? ''}</span>
-                  <span
-                    className={`code ${row.left ? (row.left.kind === 'del' ? 'del' : 'ctx') : 'void'}`}
-                    dangerouslySetInnerHTML={row.left ? hl(row.left.text) : undefined}
-                  />
-                  <span className="lineno">{row.right?.lineNo ?? ''}</span>
-                  <span
-                    className={`code ${row.right ? (row.right.kind === 'add' ? 'add' : 'ctx') : 'void'}`}
-                    dangerouslySetInnerHTML={row.right ? hl(row.right.text) : undefined}
-                  />
-                </div>
-                ),
-              )}
+          <div key={i}>
+            <div className={`diff-row split${anchored(line) ? ' anchored' : ''}`}>
+              <span className="lineno">{row.left?.lineNo ?? ''}</span>
+              <span
+                className={`code ${row.left ? (row.left.kind === 'del' ? 'del' : 'ctx') : 'void'}`}
+                dangerouslySetInnerHTML={row.left ? html(row.left.text, pair?.a ?? null) : undefined}
+              />
+              {linenoBtn(line)}
+              <span
+                className={`code ${row.right ? (row.right.kind === 'add' ? 'add' : 'ctx') : 'void'}`}
+                dangerouslySetInnerHTML={
+                  row.right ? html(row.right.text, pair?.b ?? null) : undefined
+                }
+              />
             </div>
-          )}
-          {!f.note && !sideBySide && (
-            <div className="diff-table unified">
-              {f.rows.map((row, i) =>
-                row.kind === 'gap' ? (
-                  <div key={i} className="diff-gap" />
-                ) : (
-                <div key={i} className="diff-uni-row">
-                  <span className="lineno">{row.oldNo ?? ''}</span>
-                  <span className="lineno">{row.newNo ?? ''}</span>
-                  <span
-                    className={`code ${row.kind === 'context' ? 'ctx' : row.kind}`}
-                    dangerouslySetInnerHTML={{
-                      __html:
-                        (row.kind === 'add' ? '+' : row.kind === 'del' ? '-' : ' ') +
-                        highlightLine(row.text, lang),
-                    }}
-                  />
-                </div>
-                ),
-              )}
-            </div>
-          )}
-        </article>
+            {inline(line)}
+          </div>
         )
       })}
+    </div>
+  )
+
+  return (
+    <article className="diff-hunk">
+      <header className="diff-file">
+        <button className="collapse-btn" onClick={() => setCollapsed(!collapsed)}>
+          {collapsed ? (
+            <ChevronRight size={13} strokeWidth={2} />
+          ) : (
+            <ChevronDown size={13} strokeWidth={2} />
+          )}
+        </button>
+        <span className="hunk-id">{f.path}</span>
+        <span className="spacer" />
+        <span className="linestat">
+          {stat.add > 0 && <span className="plus">+{stat.add}</span>}
+          {stat.del > 0 && <span className="minus">-{stat.del}</span>}
+        </span>
+      </header>
+      {!collapsed && f.note && <p className="diff-note muted">{f.note}</p>}
+      {!collapsed && !f.note && (split ? splitBody() : (
+        <div className="diff-table unified">{f.rows.map(unifiedRow)}</div>
+      ))}
+    </article>
+  )
+}
+
+/** One comment thread rendered under its anchored line. */
+function InlineThread({
+  parent,
+  review,
+}: {
+  parent: Comment
+  review: ReviewHooks
+}): React.JSX.Element {
+  const { t } = useTranslation()
+  const [reply, setReply] = useState('')
+  const replies = review.comments.filter((c) => c.parent === parent.id)
+  const item = (c: Comment): React.JSX.Element => (
+    <div key={c.id} className={`inline-comment${c.resolved ? ' resolved' : ''}`}>
+      <div className="comment-head">
+        <span className="author">{c.author_name}</span>
+        <span className="spacer" />
+        <button
+          className="icon-btn"
+          title={t('inspector.copy')}
+          onClick={() => void navigator.clipboard.writeText(c.body)}
+        >
+          <Copy size={12} strokeWidth={1.8} />
+        </button>
+        {!c.resolved && !c.parent && (
+          <button className="ghost-btn" onClick={() => review.onResolve(c.id)}>
+            {t('inspector.resolve')}
+          </button>
+        )}
+      </div>
+      <div className="comment-body">{c.body}</div>
+    </div>
+  )
+  return (
+    <div className="inline-thread">
+      {item(parent)}
+      {replies.map(item)}
+      <form
+        className="inline-reply"
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (reply.trim() === '') return
+          review.onReply(parent, reply)
+          setReply('')
+        }}
+      >
+        <input
+          value={reply}
+          onChange={(e) => setReply(e.target.value)}
+          placeholder={t('inspector.reply')}
+        />
+        <button type="submit" className="ghost-btn" disabled={reply.trim() === ''}>
+          {t('inspector.reply')}
+        </button>
+      </form>
     </div>
   )
 }

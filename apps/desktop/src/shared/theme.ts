@@ -8,6 +8,8 @@ export interface Settings {
   agentCommand: string
   /** Explicit ism binary path; empty = resolve from PATH. */
   ismPath: string
+  /** Preferred diff presentation, remembered across selections. */
+  diffLayout: 'split' | 'unified'
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -15,4 +17,5 @@ export const DEFAULT_SETTINGS: Settings = {
   language: 'en',
   agentCommand: 'claude',
   ismPath: '',
+  diffLayout: 'split',
 }

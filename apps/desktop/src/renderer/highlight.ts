@@ -89,6 +89,27 @@ export function highlightLine(text: string, lang: string | null): string {
   }
 }
 
+/**
+ * Highlight one line with an emphasized (intraline-changed) span. Each
+ * segment is highlighted independently — token boundaries can shift at the
+ * seams, an acceptable trade for keeping emphasis and safety composable.
+ */
+export function highlightLineEmph(
+  text: string,
+  lang: string | null,
+  emph: [number, number] | null,
+): string {
+  if (!emph || emph[0] >= emph[1]) return highlightLine(text, lang)
+  const [start, end] = emph
+  return (
+    highlightLine(text.slice(0, start), lang) +
+    '<span class="emph">' +
+    highlightLine(text.slice(start, end), lang) +
+    '</span>' +
+    highlightLine(text.slice(end), lang)
+  )
+}
+
 function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }

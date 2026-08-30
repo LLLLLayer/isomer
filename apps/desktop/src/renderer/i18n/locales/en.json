@@ -32,7 +32,12 @@
     "reply": "Reply",
     "addComment": "Comment",
     "unresolvedOnly": "Unresolved only",
-    "fixWithAgent": "Fix with agent"
+    "fixWithAgent": "Fix with agent",
+    "copy": "Copy",
+    "copyAll": "Copy all as Markdown",
+    "wholeChange": "whole change",
+    "replyTo": "Replying to {{author}}",
+    "agentPrompt": "Run ism comment list --unresolved, fix every unresolved review comment, then resolve them with ism comment resolve."
   },
   "terminal": {
     "title": "Terminal",
@@ -126,5 +131,11 @@
   "common": {
     "cancel": "Cancel",
     "ok": "OK"
+  },
+  "time": {
+    "now": "just now",
+    "minutes": "{{count}}m ago",
+    "hours": "{{count}}h ago",
+    "days": "{{count}}d ago"
   }
 }

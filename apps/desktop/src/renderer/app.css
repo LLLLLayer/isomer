@@ -286,11 +286,6 @@
   box-shadow: 0 1px 2px color-mix(in srgb, var(--fg) 14%, transparent);
 }
 
-.hunk-count {
-  font-size: 12px;
-  color: var(--fg-muted);
-  margin: 0 0 10px;
-}
 
 .hunk-list {
   list-style: none;
@@ -311,20 +306,7 @@
   background: var(--bg-raised);
 }
 
-.kind-pill {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  width: 34px;
-  text-align: center;
-  border-radius: var(--radius-s);
-  padding: 2px 0;
-}
 
-.kind-pill.add { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
-.kind-pill.del { color: var(--err); background: color-mix(in srgb, var(--err) 12%, transparent); }
-.kind-pill.mod { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
-.kind-pill.file { color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); }
 
 .hunk-id {
   font-family: var(--font-mono);
@@ -369,37 +351,101 @@
 .diff-table {
   font-family: var(--font-mono);
   font-size: 12px;
-  line-height: 1.55;
+  line-height: 1.6;
   overflow-x: auto;
+  user-select: text;
 }
 
-.diff-split-row {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 44px minmax(0, 1fr);
+.hunk-head {
+  padding: 4px 12px;
+  font-size: 11px;
+  color: var(--fg-muted);
+  background: var(--bg-raised);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: none;
 }
 
-.diff-uni-row {
+.diff-table > .hunk-head:first-child,
+.diff-table > div:first-child > .hunk-head {
+  border-top: none;
+}
+
+.diff-row {
   display: grid;
-  grid-template-columns: 44px 44px minmax(0, 1fr);
+}
+
+.diff-row.uni {
+  grid-template-columns: 44px 44px 20px minmax(0, 1fr);
+}
+
+.diff-row.split {
+  grid-template-columns: 44px minmax(0, 1fr) 52px minmax(0, 1fr);
+}
+
+.diff-row.uni.del {
+  background: color-mix(in srgb, var(--err) 8%, var(--bg));
+}
+
+.diff-row.uni.add {
+  background: color-mix(in srgb, var(--ok) 8%, var(--bg));
+}
+
+.diff-row.anchored {
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .lineno {
-  text-align: right;
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
   padding: 0 8px;
-  color: var(--fg-muted);
-  background: var(--bg-raised);
+  color: color-mix(in srgb, var(--fg-muted) 75%, transparent);
   user-select: none;
   border: none;
+  background: none;
   font: inherit;
+}
+
+.diff-row.uni.del .lineno {
+  background: color-mix(in srgb, var(--err) 7%, transparent);
+}
+
+.diff-row.uni.add .lineno {
+  background: color-mix(in srgb, var(--ok) 7%, transparent);
+}
+
+.diff-row.split .lineno:has(+ .code.del) {
+  background: color-mix(in srgb, var(--err) 14%, var(--bg));
+}
+
+.diff-row.split .lineno:has(+ .code.add) {
+  background: color-mix(in srgb, var(--ok) 14%, var(--bg));
 }
 
 button.lineno.clickable {
   cursor: pointer;
 }
 
-button.lineno.clickable:hover {
+button.lineno.clickable:hover .lineno-num {
+  visibility: hidden;
+}
+
+.lineno-bubble {
+  display: none;
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, var(--bg-raised));
+}
+
+button.lineno.clickable:hover .lineno-bubble {
+  display: inline;
 }
 
 button.lineno.anchored {
@@ -407,21 +453,136 @@ button.lineno.anchored {
   background: var(--accent);
 }
 
+button.lineno.anchored .lineno-bubble {
+  display: none;
+}
+
+button.lineno.anchored:hover .lineno-num {
+  visibility: visible;
+}
+
+.marker {
+  text-align: center;
+  user-select: none;
+  color: var(--fg-muted);
+}
+
+.marker.del {
+  color: var(--err);
+}
+
+.marker.add {
+  color: var(--ok);
+}
+
 .code {
   padding: 0 10px;
-  white-space: pre;
+  /* GitHub-style: wrap long lines (indentation preserved) instead of
+     bleeding into the neighbor column or forcing a horizontal scroll. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 .code.del {
-  background: color-mix(in srgb, var(--err) 9%, var(--bg));
+  background: color-mix(in srgb, var(--err) 8%, var(--bg));
 }
 
 .code.add {
-  background: color-mix(in srgb, var(--ok) 9%, var(--bg));
+  background: color-mix(in srgb, var(--ok) 8%, var(--bg));
 }
 
 .code.void {
-  background: color-mix(in srgb, var(--fg) 3%, var(--bg));
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      color-mix(in srgb, var(--fg) 4%, transparent) 0 1px,
+      transparent 1px 6px
+    ),
+    var(--bg-raised);
+}
+
+.code .emph,
+.diff-row.uni.del .emph,
+.diff-row.uni.add .emph {
+  border-radius: 2px;
+}
+
+.code.del .emph,
+.diff-row.uni.del .emph {
+  background: color-mix(in srgb, var(--err) 30%, transparent);
+}
+
+.code.add .emph,
+.diff-row.uni.add .emph {
+  background: color-mix(in srgb, var(--ok) 30%, transparent);
+}
+
+.collapse-btn {
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: none;
+  color: var(--fg-muted);
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Inline comment threads under their anchored lines. */
+.inline-threads {
+  font-family: var(--font-ui);
+  white-space: normal;
+  background: var(--bg-raised);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 12px;
+}
+
+.inline-thread {
+  max-width: 680px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-l);
+  overflow: hidden;
+}
+
+.inline-thread + .inline-thread {
+  margin-top: 8px;
+}
+
+.inline-comment {
+  padding: 8px 12px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.inline-comment.resolved {
+  opacity: 0.55;
+}
+
+.inline-reply {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  align-items: center;
+}
+
+.inline-reply input {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--fg);
+  font-size: 12px;
+  padding: 4px 8px;
+  outline: none;
+}
+
+.inline-reply input:focus {
+  border-color: var(--accent);
 }
 
 .anchor-chip {
@@ -451,14 +612,59 @@ button.lineno.anchored {
 
 /* ==== inspector ========================================================= */
 
-.inspector section h3 {
+.pane.inspector {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+.pane.inspector > .pane-title {
+  flex: none;
+}
+
+.inspector-tools {
   display: flex;
   align-items: center;
+  gap: 8px;
+  flex: none;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.inspector-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 2px 10px 0;
+  min-height: 0;
+}
+
+.inspector .empty {
+  padding: 24px 8px;
+}
+
+.comment-anchor {
+  align-self: flex-start;
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
   color: var(--fg-muted);
-  margin: 0 0 10px;
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+  border: none;
+  border-radius: var(--radius-s);
+  padding: 1px 6px;
+  cursor: pointer;
+}
+
+.comment-anchor:hover {
+  color: var(--accent);
+}
+
+.comment-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.comment-head .time {
+  font-size: 10.5px;
 }
 
 .toggle-label {
@@ -519,17 +725,15 @@ input[type='checkbox'] {
   font-weight: 600;
 }
 
-.comment-head .anchor {
-  font-family: var(--font-mono);
-  color: var(--fg-muted);
-}
-
 .comment-body {
   font-size: 12.5px;
   line-height: 1.45;
 }
 
 .ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   align-self: flex-start;
   background: none;
   border: 1px solid var(--border);
@@ -546,10 +750,12 @@ input[type='checkbox'] {
 }
 
 .comment-form {
-  margin-top: 12px;
+  flex: none;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding: 10px 0 14px;
+  border-top: 1px solid var(--border);
 }
 
 .comment-form textarea {
@@ -1017,23 +1223,6 @@ input[type='checkbox'] {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-}
-
-.code.ctx {
-  background: var(--bg);
-  color: var(--fg);
-}
-
-.diff-gap {
-  height: 10px;
-  background:
-    repeating-linear-gradient(
-      to right,
-      var(--border) 0 6px,
-      transparent 6px 12px
-    )
-    center / 100% 1px no-repeat,
-    var(--bg-raised);
 }
 
 /* ==== fork-style toolbar ================================================ */

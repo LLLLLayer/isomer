@@ -4,6 +4,7 @@ import type { Comment, Snapshot } from '../../shared/ism-types'
 import type { AppError } from '../../shared/result'
 import type { Settings } from '../../shared/theme'
 import { DEFAULT_SETTINGS } from '../../shared/theme'
+import i18next from 'i18next'
 import { setLanguage } from '../i18n'
 import { storage } from '../storage'
 
@@ -45,6 +46,8 @@ export interface AppState {
   commentAnchor: { path: string; line: number } | null
   terminalOpen: boolean
   terminalDock: 'bottom' | 'right'
+  /** Text queued for the terminal (agent summon); sent once a pty exists. */
+  pendingTerminalInput: string | null
   settingsOpen: boolean
   lastError: AppError | null
 
@@ -77,6 +80,9 @@ export interface AppState {
   resolveComment(id: string): Promise<void>
   toggleTerminal(): void
   setTerminalDock(dock: 'bottom' | 'right'): void
+  /** Open the terminal pre-filled with the agent command + fix prompt. */
+  summonAgent(): void
+  clearPendingTerminalInput(): void
   openSettings(): void
   closeSettings(): void
   setError(error: AppError): void
@@ -111,6 +117,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   commentAnchor: null,
   terminalOpen: false,
   terminalDock: storage.get('terminalDock') === 'right' ? 'right' : 'bottom',
+  pendingTerminalInput: null,
   settingsOpen: false,
   lastError: null,
 
@@ -427,6 +434,17 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   toggleTerminal() {
     set({ terminalOpen: !get().terminalOpen })
+  },
+
+  summonAgent() {
+    const cmd = get().settings.agentCommand.trim() || 'claude'
+    const prompt = i18next.t('inspector.agentPrompt')
+    // Pre-fill, never execute: the user reviews and presses Enter.
+    set({ pendingTerminalInput: `${cmd} "${prompt}"`, terminalOpen: true })
+  },
+
+  clearPendingTerminalInput() {
+    set({ pendingTerminalInput: null })
   },
 
   setTerminalDock(dock) {

@@ -32,7 +32,12 @@
     "reply": "回复",
     "addComment": "评论",
     "unresolvedOnly": "只看未解决",
-    "fixWithAgent": "让 agent 修复"
+    "fixWithAgent": "让 agent 修复",
+    "copy": "复制",
+    "copyAll": "以 Markdown 复制全部",
+    "wholeChange": "整个变更",
+    "replyTo": "回复 {{author}}",
+    "agentPrompt": "运行 ism comment list --unresolved，修复所有未解决的评审评论，完成后用 ism comment resolve 标记解决。"
   },
   "terminal": {
     "title": "终端",
@@ -126,5 +131,11 @@
   "common": {
     "cancel": "取消",
     "ok": "确定"
+  },
+  "time": {
+    "now": "刚刚",
+    "minutes": "{{count}} 分钟前",
+    "hours": "{{count}} 小时前",
+    "days": "{{count}} 天前"
   }
 }
