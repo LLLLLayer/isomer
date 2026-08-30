@@ -9,6 +9,8 @@ export function StackView(): React.JSX.Element {
   const comments = useAppStore((s) => s.comments)
   const selected = useAppStore((s) => s.selectedChangeId)
   const selectChange = useAppStore((s) => s.selectChange)
+  const selectedCommit = useAppStore((s) => s.selectedCommit)
+  const selectCommit = useAppStore((s) => s.selectCommit)
 
   if (!snapshot || snapshot.commits.length === 0) {
     // On the trunk there is no pending stack; show recent history instead —
@@ -20,13 +22,16 @@ export function StackView(): React.JSX.Element {
         <ol className="stack-list">
           {log.map((e) => (
             <li key={e.sha}>
-              <div className="change-card static">
+              <button
+                className={`change-card${e.sha === selectedCommit ? ' active' : ''}`}
+                onClick={() => void selectCommit(e.sha)}
+              >
                 <span className="summary">{e.title}</span>
                 <span className="badges">
                   <span className="chip">{e.changeId ?? t('stack.untracked')}</span>
                   <span className="sha">{e.sha.slice(0, 8)}</span>
                 </span>
-              </div>
+              </button>
             </li>
           ))}
         </ol>

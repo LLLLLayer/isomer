@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { parseHunkPatch, sideBySideRows } from '../diff'
+import { parseHunkPatch, parseUnifiedDiff, sideBySideRows } from '../diff'
 import { highlightLine, langFor } from '../highlight'
 import { useAppStore } from '../store/store'
+import { DiffView } from './DiffView'
 
 /** CR area: real diff text per hunk, side-by-side or unified. Clicking a
  * new-side line number anchors the next comment to path:line. */
@@ -15,6 +16,22 @@ export function ReviewView(): React.JSX.Element {
   const setCommentAnchor = useAppStore((s) => s.setCommentAnchor)
   const [sideBySide, setSideBySide] = useState(true)
 
+  const fallback = snapshot !== null && snapshot.commits.length === 0
+  const selectedCommit = useAppStore((s) => s.selectedCommit)
+  const commitDiffText = useAppStore((s) => s.commitDiffText)
+  if (fallback && selectedCommit) {
+    // No pending stack: reviewing history — show the picked commit's diff.
+    return (
+      <section className="pane review">
+        <header className="pane-title">{t('review.title')}</header>
+        {commitDiffText === null ? (
+          <p className="empty">…</p>
+        ) : (
+          <DiffView files={parseUnifiedDiff(commitDiffText)} />
+        )}
+      </section>
+    )
+  }
   const commit = snapshot?.commits.find((c) => c.sha === selected)
   if (!snapshot || !commit) {
     return (

@@ -14,8 +14,13 @@ export function Inspector(): React.JSX.Element {
   const [draft, setDraft] = useState('')
   const [unresolvedOnly, setUnresolvedOnly] = useState(false)
 
+  const log = useAppStore((s) => s.log)
+  const selectedCommit = useAppStore((s) => s.selectedCommit)
+  const fallback = snapshot !== null && snapshot.commits.length === 0
   const commit = snapshot?.commits.find((c) => c.sha === selected)
-  const changeId = commit?.change_id ?? null
+  const changeId = fallback
+    ? (log.find((e) => e.sha === selectedCommit)?.changeId ?? null)
+    : (commit?.change_id ?? null)
   // No selection ⇒ all comments; a selected but untracked commit has no
   // identity, so nothing can be anchored to it.
   const filtered = (commit && !changeId ? [] : comments)
