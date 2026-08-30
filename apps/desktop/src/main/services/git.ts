@@ -593,6 +593,18 @@ export class GitService {
     return this.simple(cwd, ['add', '--', path])
   }
 
+  /** Commit body without the Isomer-Change trailer (it rides in the PR
+   * body's own identity marker instead). */
+  async commitBody(cwd: string, sha: string): Promise<string> {
+    const r = await this.run(cwd, ['show', '-s', '--format=%b', sha])
+    if (r.code !== 0) return ''
+    return r.stdout
+      .split('\n')
+      .filter((l) => !/^Isomer-Change:/.test(l))
+      .join('\n')
+      .trim()
+  }
+
   async branchCompare(cwd: string, branch: string): Promise<Result<BranchCompare>> {
     const fmt = `--format=${LOG_FORMAT}`
     const [ahead, behind] = await Promise.all([
