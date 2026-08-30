@@ -97,6 +97,36 @@ pub fn check(git: &Git, plan: &Plan, analysis: &Analysis) -> Result<CheckedPlan>
                 "node summary must not be empty".into(),
             ));
         }
+        // Message hygiene: the summary is one line, and neither field may
+        // smuggle an identity trailer (it would corrupt trailer parsing on
+        // the materialized commit) or a NUL (git rejects it).
+        if node.summary.contains('\n') {
+            return Err(IsmError::PlanSchema(format!(
+                "node summary must be a single line: {:?}",
+                node.summary
+            )));
+        }
+        let trailer_prefix = format!("{TRAILER_KEY}:");
+        for (field, text) in [
+            ("summary", Some(&node.summary)),
+            ("body", node.body.as_ref()),
+        ] {
+            let Some(text) = text else { continue };
+            if text.contains('\0') {
+                return Err(IsmError::PlanSchema(format!(
+                    "node {field} must not contain NUL bytes"
+                )));
+            }
+            if text
+                .lines()
+                .any(|l| l.trim_start().starts_with(&trailer_prefix))
+            {
+                return Err(IsmError::PlanSchema(format!(
+                    "node {field} must not contain an {TRAILER_KEY} trailer line; \
+use the `change` field to assign identity"
+                )));
+            }
+        }
         if let Some(c) = &node.change {
             if !is_valid_change_id(c) {
                 return Err(IsmError::PlanSchema(format!("invalid change id: {c}")));
@@ -178,6 +208,15 @@ pub fn check(git: &Git, plan: &Plan, analysis: &Analysis) -> Result<CheckedPlan>
                 v
             }
         };
+        if hunk_idxs.is_empty() {
+            return Err(IsmError::PlanSchema(format!(
+                "node {} resolves to zero hunks; empty commits are not a thing ism creates",
+                node.name
+                    .clone()
+                    .or_else(|| node.change.clone())
+                    .unwrap_or_default()
+            )));
+        }
         raw_nodes.push(RawNode { node, hunk_idxs });
     }
 

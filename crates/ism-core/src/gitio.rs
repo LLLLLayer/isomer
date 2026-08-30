@@ -275,8 +275,8 @@ impl Git {
         if sign {
             args.push("-S".into());
         }
-        args.push("-m".into());
-        args.push(message.into());
+        // Message via stdin: -m puts it in argv, which dies on ARG_MAX for
+        // large bodies — violating "check passed => apply succeeds".
         let argrefs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
         let mut envs: Vec<(&str, &str)> = Vec::new();
         if let Some((name, email, date)) = author {
@@ -284,13 +284,15 @@ impl Git {
             envs.push(("GIT_AUTHOR_EMAIL", email));
             envs.push(("GIT_AUTHOR_DATE", date));
         }
-        let out = self.run_with(&argrefs, None, &envs).map_err(|e| {
-            if sign {
-                IsmError::SigningFailed(e.to_string())
-            } else {
-                e
-            }
-        })?;
+        let out = self
+            .run_with(&argrefs, Some(message.as_bytes()), &envs)
+            .map_err(|e| {
+                if sign {
+                    IsmError::SigningFailed(e.to_string())
+                } else {
+                    e
+                }
+            })?;
         Ok(String::from_utf8_lossy(&out).trim().to_string())
     }
 

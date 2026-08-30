@@ -80,6 +80,11 @@ To see actual patch text: `ism show hunk <id>...` or `ism inspect --full`.
 - `deps` are *soft* (semantic) dependencies for narrative ordering; hard
   dependencies from `inspect` are enforced regardless.
 - To preserve an existing change identity, set `"change": "i-xxxxxxxx"`.
+  Identity is otherwise inherited only when a node owns ALL hunks of one
+  source commit; splitting a commit mints fresh ids for both halves.
+- Hygiene rules (E001): `summary` is a single line; never write an
+  `Isomer-Change:` line inside `summary`/`body` (quote ids inline instead);
+  every node must resolve to at least one hunk.
 
 Craft the narrative like a reviewer will read it commit by commit:
 independent concerns in separate nodes, mechanical churn separated from
