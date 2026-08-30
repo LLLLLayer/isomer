@@ -53,14 +53,36 @@ git rev-parse <new-head>^{tree}     # equal ⇒ code untouched
 - Narrative quality depends on your agent; `ism` guarantees invalid plans
   cannot execute, not that valid plans are wise.
 
+## Desktop app
+
+`apps/desktop` is a full Electron client built on the same contract — it
+talks to ism exclusively by spawning the CLI and parsing its JSON:
+
+- A Fork-class git client: staging down to the hunk, stash management,
+  merge/rebase with a conflict flow, cherry-pick/revert, tags, branch
+  compare, file history and blame, repo-wide search, reflog, a real commit
+  graph, and a Cmd+P quick launcher.
+- The **stack editor**: draft changes seeded from your pending commits, hunks
+  dragged between them, validated by the CLI's full R1–R8 check ("check
+  passed ⇒ apply succeeds"), applied with the tree-equality proof shown
+  in the UI — provably safe interactive rebase.
+- Review built in: select code to comment in place; comments anchor to
+  change identities (not shas) and feed agent fix loops via
+  `ism comment list --unresolved`.
+
+Download the latest build from
+[Releases](https://github.com/LLLLLayer/isomer/releases) (macOS arm64 dmg/zip
+plus the CLI tarball); the app checks for new releases and offers the
+download itself.
+
 ## Status
 
 The core engine and CLI are implemented with end-to-end tests: the
 reorganization loop, review comments anchored to change identities
-(`ism comment add/list/resolve`), and the embedded agent skill
-(`ism skill install`). An Electron desktop app scaffold lives in
-`apps/desktop`. Publishing (`submit`) and trunk sync (`sync`) are on the
-roadmap.
+(`ism comment add/list/resolve`), the op-log reader (`ism ops`), and the
+embedded agent skill (`ism skill install`). The desktop app above ships from
+this repo's release pipeline. Publishing (`submit`) and trunk sync (`sync`)
+are on the roadmap.
 
 ## License
 
