@@ -1,33 +1,85 @@
 {
   "kind": "apply",
-  "branch": "main",
-  "old_head": "4e2c717b20fb371c507f865070d72afcddf4e8d9",
-  "new_head": "f19014fceb8a5d3d6b757d52083a829fca7c92e0",
-  "base": "4afaeba4f7672adeb845291ec3fc508beeb8d831",
-  "old_tree": "a5c42a0d1382d493f8b397e9b4ab3745b3fae875",
-  "new_tree": "a5c42a0d1382d493f8b397e9b4ab3745b3fae875",
-  "plan_digest": "sha256:f5cdf2f1f1380cdca7a491cb818c03aad7da14faa120d1e841d12a634acd6418",
-  "snapshot_digest": "sha256:0bb91348ec2974bfc0ccf6c3e5d75a9d567dc3b0eeb0d0b473022dfffe13d296",
+  "branch": "feat/stack-evidence",
+  "old_head": "1f3982f2dc6d90617d9de62b765462b2c3f58b66",
+  "new_head": "48b2affa737904caca6df8211aed2c6abee91d71",
+  "base": "f19014fceb8a5d3d6b757d52083a829fca7c92e0",
+  "old_tree": "20ce5ea6e821f16c4c36cb7a2492a2dcf7f54aaf",
+  "new_tree": "20ce5ea6e821f16c4c36cb7a2492a2dcf7f54aaf",
+  "plan_digest": "sha256:12b8b197fc06bad5fe6ae51af27bfed682e8e507ac9d40e10d8bffaa8c7fdc6f",
+  "snapshot_digest": "sha256:84e8b19b797fda6b9a1d84f6635934f7d1e0ceb05ac91f56d634c6b9e8aefecd",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:0bb91348ec2974bfc0ccf6c3e5d75a9d567dc3b0eeb0d0b473022dfffe13d296",
-    "base": "4afaeba4f7672adeb845291ec3fc508beeb8d831",
-    "head": "4e2c717b20fb371c507f865070d72afcddf4e8d9",
+    "snapshot_digest": "sha256:84e8b19b797fda6b9a1d84f6635934f7d1e0ceb05ac91f56d634c6b9e8aefecd",
+    "base": "f19014fceb8a5d3d6b757d52083a829fca7c92e0",
+    "head": "1f3982f2dc6d90617d9de62b765462b2c3f58b66",
     "nodes": [
       {
-        "name": "claude-md-increments",
-        "summary": "docs: CLAUDE.md learns releasing, updates.ts, and the E010 trap",
+        "name": "dep-and-proof-model",
+        "summary": "Lift hunk deps to change edges; bottle the proof",
         "from": [
-          "CLAUDE.md:36#aedd",
-          "CLAUDE.md:64#00e2",
-          "CLAUDE.md:80#cec1"
+          "apps/desktop/src/renderer/proof.test.ts:1#4d96",
+          "apps/desktop/src/renderer/proof.ts:1#d9c2",
+          "apps/desktop/src/renderer/stackdeps.test.ts:1#3fea",
+          "apps/desktop/src/renderer/stackdeps.ts:1#06af"
+        ]
+      },
+      {
+        "name": "stack-view-evidence",
+        "summary": "The stack shows its evidence: edges, proof, approvals",
+        "from": [
+          "apps/desktop/src/renderer/app.css:242#0687",
+          "apps/desktop/src/renderer/components/StackView.tsx:1#cbb0",
+          "apps/desktop/src/renderer/components/StackView.tsx:3#42b5",
+          "apps/desktop/src/renderer/components/StackView.tsx:14#3ee5",
+          "apps/desktop/src/renderer/components/StackView.tsx:19#d802",
+          "apps/desktop/src/renderer/components/StackView.tsx:28#933c",
+          "apps/desktop/src/renderer/components/StackView.tsx:59#5cdf",
+          "apps/desktop/src/renderer/components/StackView.tsx:64#9ce7",
+          "apps/desktop/src/renderer/components/StackView.tsx:72#a032",
+          "apps/desktop/src/renderer/components/StackView.tsx:79#2237",
+          "apps/desktop/src/renderer/components/StackView.tsx:97#6801",
+          "apps/desktop/src/renderer/components/StackView.tsx:101#f992",
+          "apps/desktop/src/renderer/components/StackView.tsx:108#6787",
+          "apps/desktop/src/renderer/components/StackView.tsx:142#8269",
+          "apps/desktop/src/renderer/i18n/locales/en.json:20#9f16",
+          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:20#f48d",
+          "apps/desktop/src/renderer/store/store.ts:52#ae9b",
+          "apps/desktop/src/renderer/store/store.ts:102#48b7",
+          "apps/desktop/src/renderer/store/store.ts:118#b7a9",
+          "apps/desktop/src/renderer/store/store.ts:170#82d2",
+          "apps/desktop/src/renderer/store/store.ts:246#dc5d",
+          "apps/desktop/src/renderer/store/store.ts:529#889c"
+        ]
+      },
+      {
+        "name": "organize-live-advisory",
+        "summary": "Organize warns before the check would fail",
+        "from": [
+          "apps/desktop/src/renderer/components/OrganizeView.tsx:4#cb21",
+          "apps/desktop/src/renderer/components/OrganizeView.tsx:8#7a0a",
+          "apps/desktop/src/renderer/components/OrganizeView.tsx:19#eee9",
+          "apps/desktop/src/renderer/components/OrganizeView.tsx:76#82b9",
+          "apps/desktop/src/renderer/components/OrganizeView.tsx:124#56ea",
+          "apps/desktop/src/renderer/components/OrganizeView.tsx:218#f6b9",
+          "apps/desktop/src/renderer/components/OrganizeView.tsx:292#9a46",
+          "apps/desktop/src/renderer/components/OrganizeView.tsx:296#8d21",
+          "apps/desktop/src/renderer/components/OrganizeView.tsx:329#6977",
+          "apps/desktop/src/renderer/components/OrganizeView.tsx:396#1b8e",
+          "apps/desktop/src/renderer/components/OrganizeView.tsx:398#0c81",
+          "apps/desktop/src/renderer/components/OrganizeView.tsx:457#df9a",
+          "apps/desktop/src/renderer/components/OrganizeView.tsx:464#bfdb",
+          "apps/desktop/src/renderer/i18n/locales/en.json:285#77a2",
+          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:285#963f"
         ]
       }
     ],
     "order": [
-      "claude-md-increments"
+      "dep-and-proof-model",
+      "stack-view-evidence",
+      "organize-live-advisory"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788111187"
+  "timestamp": "1788112524"
 }
