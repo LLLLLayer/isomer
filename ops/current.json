@@ -1,38 +1,33 @@
 {
   "kind": "apply",
   "branch": "main",
-  "old_head": "8a4fb7ac25b9a399c34666beb1cb37a1c70e01a6",
-  "new_head": "4afaeba4f7672adeb845291ec3fc508beeb8d831",
-  "base": "d34c23ec74a4e9bd0bd04241647c2be9ae6a3312",
-  "old_tree": "cc6581ea01c7c34ede3ff4b421d4301bf032fff0",
-  "new_tree": "cc6581ea01c7c34ede3ff4b421d4301bf032fff0",
-  "plan_digest": "sha256:8295b42bc72ff445de26ee1129180160136895b576a808eb7cc2bb042e046df6",
-  "snapshot_digest": "sha256:d501b21b7f55843956c47e20327d6ae2d15b10fff219fbdf3bc861c15056723d",
+  "old_head": "4e2c717b20fb371c507f865070d72afcddf4e8d9",
+  "new_head": "f19014fceb8a5d3d6b757d52083a829fca7c92e0",
+  "base": "4afaeba4f7672adeb845291ec3fc508beeb8d831",
+  "old_tree": "a5c42a0d1382d493f8b397e9b4ab3745b3fae875",
+  "new_tree": "a5c42a0d1382d493f8b397e9b4ab3745b3fae875",
+  "plan_digest": "sha256:f5cdf2f1f1380cdca7a491cb818c03aad7da14faa120d1e841d12a634acd6418",
+  "snapshot_digest": "sha256:0bb91348ec2974bfc0ccf6c3e5d75a9d567dc3b0eeb0d0b473022dfffe13d296",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:d501b21b7f55843956c47e20327d6ae2d15b10fff219fbdf3bc861c15056723d",
-    "base": "d34c23ec74a4e9bd0bd04241647c2be9ae6a3312",
-    "head": "8a4fb7ac25b9a399c34666beb1cb37a1c70e01a6",
+    "snapshot_digest": "sha256:0bb91348ec2974bfc0ccf6c3e5d75a9d567dc3b0eeb0d0b473022dfffe13d296",
+    "base": "4afaeba4f7672adeb845291ec3fc508beeb8d831",
+    "head": "4e2c717b20fb371c507f865070d72afcddf4e8d9",
     "nodes": [
       {
-        "name": "docs-catch-up",
-        "summary": "docs: the words catch up with the product",
+        "name": "claude-md-increments",
+        "summary": "docs: CLAUDE.md learns releasing, updates.ts, and the E010 trap",
         "from": [
-          "CLAUDE.md:21#a6d7",
-          "CLAUDE.md:31#2343",
-          "CLAUDE.md:65#4729",
-          "README.md:56#0088",
-          "README.md:82#e1a0",
-          "apps/desktop/README.md:1#67fc",
-          "crates/ism-cli/skill/SKILL.md:110#f7a2",
-          "skills/ism/SKILL.md:110#523a"
+          "CLAUDE.md:36#aedd",
+          "CLAUDE.md:64#00e2",
+          "CLAUDE.md:80#cec1"
         ]
       }
     ],
     "order": [
-      "docs-catch-up"
+      "claude-md-increments"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788110841"
+  "timestamp": "1788111187"
 }
