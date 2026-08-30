@@ -1,0 +1,6 @@
+{
+  "id": "i-6g2xzmgz",
+  "name": "layout-containment",
+  "summary": "Own the window: the shell never scrolls or under-fills",
+  "body": "Two related layout escapes: xterm's first fit in an unconstrained\ncontainer pushed the shell into document scrolling, and the previous\npatch's html/body/#root height rule missed its anchor silently, so\nthe shell sized to content and left a dead band under the statusbar.\nThe height chain now lives in tokens.css (asserted on edit), every\nfixed-size wrapper is a .pane-wrap with a complete min-size chain,\nand each region scrolls only inside itself."
+}

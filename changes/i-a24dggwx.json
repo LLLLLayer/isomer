@@ -1,0 +1,9 @@
+{
+  "id": "i-a24dggwx",
+  "name": "branch-menu",
+  "summary": "Branch context menu: checkout, create, rename, delete, copy",
+  "body": "Right-click a branch for the essentials (double-click checks out).\nCreate and rename prompt inline; delete confirms while showing the\nexact git command it will run — transparency as a feature. All ops\nspawn real git, surface stderr on failure, and refresh through the\nwatcher path.",
+  "deps": [
+    "file-list-views"
+  ]
+}

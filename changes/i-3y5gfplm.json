@@ -1,0 +1,9 @@
+{
+  "id": "i-3y5gfplm",
+  "name": "file-list-views",
+  "summary": "Fork's file-list vocabulary: Tree, List, Combined List",
+  "body": "A view-options menu on the changes list switches between a\ncollapsible file tree (folder glyphs, chevrons, per-file status\nbadges), Fork's default name-plus-dimmed-directory list, and the\nfull-path combined list; the choice persists. The commit detail's\nFile Tree tab is now interactive: pick a file, see its diff beside\nthe tree. Sidebar labels no longer wrap.",
+  "deps": [
+    "layout-containment"
+  ]
+}
