@@ -37,7 +37,9 @@ fn file_entry(git: &Git, rev: &str, path: &str) -> Result<Option<(String, String
             for line in text.lines() {
                 if let Some((meta, _name)) = line.split_once('\t') {
                     let parts: Vec<&str> = meta.split_whitespace().collect();
-                    if parts.len() == 3 && parts[1] == "blob" {
+                    // "blob" for files, "commit" for submodule gitlinks —
+                    // both carry a (mode, sha) pair the tree writer can use.
+                    if parts.len() == 3 && (parts[1] == "blob" || parts[1] == "commit") {
                         return Ok(Some((parts[0].to_string(), parts[2].to_string())));
                     }
                 }

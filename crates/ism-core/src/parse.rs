@@ -63,6 +63,8 @@ pub fn parse_diff(raw: &[u8]) -> Result<Vec<FileDiff>> {
     let lines = split_lines(raw);
     let mut files: Vec<FileDiff> = Vec::new();
     let mut cur: Option<FileDiff> = None;
+    // Old-side path from "--- a/<p>", used when the new side is /dev/null.
+    let mut old_path: Option<String> = None;
     let mut i = 0;
 
     while i < lines.len() {
@@ -73,7 +75,11 @@ pub fn parse_diff(raw: &[u8]) -> Result<Vec<FileDiff>> {
             if let Some(f) = cur.take() {
                 files.push(f);
             }
-            // Path from `diff --git a/<p> b/<p>` — take everything after " b/".
+            old_path = None;
+            // Provisional path from `diff --git a/<p> b/<p>`. This heuristic is
+            // ambiguous when the path itself contains " b/", so text diffs
+            // override it below from the unambiguous `---`/`+++` lines; it
+            // remains the anchor only for binary entries (which lack those).
             let path = text
                 .rfind(" b/")
                 .map(|idx| text[idx + 3..].to_string())
@@ -110,15 +116,25 @@ pub fn parse_diff(raw: &[u8]) -> Result<Vec<FileDiff>> {
             if let Some(mode) = parts.next() {
                 f.new_mode = mode.to_string();
                 f.old_mode = mode.to_string();
+                if mode == "160000" {
+                    // Submodule gitlink: no line content to reason about.
+                    f.degraded = true;
+                }
             }
         } else if let Some(m) = text.strip_prefix("new file mode ") {
             f.is_new = true;
             f.new_mode = m.trim().to_string();
             f.old_mode = "000000".into();
+            if f.new_mode == "160000" {
+                f.degraded = true;
+            }
         } else if let Some(m) = text.strip_prefix("deleted file mode ") {
             f.is_deleted = true;
             f.old_mode = m.trim().to_string();
             f.new_mode = "000000".into();
+            if f.old_mode == "160000" {
+                f.degraded = true;
+            }
         } else if let Some(m) = text.strip_prefix("old mode ") {
             f.old_mode = m.trim().to_string();
             f.degraded = true; // mode change → whole-file unit
@@ -127,6 +143,19 @@ pub fn parse_diff(raw: &[u8]) -> Result<Vec<FileDiff>> {
             f.degraded = true;
         } else if text.starts_with("Binary files ") || text.starts_with("GIT binary patch") {
             f.degraded = true;
+        } else if let Some(rest) = text.strip_prefix("--- ") {
+            if let Some(op) = rest.strip_prefix("a/") {
+                old_path = Some(op.to_string());
+            }
+        } else if let Some(rest) = text.strip_prefix("+++ ") {
+            // The authoritative path (with --no-renames both sides agree).
+            if let Some(np) = rest.strip_prefix("b/") {
+                f.path = np.to_string();
+            } else if rest == "/dev/null" {
+                if let Some(op) = old_path.take() {
+                    f.path = op;
+                }
+            }
         } else if text.starts_with("@@ ") {
             // "@@ -a[,b] +c[,d] @@ ..."
             let header = text
@@ -147,26 +176,40 @@ pub fn parse_diff(raw: &[u8]) -> Result<Vec<FileDiff>> {
             let (Some((os, ol)), Some((ns, nl))) = (old, new) else {
                 return Err(IsmError::Internal(format!("bad hunk header: {text}")));
             };
+            // Consume EXACTLY the line counts the header declares. Sniffing
+            // prefixes instead would misread content lines that look like
+            // file headers (e.g. a removed `-- SQL comment` renders as
+            // `--- SQL comment`) and silently truncate the hunk.
             let mut removed = Vec::new();
             let mut added = Vec::new();
             i += 1;
             while i < lines.len() {
                 let l = lines[i];
-                if l.first() == Some(&b'-') && !l.starts_with(b"--- ") {
-                    removed.push(l[1..].to_vec());
-                } else if l.first() == Some(&b'+') && !l.starts_with(b"+++ ") {
-                    added.push(l[1..].to_vec());
-                } else if l.starts_with(b"\\ No newline") {
-                    // Missing trailing newline anywhere in the hunk → degrade
-                    // the file; whole-file replay is byte-exact by construction.
+                if l.first() == Some(&b'\\') {
+                    // "\ No newline at end of file" → degrade the file;
+                    // whole-file replay is byte-exact by construction.
                     f.degraded = true;
+                } else if l.first() == Some(&b'-') && (removed.len() as u32) < ol {
+                    removed.push(l[1..].to_vec());
+                } else if l.first() == Some(&b'+') && (added.len() as u32) < nl {
+                    added.push(l[1..].to_vec());
                 } else {
                     break;
                 }
                 i += 1;
             }
-            debug_assert!(removed.len() as u32 == ol || f.degraded);
-            debug_assert!(added.len() as u32 == nl || f.degraded);
+            if removed.len() as u32 != ol || added.len() as u32 != nl {
+                return Err(IsmError::Internal(format!(
+                    "malformed hunk for {}: header -{},{} +{},{} but body has {}/{} lines",
+                    f.path,
+                    os,
+                    ol,
+                    ns,
+                    nl,
+                    removed.len(),
+                    added.len()
+                )));
+            }
             f.hunks.push(RawHunk {
                 old_start: os,
                 old_len: ol,
@@ -185,10 +228,17 @@ pub fn parse_diff(raw: &[u8]) -> Result<Vec<FileDiff>> {
     Ok(files)
 }
 
-/// Extract all `Isomer-Change:` trailer values from a commit message.
+/// Extract `Isomer-Change:` trailer values from a commit message.
+/// Git trailer semantics: only the final paragraph counts — a change id
+/// quoted in the body must never read as an identity.
 pub fn parse_change_trailers(message: &str) -> Vec<String> {
     let key = format!("{}:", crate::model::TRAILER_KEY);
-    message
+    let last_paragraph = message
+        .trim_end_matches(['\n', ' '])
+        .rsplit("\n\n")
+        .next()
+        .unwrap_or("");
+    last_paragraph
         .lines()
         .filter_map(|l| l.strip_prefix(&key))
         .map(|v| v.trim().to_string())
@@ -262,6 +312,79 @@ index 3333333333333333333333333333333333333333..00000000000000000000000000000000
         assert!(files[0].is_new);
         assert!(files[1].is_deleted);
         assert_eq!(files[1].new_mode, "000000");
+    }
+
+    #[test]
+    fn content_lines_looking_like_headers_do_not_truncate_hunks() {
+        // A removed `-- SQL comment` renders as `--- SQL comment`; the body
+        // loop must be count-driven, not prefix-sniffing.
+        let diff = b"diff --git a/q.sql b/q.sql\n\
+index 1111111111111111111111111111111111111111..2222222222222222222222222222222222222222 100644\n\
+--- a/q.sql\n\
++++ b/q.sql\n\
+@@ -1,2 +1,2 @@\n\
+--- old comment\n\
+-select 1;\n\
++-- new comment\n\
++select 2;\n";
+        let files = parse_diff(diff).unwrap();
+        let h = &files[0].hunks[0];
+        assert_eq!(
+            h.removed,
+            vec![b"-- old comment".to_vec(), b"select 1;".to_vec()]
+        );
+        assert_eq!(
+            h.added,
+            vec![b"-- new comment".to_vec(), b"select 2;".to_vec()]
+        );
+        assert!(!files[0].degraded);
+    }
+
+    #[test]
+    fn paths_containing_space_b_slash_come_from_plus_line() {
+        let diff = b"diff --git a/lib b/c.txt b/lib b/c.txt\n\
+index 1111111111111111111111111111111111111111..2222222222222222222222222222222222222222 100644\n\
+--- a/lib b/c.txt\n\
++++ b/lib b/c.txt\n\
+@@ -1,1 +1,1 @@\n\
+-x\n\
++y\n";
+        let files = parse_diff(diff).unwrap();
+        assert_eq!(files[0].path, "lib b/c.txt");
+        // Deleted file: the path must come from the old side.
+        let diff = b"diff --git a/lib b/d.txt b/lib b/d.txt\n\
+deleted file mode 100644\n\
+index 1111111111111111111111111111111111111111..0000000000000000000000000000000000000000\n\
+--- a/lib b/d.txt\n\
++++ /dev/null\n\
+@@ -1,1 +0,0 @@\n\
+-x\n";
+        let files = parse_diff(diff).unwrap();
+        assert_eq!(files[0].path, "lib b/d.txt");
+        assert!(files[0].is_deleted);
+    }
+
+    #[test]
+    fn gitlink_bumps_degrade_to_whole_file_units() {
+        let diff = b"diff --git a/sub b/sub\n\
+index 1111111111111111111111111111111111111111..2222222222222222222222222222222222222222 160000\n\
+--- a/sub\n\
++++ b/sub\n\
+@@ -1 +1 @@\n\
+-Subproject commit 1111111111111111111111111111111111111111\n\
++Subproject commit 2222222222222222222222222222222222222222\n";
+        let files = parse_diff(diff).unwrap();
+        assert!(files[0].degraded);
+        assert_eq!(files[0].new_mode, "160000");
+    }
+
+    #[test]
+    fn trailers_only_in_final_paragraph() {
+        let msg = "title\n\nThe body quotes Isomer-Change: i-zzzzzzzz here.\n\nIsomer-Change: i-abcdefgh\n";
+        assert_eq!(parse_change_trailers(msg), vec!["i-abcdefgh"]);
+        let msg =
+            "title\n\nIsomer-Change: i-aaaaaaaa mentioned mid-message\n\nreal tail paragraph\n";
+        assert!(parse_change_trailers(msg).is_empty());
     }
 
     #[test]
