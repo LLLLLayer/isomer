@@ -18,14 +18,17 @@ cargo clippy --all-targets -- -D warnings     # CI-gated
 cargo run -p ism-cli -- inspect               # run the CLI
 ```
 
-Desktop app (`apps/desktop`, Electron + React + TS — see its own README):
+Desktop app (`apps/desktop`, Electron + React + TS):
 
 ```sh
 cd apps/desktop && npm install
 npm run typecheck && npm test                 # vitest (node + happy-dom projects)
 npm run build                                 # bundle main/preload/renderer
 ISOMER_SMOKE=1 npx electron .                 # headless boot proof
+ISOMER_SHOT=shot.png npx electron .           # boot, self-screenshot, print layout probe, exit
 ```
+
+`ISOMER_SHOT_VIEW=<view>` forces the landing view for a shot. Use ISOMER_SHOT to verify UI changes visually — never screen-capture the whole display. `package-lock.json` must resolve against registry.npmjs.org (CI `npm ci` fails on mirror URLs).
 
 The app talks to ism ONLY by spawning the CLI and parsing its JSON (design
 D23) — never add a second semantic channel (no napi/FFI).
@@ -37,7 +40,7 @@ CI (`.github/workflows/ci.yml`) runs exactly these five checks on ubuntu + macos
 Two-crate workspace, strict split:
 
 - **`crates/ism-core`** — all domain logic. Its serde types (`model.rs`) *are* the public JSON contract; renaming a serialized field is a breaking API change.
-- **`crates/ism-cli`** — thin clap shell: parses args, calls core, prints JSON. Never put logic here; a future desktop app (`apps/`) will link ism-core directly.
+- **`crates/ism-cli`** — thin clap shell: parses args, calls core, prints JSON. Never put logic here. The desktop app deliberately does *not* link ism-core — the CLI's JSON is the only interface (D23).
 
 Data flows through ism-core as a pipeline:
 
@@ -52,6 +55,15 @@ Data flows through ism-core as a pipeline:
 9. **`verify.rs`** — deliberately independent code path that re-derives the tree-equality proof; keep it decoupled from engine.rs so it stays a real check.
 
 **`error.rs`** defines stable error codes (E001–E900) and exit codes (1 business / 2 usage / 3 precondition / 9 internal). These codes are public API consumed by agents — never renumber or reuse a code; add new ones.
+
+## Desktop app (`apps/desktop`)
+
+Electron three-process split; all real logic lives in `src/main/services/` and the renderer store:
+
+- **`src/shared/ipc.ts`** is the single IPC contract table. Adding a channel means: add the typed contract, add it to `INVOKE_CHANNELS`/`PUSH_CHANNELS` (a compile-time assertion fails typecheck if you forget), and the preload runtime allowlist picks it up automatically. `src/shared/ism-types.ts` mirrors ism-core's serde types — keep it in sync with `model.rs`.
+- **`src/main/services/`** — `git.ts` (porcelain wrapper; every command runs with `--no-optional-locks`), `ism.ts` (spawns the ism CLI, parses JSON), `pty.ts` (node-pty; re-chmods the prebuilt spawn-helper before every spawn — npm drops its exec bit), `watcher.ts` (debounced `.git` watcher → `repo:changed` push).
+- **Renderer**: zustand store (`store/store.ts`) with stale-project guards after every await; all colors come from `theme/tokens.css` design tokens (a test rejects raw hex elsewhere); i18n locales en / zh-CN have a key-parity test.
+- Tests are vitest with two projects (node for main/shared, happy-dom for renderer); `npm test` runs both.
 
 ## Invariants to preserve
 
