@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { PanelBottom, PanelRight, RotateCcw, X } from 'lucide-react'
 import { FitAddon } from '@xterm/addon-fit'
 import { Terminal } from '@xterm/xterm'
 import '@xterm/xterm/css/xterm.css'
@@ -8,16 +9,21 @@ import { useAppStore } from '../store/store'
 /** Session ids are 36-char uuids; pty:data payloads are id-prefixed. */
 const ID_LEN = 36
 
+/** The terminal panel; docks at the bottom or the right (Fork-style). */
 export function TerminalDrawer(): React.JSX.Element | null {
   const { t } = useTranslation()
   const open = useAppStore((s) => s.terminalOpen)
+  const dock = useAppStore((s) => s.terminalDock)
+  const setDock = useAppStore((s) => s.setTerminalDock)
   const toggle = useAppStore((s) => s.toggleTerminal)
   const projectId = useAppStore((s) => s.currentProjectId)
-  const setError = useAppStore((s) => s.setError)
   const containerRef = useRef<HTMLDivElement>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     if (!open || !projectId || !containerRef.current) return
+    setError(null)
     const term = new Terminal({
       fontFamily: 'SF Mono, JetBrains Mono, Menlo, monospace',
       fontSize: 12,
@@ -48,8 +54,9 @@ export function TerminalDrawer(): React.JSX.Element | null {
       .invoke('pty:create', { projectId, cols: term.cols, rows: term.rows })
       .then((r) => {
         if (!r.ok) {
-          setError(r.error)
-          if (!disposed) toggle()
+          // Keep the drawer open and say what broke — a flash-close reads
+          // as a crash and hides the actual error.
+          if (!disposed) setError(`${r.error.code}: ${r.error.message}`)
           return
         }
         if (disposed) {
@@ -64,7 +71,7 @@ export function TerminalDrawer(): React.JSX.Element | null {
         }
       })
       .catch((e: unknown) => {
-        setError({ code: 'PTY', message: e instanceof Error ? e.message : String(e) })
+        if (!disposed) setError(e instanceof Error ? e.message : String(e))
       })
 
     const dataSub = term.onData((data) => {
@@ -86,19 +93,42 @@ export function TerminalDrawer(): React.JSX.Element | null {
       if (sessionId) void window.isomer.invoke('pty:kill', { id: sessionId })
       term.dispose()
     }
-  }, [open, projectId, toggle, setError])
+  }, [open, projectId, toggle, attempt])
 
   if (!open) return null
   return (
-    <div className="terminal-drawer">
+    <div className={`terminal-drawer ${dock}`}>
       <header className="pane-title">
         {t('terminal.title')}
         <span className="spacer" />
-        <button className="link" onClick={toggle}>
-          {t('terminal.close')}
+        <button
+          className={`icon-btn${dock === 'bottom' ? ' active' : ''}`}
+          title={t('terminal.dockBottom')}
+          onClick={() => setDock('bottom')}
+        >
+          <PanelBottom size={14} strokeWidth={1.8} />
+        </button>
+        <button
+          className={`icon-btn${dock === 'right' ? ' active' : ''}`}
+          title={t('terminal.dockRight')}
+          onClick={() => setDock('right')}
+        >
+          <PanelRight size={14} strokeWidth={1.8} />
+        </button>
+        <button className="icon-btn" title={t('terminal.close')} onClick={toggle}>
+          <X size={14} strokeWidth={1.8} />
         </button>
       </header>
-      <div className="terminal-host" ref={containerRef} />
+      {error ? (
+        <div className="terminal-error">
+          <p className="mono">{error}</p>
+          <button className="ghost-btn" onClick={() => setAttempt((a) => a + 1)}>
+            <RotateCcw size={12} strokeWidth={1.8} /> {t('terminal.retry')}
+          </button>
+        </div>
+      ) : (
+        <div className="terminal-host" ref={containerRef} />
+      )}
     </div>
   )
 }

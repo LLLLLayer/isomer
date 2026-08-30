@@ -37,7 +37,10 @@
   "terminal": {
     "title": "Terminal",
     "open": "Open terminal",
-    "close": "Close"
+    "close": "Close",
+    "retry": "Retry",
+    "dockBottom": "Dock to bottom",
+    "dockRight": "Dock to right"
   },
   "verify": {
     "proof": "Tree proof: {{old}} == {{new}}",

@@ -20,7 +20,26 @@ import { StackView } from './components/StackView'
 import { TerminalDrawer } from './components/TerminalDrawer'
 import { useAppStore } from './store/store'
 import { useTheme } from './theme/useTheme'
+import { Splitter, usePaneSize } from './resize'
 import './app.css'
+
+function StackColumns(): React.JSX.Element {
+  const [stackW, resizeStack] = usePaneSize('stack-col', 300, 220, 480)
+  const [inspW, resizeInsp] = usePaneSize('inspector-col', 320, 240, 520)
+  return (
+    <main className="columns">
+      <div style={{ width: stackW, display: 'flex', minWidth: 0 }}>
+        <StackView />
+      </div>
+      <Splitter axis="x" onDelta={resizeStack} />
+      <ReviewView />
+      <Splitter axis="x" onDelta={(d) => resizeInsp(-d)} />
+      <div style={{ width: inspW, display: 'flex', minWidth: 0 }}>
+        <Inspector />
+      </div>
+    </main>
+  )
+}
 
 export function App(): React.JSX.Element {
   const { t } = useTranslation()
@@ -49,6 +68,11 @@ export function App(): React.JSX.Element {
   }, [bootstrap])
 
   const project = projects.find((p) => p.id === currentProjectId)
+  const terminalOpen = useAppStore((s) => s.terminalOpen)
+  const terminalDock = useAppStore((s) => s.terminalDock)
+  const [sidebarW, resizeSidebar] = usePaneSize('sidebar', 200, 150, 340)
+  const [termH, resizeTermH] = usePaneSize('terminal-h', 240, 120, 560)
+  const [termW, resizeTermW] = usePaneSize('terminal-w', 380, 240, 720)
   const ICONS = {
     fetch: <ArrowDownToLine size={16} strokeWidth={1.8} />,
     pull: <ArrowDown size={16} strokeWidth={1.8} />,
@@ -101,18 +125,30 @@ export function App(): React.JSX.Element {
       </header>
       <div className="main-row">
         <ProjectRail />
-        <Sidebar />
+        <div style={{ width: sidebarW, display: 'flex' }}>
+          <Sidebar />
+        </div>
+        <Splitter axis="x" onDelta={resizeSidebar} />
         {view === 'changes' && <ChangesView />}
         {view === 'history' && <HistoryView />}
-        {view === 'stack' && (
-          <main className="columns">
-            <StackView />
-            <ReviewView />
-            <Inspector />
-          </main>
+        {view === 'stack' && <StackColumns />}
+        {terminalOpen && terminalDock === 'right' && (
+          <>
+            <Splitter axis="x" onDelta={(d) => resizeTermW(-d)} />
+            <div style={{ width: termW, display: 'flex', minWidth: 0 }}>
+              <TerminalDrawer />
+            </div>
+          </>
         )}
       </div>
-      <TerminalDrawer />
+      {terminalOpen && terminalDock === 'bottom' && (
+        <>
+          <Splitter axis="y" onDelta={(d) => resizeTermH(-d)} />
+          <div style={{ height: termH, display: 'flex', minHeight: 0 }}>
+            <TerminalDrawer />
+          </div>
+        </>
+      )}
       <SettingsModal />
       <footer className="statusbar">
         <button className="icon-btn labeled" onClick={toggleTerminal}>

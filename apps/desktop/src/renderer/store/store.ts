@@ -5,6 +5,7 @@ import type { AppError } from '../../shared/result'
 import type { Settings } from '../../shared/theme'
 import { DEFAULT_SETTINGS } from '../../shared/theme'
 import { setLanguage } from '../i18n'
+import { storage } from '../storage'
 
 export type ViewMode = 'changes' | 'history' | 'stack'
 export type ChangeArea = 'unstaged' | 'staged'
@@ -43,6 +44,7 @@ export interface AppState {
   /** Pending file/line anchor for the next comment (set from the diff). */
   commentAnchor: { path: string; line: number } | null
   terminalOpen: boolean
+  terminalDock: 'bottom' | 'right'
   settingsOpen: boolean
   lastError: AppError | null
 
@@ -67,6 +69,7 @@ export interface AppState {
   addComment(input: { change: string; body: string; path?: string; line?: number; replyTo?: string }): Promise<void>
   resolveComment(id: string): Promise<void>
   toggleTerminal(): void
+  setTerminalDock(dock: 'bottom' | 'right'): void
   openSettings(): void
   closeSettings(): void
   setError(error: AppError): void
@@ -100,6 +103,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   patches: {},
   commentAnchor: null,
   terminalOpen: false,
+  terminalDock: storage.get('terminalDock') === 'right' ? 'right' : 'bottom',
   settingsOpen: false,
   lastError: null,
 
@@ -382,6 +386,11 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   toggleTerminal() {
     set({ terminalOpen: !get().terminalOpen })
+  },
+
+  setTerminalDock(dock) {
+    storage.set('terminalDock', dock)
+    set({ terminalDock: dock })
   },
 
   openSettings() {

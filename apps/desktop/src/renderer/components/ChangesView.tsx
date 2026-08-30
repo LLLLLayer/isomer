@@ -3,6 +3,7 @@ import type { ChangeArea } from '../store/store'
 import { useAppStore } from '../store/store'
 import { parseUnifiedDiff } from '../diff'
 import { DiffView } from './DiffView'
+import { Splitter, usePaneSize } from '../resize'
 
 /** Fork-style local changes: Unstaged / Staged areas with stage buttons,
  * the selected file's diff, and the commit box (staged set only). */
@@ -42,9 +43,10 @@ export function ChangesView(): React.JSX.Element {
     </button>
   )
 
+  const [colW, resizeCol] = usePaneSize('stage-column', 280, 180, 460)
   return (
     <div className="changes-view">
-      <aside className="stage-column">
+      <aside className="stage-column" style={{ width: colW }}>
         <div className="area-header">
           <span>{t('changes.unstaged')}</span>
           <span className="spacer" />
@@ -70,6 +72,7 @@ export function ChangesView(): React.JSX.Element {
         </div>
         <div className="area-list">{staged.map((e) => fileRow(e, 'staged'))}</div>
       </aside>
+      <Splitter axis="x" onDelta={resizeCol} />
       <section className="changes-main">
         <div className="pane diff-pane">
           {entries.length === 0 ? (

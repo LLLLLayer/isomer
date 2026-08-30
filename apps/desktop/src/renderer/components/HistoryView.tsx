@@ -3,6 +3,7 @@ import { parseUnifiedDiff } from '../diff'
 import { buildFileTree, type TreeNode } from '../filetree'
 import { useAppStore } from '../store/store'
 import { DiffView } from './DiffView'
+import { Splitter, usePaneSize } from '../resize'
 
 function fmtDate(ts: number): string {
   if (!ts) return ''
@@ -62,9 +63,10 @@ export function HistoryView(): React.JSX.Element {
 
   const files = diffText === null ? [] : parseUnifiedDiff(diffText)
 
+  const [listH, resizeList] = usePaneSize('commit-list', 300, 140, 640)
   return (
     <div className="history-view">
-      <div className="commit-list">
+      <div className="commit-list" style={{ height: listH, maxHeight: 'none' }}>
         {log.map((e, i) => (
           <button
             key={e.sha}
@@ -87,6 +89,7 @@ export function HistoryView(): React.JSX.Element {
           </button>
         ))}
       </div>
+      <Splitter axis="y" onDelta={resizeList} />
       <section className="commit-detail">
         <nav className="detail-tabs">
           {(['commit', 'changes', 'tree'] as const).map((k) => (

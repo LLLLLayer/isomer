@@ -37,7 +37,10 @@
   "terminal": {
     "title": "终端",
     "open": "打开终端",
-    "close": "关闭"
+    "close": "关闭",
+    "retry": "重试",
+    "dockBottom": "停靠底部",
+    "dockRight": "停靠右侧"
   },
   "verify": {
     "proof": "树哈希证明：{{old}} == {{new}}",
