@@ -33,7 +33,7 @@ ISOMER_SHOT=shot.png npx electron .           # boot, self-screenshot, print lay
 The app talks to ism ONLY by spawning the CLI and parsing its JSON (design
 D23) — never add a second semantic channel (no napi/FFI).
 
-CI (`.github/workflows/ci.yml`) runs exactly these five checks on ubuntu + macos. Run all of them before committing.
+CI (`.github/workflows/ci.yml`) runs exactly these five checks on ubuntu + macos. Run all of them before committing. Releasing = push a `v*` tag: `release.yml` builds the CLI tarball and the mac app (version stamped from the tag, ad-hoc signed) and publishes a GitHub release, which is what the app's in-app update check reads.
 
 ## Architecture
 
@@ -61,7 +61,7 @@ Data flows through ism-core as a pipeline:
 Electron three-process split; all real logic lives in `src/main/services/` and the renderer store:
 
 - **`src/shared/ipc.ts`** is the single IPC contract table. Adding a channel means: add the typed contract, add it to `INVOKE_CHANNELS`/`PUSH_CHANNELS` (a compile-time assertion fails typecheck if you forget), and the preload runtime allowlist picks it up automatically. `src/shared/ism-types.ts` mirrors ism-core's serde types — keep it in sync with `model.rs`.
-- **`src/main/services/`** — `git.ts` (porcelain wrapper; every command runs with `--no-optional-locks`), `ism.ts` (spawns the ism CLI, parses JSON), `pty.ts` (node-pty; re-chmods the prebuilt spawn-helper before every spawn — npm drops its exec bit), `watcher.ts` (debounced `.git` watcher → `repo:changed` push).
+- **`src/main/services/`** — `git.ts` (porcelain wrapper; every command runs with `--no-optional-locks`), `ism.ts` (spawns the ism CLI, parses JSON), `pty.ts` (node-pty; re-chmods the prebuilt spawn-helper before every spawn — npm drops its exec bit), `watcher.ts` (debounced `.git` watcher → `repo:changed` push), `updates.ts` (GitHub releases check — guided download, no updater daemon).
 - **Renderer**: zustand store (`store/store.ts`) with stale-project guards after every await; all colors come from `theme/tokens.css` design tokens (a test rejects raw hex elsewhere); i18n locales en / zh-CN have a key-parity test. The terminal pty session is a module-level singleton in `TerminalDrawer.tsx` — dock switches remount the component across parents and must not kill the shell. The Organize view is the stack editor: plans are built in the renderer and serialized to a temp file by main (`ism:check`/`ism:apply` take plan objects).
 - Tests are vitest with two projects (node for main/shared, happy-dom for renderer); `npm test` runs both.
 
@@ -77,4 +77,4 @@ Electron three-process split; all real logic lives in `src/main/services/` and t
 - `schema/plan.v1.json` and `skills/ism/SKILL.md` at the root are **convention copies**; the embed sources live inside the crates (`crates/ism-core/schema/`, `crates/ism-cli/skill/`) because `cargo publish` can't include files outside the crate dir. Edit the crate copy, mirror to the root copy, and `./scripts/check-sync.sh` enforces byte equality.
 - `design/` and `research/` are gitignored, local-only folders. If `design/` is present, read it before architectural changes: `design/01-decisions.md` is an append-only ADR log (D01–D20) — record reversals as new entries, never edit old ones.
 - E2E tests (`crates/ism-cli/tests/e2e.rs`) build throwaway repos with the `Repo` helper. Write plan files to a tempdir *outside* the test repo — a plan file inside it dirties `git status` and breaks assertions.
-- This repo dogfoods itself: history is organized into ism changes with `Isomer-Change` trailers, and `refs/isomer/data` is pushed. Prefer `ism` for reorganizing your own messy WIP commits before committing/pushing.
+- This repo dogfoods itself: history is organized into ism changes with `Isomer-Change` trailers, and `refs/isomer/data` is pushed. Prefer `ism` for reorganizing your own messy WIP commits before committing/pushing. When dogfooding ON the trunk, the plan must carry `base`/`head` copied from the snapshot (`ism inspect --base <prev-head>`) — the default analysis sees an empty stack there and an unanchored plan fails E010.
