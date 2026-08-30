@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto'
+import { chmodSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import { dirname, join } from 'node:path'
 
 /**
  * Coalesce pty output for up to `waitMs` or `maxBytes`, whichever first,
@@ -66,6 +68,17 @@ export class PtyService {
   create(cwd: string, cols: number, rows: number): string {
     // Lazy require keeps the native module out of startup and test paths.
     const nativeRequire = createRequire(import.meta.url)
+    // npm does not always preserve the exec bit on node-pty's spawn-helper
+    // (symptom: "posix_spawnp failed"); heal it before every spawn.
+    try {
+      const ptyRoot = dirname(nativeRequire.resolve('node-pty/package.json'))
+      chmodSync(
+        join(ptyRoot, 'prebuilds', `${process.platform}-${process.arch}`, 'spawn-helper'),
+        0o755,
+      )
+    } catch {
+      /* no prebuild for this platform — node-gyp builds are fine */
+    }
     const nodePty = nativeRequire('node-pty') as {
       spawn(file: string, args: string[], opts: object): PtyLike & {
         onData(cb: (d: string) => void): void
