@@ -1,53 +1,38 @@
 {
   "kind": "apply",
   "branch": "main",
-  "old_head": "a553be68efc5461a4386419303aee8aa14b87650",
-  "new_head": "d34c23ec74a4e9bd0bd04241647c2be9ae6a3312",
-  "base": "f74258983cbdcd7fdf3174f20f5a37ad89efb94f",
-  "old_tree": "7b93cba351055c48a625a404a2a174fb68d02f21",
-  "new_tree": "7b93cba351055c48a625a404a2a174fb68d02f21",
-  "plan_digest": "sha256:1bf65d168707fe72c43cc97213161d714b9778cf0a6082f748b7f2a050675afb",
-  "snapshot_digest": "sha256:17b623c93fc4d9248aecd7314e1b25f4d30cb452efcb5d20dba08b609635b584",
+  "old_head": "8a4fb7ac25b9a399c34666beb1cb37a1c70e01a6",
+  "new_head": "4afaeba4f7672adeb845291ec3fc508beeb8d831",
+  "base": "d34c23ec74a4e9bd0bd04241647c2be9ae6a3312",
+  "old_tree": "cc6581ea01c7c34ede3ff4b421d4301bf032fff0",
+  "new_tree": "cc6581ea01c7c34ede3ff4b421d4301bf032fff0",
+  "plan_digest": "sha256:8295b42bc72ff445de26ee1129180160136895b576a808eb7cc2bb042e046df6",
+  "snapshot_digest": "sha256:d501b21b7f55843956c47e20327d6ae2d15b10fff219fbdf3bc861c15056723d",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:17b623c93fc4d9248aecd7314e1b25f4d30cb452efcb5d20dba08b609635b584",
-    "base": "f74258983cbdcd7fdf3174f20f5a37ad89efb94f",
-    "head": "a553be68efc5461a4386419303aee8aa14b87650",
+    "snapshot_digest": "sha256:d501b21b7f55843956c47e20327d6ae2d15b10fff219fbdf3bc861c15056723d",
+    "base": "d34c23ec74a4e9bd0bd04241647c2be9ae6a3312",
+    "head": "8a4fb7ac25b9a399c34666beb1cb37a1c70e01a6",
     "nodes": [
       {
-        "name": "one-composer-full-panes",
-        "summary": "One composer at a time; panes fill their frames; settings breathe",
+        "name": "docs-catch-up",
+        "summary": "docs: the words catch up with the product",
         "from": [
-          "apps/desktop/src/renderer/app.css:1726#9a05",
-          "apps/desktop/src/renderer/app.css:1743#03ca",
-          "apps/desktop/src/renderer/app.css:1747#df88",
-          "apps/desktop/src/renderer/app.css:1765#2191",
-          "apps/desktop/src/renderer/app.css:2045#4c7d",
-          "apps/desktop/src/renderer/app.css:2047#5312",
-          "apps/desktop/src/renderer/components/DiffView.tsx:101#6adc",
-          "apps/desktop/src/renderer/components/DiffView.tsx:121#7472",
-          "apps/desktop/src/renderer/components/DiffView.tsx:151#5603",
-          "apps/desktop/src/renderer/components/SettingsPage.tsx:6#f20c",
-          "apps/desktop/src/renderer/components/SettingsPage.tsx:37#c5e8",
-          "apps/desktop/src/renderer/components/SettingsPage.tsx:92#ea93",
-          "apps/desktop/src/renderer/components/SettingsPage.tsx:102#0dd6",
-          "apps/desktop/src/renderer/components/SettingsPage.tsx:107#7954",
-          "artwork/reference-study/first-preview.png:0#2fb8",
-          "artwork/reference-study/first.svg:27#ccc5",
-          "artwork/reference-study/first.svg:47#292a",
-          "artwork/reference-study/first.svg:51#2e53",
-          "artwork/reference-study/first.svg:107#d4c1",
-          "artwork/reference-study/first.svg:123#ed80",
-          "artwork/reference-study/first.svg:125#b4b9",
-          "artwork/reference-study/first.svg:173#63e1",
-          "artwork/reference-study/first.svg:179#3648"
+          "CLAUDE.md:21#a6d7",
+          "CLAUDE.md:31#2343",
+          "CLAUDE.md:65#4729",
+          "README.md:56#0088",
+          "README.md:82#e1a0",
+          "apps/desktop/README.md:1#67fc",
+          "crates/ism-cli/skill/SKILL.md:110#f7a2",
+          "skills/ism/SKILL.md:110#523a"
         ]
       }
     ],
     "order": [
-      "one-composer-full-panes"
+      "docs-catch-up"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788109884"
+  "timestamp": "1788110841"
 }
