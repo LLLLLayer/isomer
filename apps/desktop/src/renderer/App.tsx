@@ -1,10 +1,20 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import {
+  Archive,
+  ArrowDown,
+  ArrowDownToLine,
+  ArrowUp,
+  GitBranch,
+  Settings,
+  SquareTerminal,
+} from 'lucide-react'
 import { ChangesView } from './components/ChangesView'
 import { HistoryView } from './components/HistoryView'
 import { Inspector } from './components/Inspector'
 import { ProjectRail } from './components/ProjectRail'
 import { ReviewView } from './components/ReviewView'
+import { SettingsModal } from './components/SettingsModal'
 import { Sidebar } from './components/Sidebar'
 import { StackView } from './components/StackView'
 import { TerminalDrawer } from './components/TerminalDrawer'
@@ -25,8 +35,8 @@ export function App(): React.JSX.Element {
   const doStash = useAppStore((s) => s.doStash)
   const status = useAppStore((s) => s.status)
   const bootstrap = useAppStore((s) => s.bootstrap)
-  const updateSettings = useAppStore((s) => s.updateSettings)
   const toggleTerminal = useAppStore((s) => s.toggleTerminal)
+  const openSettings = useAppStore((s) => s.openSettings)
   const lastError = useAppStore((s) => s.lastError)
   const clearError = useAppStore((s) => s.clearError)
   useTheme(settings.theme)
@@ -39,11 +49,10 @@ export function App(): React.JSX.Element {
   }, [bootstrap])
 
   const project = projects.find((p) => p.id === currentProjectId)
-  const ICONS: Record<string, string> = {
-    fetch: '↧',
-    pull: '⇩',
-    push: '⇧',
-    stash: '☰',
+  const ICONS = {
+    fetch: <ArrowDownToLine size={16} strokeWidth={1.8} />,
+    pull: <ArrowDown size={16} strokeWidth={1.8} />,
+    push: <ArrowUp size={16} strokeWidth={1.8} />,
   }
   const netBtn = (verb: 'fetch' | 'pull' | 'push'): React.JSX.Element => (
     <button
@@ -68,13 +77,19 @@ export function App(): React.JSX.Element {
             disabled={!project || (status?.entries.length ?? 0) === 0}
             onClick={() => void doStash()}
           >
-            <span className="toolbar-icon">{ICONS.stash}</span>
+            <span className="toolbar-icon">
+              <Archive size={16} strokeWidth={1.8} />
+            </span>
             <span>{t('toolbar.stash')}</span>
           </button>
         </div>
         <div className="repo-card">
           <span className="titlebar-project">{project?.name ?? t('app.title')}</span>
-          {snapshot && <span className="titlebar-branch mono">⎇ {snapshot.branch}</span>}
+          {snapshot && (
+            <span className="titlebar-branch mono">
+              <GitBranch size={11} strokeWidth={2} /> {snapshot.branch}
+            </span>
+          )}
         </div>
         <span className="spacer" />
         {netNote && <span className="net-note mono">{netNote}</span>}
@@ -98,30 +113,16 @@ export function App(): React.JSX.Element {
         )}
       </div>
       <TerminalDrawer />
+      <SettingsModal />
       <footer className="statusbar">
-        <button className="link" onClick={toggleTerminal}>
+        <button className="icon-btn labeled" onClick={toggleTerminal}>
+          <SquareTerminal size={14} strokeWidth={1.8} />
           {t('terminal.open')}
         </button>
         <span className="spacer" />
-        <span className="select-wrap">
-          <select
-            value={settings.theme}
-            onChange={(e) => void updateSettings({ theme: e.target.value as never })}
-          >
-            <option value="system">{t('settings.themeSystem')}</option>
-            <option value="light">{t('settings.themeLight')}</option>
-            <option value="dark">{t('settings.themeDark')}</option>
-          </select>
-        </span>
-        <span className="select-wrap">
-          <select
-            value={settings.language}
-            onChange={(e) => void updateSettings({ language: e.target.value as never })}
-          >
-            <option value="en">English</option>
-            <option value="zh-CN">中文</option>
-          </select>
-        </span>
+        <button className="icon-btn" title={t('settings.title')} onClick={openSettings}>
+          <Settings size={14} strokeWidth={1.8} />
+        </button>
       </footer>
     </div>
   )

@@ -43,6 +43,7 @@ export interface AppState {
   /** Pending file/line anchor for the next comment (set from the diff). */
   commentAnchor: { path: string; line: number } | null
   terminalOpen: boolean
+  settingsOpen: boolean
   lastError: AppError | null
 
   bootstrap(): Promise<void>
@@ -66,6 +67,8 @@ export interface AppState {
   addComment(input: { change: string; body: string; path?: string; line?: number; replyTo?: string }): Promise<void>
   resolveComment(id: string): Promise<void>
   toggleTerminal(): void
+  openSettings(): void
+  closeSettings(): void
   setError(error: AppError): void
   clearError(): void
 }
@@ -97,6 +100,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   patches: {},
   commentAnchor: null,
   terminalOpen: false,
+  settingsOpen: false,
   lastError: null,
 
   async bootstrap() {
@@ -378,6 +382,14 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   toggleTerminal() {
     set({ terminalOpen: !get().terminalOpen })
+  },
+
+  openSettings() {
+    set({ settingsOpen: true })
+  },
+
+  closeSettings() {
+    set({ settingsOpen: false })
   },
 
   setError(error) {

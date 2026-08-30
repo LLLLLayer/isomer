@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { FileDiff, History, Layers } from 'lucide-react'
 import { useAppStore } from '../store/store'
 
 function Section({
@@ -41,13 +42,20 @@ export function Sidebar(): React.JSX.Element {
   const match = (n: string): boolean =>
     filter.trim() === '' || n.toLowerCase().includes(filter.trim().toLowerCase())
 
+  const ICONS = {
+    changes: <FileDiff size={14} strokeWidth={1.8} />,
+    history: <History size={14} strokeWidth={1.8} />,
+    stack: <Layers size={14} strokeWidth={1.8} />,
+  }
   const item = (
     key: 'changes' | 'history' | 'stack',
     label: string,
     count?: number,
   ): React.JSX.Element => (
     <button className={`side-item${view === key ? ' active' : ''}`} onClick={() => setView(key)}>
+      <span className="side-icon">{ICONS[key]}</span>
       <span>{label}</span>
+      <span className="spacer" />
       {count !== undefined && count > 0 && <span className="side-count">{count}</span>}
     </button>
   )

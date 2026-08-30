@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { Plus } from 'lucide-react'
 import { useAppStore } from '../store/store'
 
 /** Deterministic pleasant hue per project name. */
@@ -29,7 +30,7 @@ export function ProjectRail(): React.JSX.Element {
         </button>
       ))}
       <button className="project-chip add" title={t('projects.add')} onClick={() => void addProject()}>
-        +
+        <Plus size={16} strokeWidth={1.8} />
       </button>
     </nav>
   )

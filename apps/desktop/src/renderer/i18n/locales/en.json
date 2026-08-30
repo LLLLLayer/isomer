@@ -49,7 +49,14 @@
     "themeSystem": "System",
     "themeLight": "Light",
     "themeDark": "Dark",
-    "language": "Language"
+    "language": "Language",
+    "close": "Close",
+    "appearance": "Appearance",
+    "integration": "Integration",
+    "agentCommand": "Agent command",
+    "agentCommandHint": "Pre-filled in the terminal when you summon a coding agent.",
+    "ismPath": "ism binary",
+    "ismPathHint": "Leave empty to resolve ism from PATH."
   },
   "errors": {
     "generic": "Something failed",
