@@ -1,0 +1,6 @@
+{
+  "id": "i-t5pxyyhn",
+  "name": "macos-glass",
+  "summary": "macOS vibrancy: translucent chrome over the sidebar material",
+  "body": "The window now carries the NSVisualEffectView sidebar material;\nthe rail, sidebar, titlebar and statusbar go translucent so the\ndesktop blurs through (Fork's frosted look) while content panes stay\nopaque for readability. nativeTheme follows the in-app theme so the\nglass matches a forced light/dark; non-mac platforms keep solid\ncolors (preload exposes the platform for the renderer to decide)."
+}

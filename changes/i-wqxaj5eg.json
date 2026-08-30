@@ -1,0 +1,9 @@
+{
+  "id": "i-wqxaj5eg",
+  "name": "settings-and-icons",
+  "summary": "Dedicated settings panel; unify all icons on Lucide",
+  "body": "A Fork-style preferences modal (appearance: theme/language as\nsegmented controls; integration: agent command and ism binary path,\nsaved on change, Esc/backdrop to close, app version in the footer)\nreplaces the two raw selects in the statusbar. Every icon is now\nLucide (ISC) at a consistent stroke: toolbar verbs, sidebar views,\nproject-rail add, terminal and the new settings gear — SF Symbols\nthemselves are licensed for Apple-platform rendering only and cannot\nbe bundled into an Electron app.",
+  "deps": [
+    "macos-glass"
+  ]
+}
