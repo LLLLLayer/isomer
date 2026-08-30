@@ -75,6 +75,27 @@ describe('app store', () => {
     expect(useAppStore.getState().lastError?.code).toBe('E002')
   })
 
+  it('drops slow responses that arrive after a project switch', async () => {
+    let releaseA: () => void = () => {}
+    const gate = new Promise<void>((res) => (releaseA = res))
+    const slowStatus = { branch: 'stale-A', upstream: null, ahead: 0, behind: 0, entries: [] }
+    fakeBridge({
+      'git:status': async () => {
+        await gate
+        return { ok: true, data: slowStatus }
+      },
+      'git:log': () => ({ ok: true, data: [] }),
+      'ism:snapshot': () => ({ ok: false, error: { code: 'E101', message: 'x' } }),
+      'ism:comment-list': () => ({ ok: true, data: [] }),
+    })
+    const first = useAppStore.getState().openProject('A')
+    // The user switches before A's status resolves.
+    useAppStore.setState({ currentProjectId: 'B', status: null })
+    releaseA()
+    await first
+    expect(useAppStore.getState().status?.branch).not.toBe('stale-A')
+  })
+
   it('toggleTerminal flips the drawer', () => {
     expect(useAppStore.getState().terminalOpen).toBe(false)
     useAppStore.getState().toggleTerminal()

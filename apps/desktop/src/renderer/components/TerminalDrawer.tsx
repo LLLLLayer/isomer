@@ -13,6 +13,7 @@ export function TerminalDrawer(): React.JSX.Element | null {
   const open = useAppStore((s) => s.terminalOpen)
   const toggle = useAppStore((s) => s.toggleTerminal)
   const projectId = useAppStore((s) => s.currentProjectId)
+  const setError = useAppStore((s) => s.setError)
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -29,21 +30,41 @@ export function TerminalDrawer(): React.JSX.Element | null {
 
     let sessionId: string | null = null
     let disposed = false
-    const unsubs: (() => void)[] = []
+    // Subscribe BEFORE creating the session: the shell's first prompt can
+    // arrive ahead of the create-response, so buffer payloads until the
+    // session id is known, then replay the ones that match.
+    const early: string[] = []
+    const unsubs: (() => void)[] = [
+      window.isomer.on('pty:data', (payload) => {
+        if (sessionId === null) early.push(payload)
+        else if (payload.slice(0, ID_LEN) === sessionId) term.write(payload.slice(ID_LEN))
+      }),
+      window.isomer.on('pty:exit', ({ id }) => {
+        if (id === sessionId) toggle()
+      }),
+    ]
 
     void window.isomer
       .invoke('pty:create', { projectId, cols: term.cols, rows: term.rows })
       .then((r) => {
-        if (!r.ok || disposed) return
+        if (!r.ok) {
+          setError(r.error)
+          if (!disposed) toggle()
+          return
+        }
+        if (disposed) {
+          // The drawer closed while the session was being created; the
+          // cleanup below never saw this id, so reap it here.
+          void window.isomer.invoke('pty:kill', { id: r.data.id })
+          return
+        }
         sessionId = r.data.id
-        unsubs.push(
-          window.isomer.on('pty:data', (payload) => {
-            if (payload.slice(0, ID_LEN) === sessionId) term.write(payload.slice(ID_LEN))
-          }),
-          window.isomer.on('pty:exit', ({ id }) => {
-            if (id === sessionId) toggle()
-          }),
-        )
+        for (const payload of early.splice(0)) {
+          if (payload.slice(0, ID_LEN) === sessionId) term.write(payload.slice(ID_LEN))
+        }
+      })
+      .catch((e: unknown) => {
+        setError({ code: 'PTY', message: e instanceof Error ? e.message : String(e) })
       })
 
     const dataSub = term.onData((data) => {
@@ -65,7 +86,7 @@ export function TerminalDrawer(): React.JSX.Element | null {
       if (sessionId) void window.isomer.invoke('pty:kill', { id: sessionId })
       term.dispose()
     }
-  }, [open, projectId, toggle])
+  }, [open, projectId, toggle, setError])
 
   if (!open) return null
   return (

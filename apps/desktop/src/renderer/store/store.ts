@@ -27,6 +27,7 @@ export interface AppState {
   addComment(input: { change: string; body: string; path?: string; line?: number; replyTo?: string }): Promise<void>
   resolveComment(id: string): Promise<void>
   toggleTerminal(): void
+  setError(error: AppError): void
   clearError(): void
 }
 
@@ -92,6 +93,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       window.isomer.invoke('ism:snapshot', { projectId: id }),
       window.isomer.invoke('ism:comment-list', { projectId: id }),
     ])
+    // The user may have switched projects while we awaited; never let a
+    // slow response land on the wrong project.
+    if (get().currentProjectId !== id) return
     set({
       status: status.ok ? status.data : null,
       log: log.ok ? log.data : [],
@@ -109,6 +113,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const id = get().currentProjectId
     if (!id) return
     const r = await window.isomer.invoke('ism:comment-add', { projectId: id, ...input })
+    if (get().currentProjectId !== id) return
     if (!r.ok) {
       set({ lastError: r.error })
       return
@@ -120,6 +125,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const id = get().currentProjectId
     if (!id) return
     const r = await window.isomer.invoke('ism:comment-resolve', { projectId: id, id: commentId })
+    if (get().currentProjectId !== id) return
     if (!r.ok) {
       set({ lastError: r.error })
       return
@@ -129,6 +135,10 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   toggleTerminal() {
     set({ terminalOpen: !get().terminalOpen })
+  },
+
+  setError(error) {
+    set({ lastError: error })
   },
 
   clearError() {

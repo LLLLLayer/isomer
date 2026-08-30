@@ -14,7 +14,9 @@ export function Inspector(): React.JSX.Element {
 
   const commit = snapshot?.commits.find((c) => c.sha === selected)
   const changeId = commit?.change_id ?? null
-  const visible = comments
+  // No selection ⇒ all comments; a selected but untracked commit has no
+  // identity, so nothing can be anchored to it.
+  const visible = (commit && !changeId ? [] : comments)
     .filter((c) => (changeId ? c.change === changeId : true))
     .filter((c) => !unresolvedOnly || !c.resolved)
 
