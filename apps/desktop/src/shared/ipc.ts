@@ -35,6 +35,14 @@ export interface GitLogEntry {
   changeId: string | null
 }
 
+export interface GitRefs {
+  current: string
+  locals: string[]
+  remotes: string[]
+  tags: string[]
+  stashes: number
+}
+
 /** renderer → main, request/response (ipcRenderer.invoke / ipcMain.handle). */
 export interface InvokeContracts {
   'app:version': { req: void; res: string }
@@ -46,6 +54,12 @@ export interface InvokeContracts {
   'projects:remove': { req: { id: string }; res: void }
   'git:status': { req: { projectId: string }; res: Result<GitStatusSummary> }
   'git:log': { req: { projectId: string; limit: number }; res: Result<GitLogEntry[]> }
+  'git:refs': { req: { projectId: string }; res: Result<GitRefs> }
+  'git:working-diff': { req: { projectId: string; path: string; untracked: boolean }; res: Result<string> }
+  'git:commit-diff': { req: { projectId: string; sha: string }; res: Result<string> }
+  'git:fetch': { req: { projectId: string }; res: Result<string> }
+  'git:pull': { req: { projectId: string }; res: Result<string> }
+  'git:push': { req: { projectId: string }; res: Result<string> }
   'ism:snapshot': { req: { projectId: string; base?: string }; res: Result<Snapshot> }
   'ism:hunks': { req: { projectId: string; ids: string[] }; res: Result<HunkPatch[]> }
   'ism:verify': { req: { projectId: string }; res: Result<VerifyOutcome> }
@@ -98,6 +112,12 @@ export const INVOKE_CHANNELS = [
   'projects:remove',
   'git:status',
   'git:log',
+  'git:refs',
+  'git:working-diff',
+  'git:commit-diff',
+  'git:fetch',
+  'git:pull',
+  'git:push',
   'ism:snapshot',
   'ism:hunks',
   'ism:verify',

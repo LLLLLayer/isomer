@@ -54,5 +54,26 @@
   "errors": {
     "generic": "操作失败",
     "hint": "提示"
+  },
+  "sidebar": {
+    "localChanges": "本地更改",
+    "allCommits": "全部提交",
+    "stack": "变更栈",
+    "branches": "分支",
+    "remotes": "远程",
+    "tags": "标签",
+    "stashes": "贮藏"
+  },
+  "toolbar": {
+    "fetch": "拉取远端",
+    "pull": "拉取合并",
+    "push": "推送"
+  },
+  "changes": {
+    "clean": "工作区是干净的。"
+  },
+  "diff": {
+    "empty": "没有文本变更。",
+    "files": "{{count}} 个文件"
   }
 }

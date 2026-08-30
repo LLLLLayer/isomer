@@ -40,10 +40,11 @@ describe('app store', () => {
     })
   })
 
-  it('openProject resets state then loads the four data sources', async () => {
+  it('openProject resets state then loads the project data sources', async () => {
     fakeBridge({
       'git:status': () => ({ ok: true, data: { branch: 'feat', upstream: null, ahead: 0, behind: 0, entries: [] } }),
       'git:log': () => ({ ok: true, data: [] }),
+      'git:refs': () => ({ ok: true, data: { current: 'feat', locals: ['feat'], remotes: [], tags: [], stashes: 0 } }),
       'ism:snapshot': () => ({ ok: false, error: { code: 'E101', message: 'empty stack' } }),
       'ism:comment-list': () => ({ ok: true, data: [] }),
     })
@@ -85,6 +86,7 @@ describe('app store', () => {
         return { ok: true, data: slowStatus }
       },
       'git:log': () => ({ ok: true, data: [] }),
+      'git:refs': () => ({ ok: true, data: { current: '', locals: [], remotes: [], tags: [], stashes: 0 } }),
       'ism:snapshot': () => ({ ok: false, error: { code: 'E101', message: 'x' } }),
       'ism:comment-list': () => ({ ok: true, data: [] }),
     })

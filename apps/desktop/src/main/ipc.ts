@@ -70,6 +70,30 @@ export function registerIpc(exec: Exec): { dispose(): void } {
     return dir ? git.log(dir, limit) : NO_PROJECT
   })
 
+  handle('git:refs', async ({ projectId }) => {
+    const dir = cwd(projectId)
+    return dir ? git.refs(dir) : NO_PROJECT
+  })
+  handle('git:working-diff', async ({ projectId, path, untracked }) => {
+    const dir = cwd(projectId)
+    return dir ? git.workingDiff(dir, path, untracked) : NO_PROJECT
+  })
+  handle('git:commit-diff', async ({ projectId, sha }) => {
+    const dir = cwd(projectId)
+    return dir ? git.commitDiff(dir, sha) : NO_PROJECT
+  })
+  handle('git:fetch', async ({ projectId }) => {
+    const dir = cwd(projectId)
+    return dir ? git.fetch(dir) : NO_PROJECT
+  })
+  handle('git:pull', async ({ projectId }) => {
+    const dir = cwd(projectId)
+    return dir ? git.pull(dir) : NO_PROJECT
+  })
+  handle('git:push', async ({ projectId }) => {
+    const dir = cwd(projectId)
+    return dir ? git.push(dir) : NO_PROJECT
+  })
   handle('ism:snapshot', async ({ projectId, base }) => {
     const dir = cwd(projectId)
     if (!dir) return NO_PROJECT

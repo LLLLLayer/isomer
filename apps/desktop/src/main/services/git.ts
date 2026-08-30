@@ -1,4 +1,4 @@
-import type { GitLogEntry, GitStatusSummary } from '../../shared/ipc'
+import type { GitLogEntry, GitRefs, GitStatusSummary } from '../../shared/ipc'
 import type { Result } from '../../shared/result'
 import { err, ok } from '../../shared/result'
 import type { Exec } from './exec'
@@ -119,5 +119,86 @@ export class GitService {
   async isRepository(cwd: string): Promise<boolean> {
     const r = await this.run(cwd, ['rev-parse', '--git-dir'])
     return r.code === 0
+  }
+
+  async refs(cwd: string): Promise<Result<GitRefs>> {
+    const [head, refs, stashes] = await Promise.all([
+      this.run(cwd, ['rev-parse', '--abbrev-ref', 'HEAD']),
+      this.run(cwd, [
+        'for-each-ref',
+        '--format=%(refname)',
+        'refs/heads',
+        'refs/remotes',
+        'refs/tags',
+      ]),
+      this.run(cwd, ['stash', 'list']),
+    ])
+    if (refs.code !== 0) {
+      return err({ code: 'GIT', message: refs.stderr.trim() || 'for-each-ref failed' })
+    }
+    const out: GitRefs = {
+      current: head.code === 0 ? head.stdout.trim() : '',
+      locals: [],
+      remotes: [],
+      tags: [],
+      stashes:
+        stashes.code === 0 ? stashes.stdout.split('\n').filter((l) => l !== '').length : 0,
+    }
+    for (const line of refs.stdout.split('\n')) {
+      if (line.startsWith('refs/heads/')) out.locals.push(line.slice('refs/heads/'.length))
+      else if (line.startsWith('refs/remotes/')) out.remotes.push(line.slice('refs/remotes/'.length))
+      else if (line.startsWith('refs/tags/')) out.tags.push(line.slice('refs/tags/'.length))
+    }
+    return ok(out)
+  }
+
+  /** Unified diff of a working-tree file against HEAD; untracked files are
+   * rendered via --no-index against /dev/null (exit 1 means "differs"). */
+  async workingDiff(cwd: string, path: string, untracked: boolean): Promise<Result<string>> {
+    const args = untracked
+      ? ['diff', '--no-color', '--no-index', '--', '/dev/null', path]
+      : ['diff', '--no-color', 'HEAD', '--', path]
+    const r = await this.run(cwd, args)
+    if (r.code !== 0 && !(untracked && r.code === 1)) {
+      return err({ code: 'GIT', message: r.stderr.trim() || 'git diff failed' })
+    }
+    return ok(r.stdout)
+  }
+
+  async commitDiff(cwd: string, sha: string): Promise<Result<string>> {
+    const r = await this.run(cwd, [
+      'show',
+      sha,
+      '--format=',
+      '--patch',
+      '--no-color',
+      '--no-renames',
+    ])
+    if (r.code !== 0) {
+      return err({ code: 'GIT', message: r.stderr.trim() || 'git show failed' })
+    }
+    return ok(r.stdout)
+  }
+
+  /** Network verbs report their stderr tail (git talks progress on stderr). */
+  private async network(cwd: string, args: string[]): Promise<Result<string>> {
+    const r = await this.run(cwd, args)
+    const tail = (r.stderr.trim() || r.stdout.trim()).split('\n').slice(-3).join('\n')
+    if (r.code !== 0) {
+      return err({ code: 'GIT', message: tail || `git ${args[0]} failed` })
+    }
+    return ok(tail)
+  }
+
+  fetch(cwd: string): Promise<Result<string>> {
+    return this.network(cwd, ['fetch', '--prune'])
+  }
+
+  pull(cwd: string): Promise<Result<string>> {
+    return this.network(cwd, ['pull', '--ff-only'])
+  }
+
+  push(cwd: string): Promise<Result<string>> {
+    return this.network(cwd, ['push'])
   }
 }

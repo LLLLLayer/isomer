@@ -1,10 +1,12 @@
 import { create } from 'zustand'
-import type { GitLogEntry, GitStatusSummary, Project } from '../../shared/ipc'
+import type { GitLogEntry, GitRefs, GitStatusSummary, Project } from '../../shared/ipc'
 import type { Comment, Snapshot } from '../../shared/ism-types'
 import type { AppError } from '../../shared/result'
 import type { Settings } from '../../shared/theme'
 import { DEFAULT_SETTINGS } from '../../shared/theme'
 import { setLanguage } from '../i18n'
+
+export type ViewMode = 'changes' | 'history' | 'stack'
 
 export interface AppState {
   settings: Settings
@@ -12,6 +14,17 @@ export interface AppState {
   currentProjectId: string | null
   status: GitStatusSummary | null
   log: GitLogEntry[]
+  refs: GitRefs | null
+  view: ViewMode
+  /** Changes view: selected working-tree file and its diff text. */
+  selectedPath: string | null
+  workingDiffText: string | null
+  /** History view: selected commit and its diff text. */
+  selectedCommit: string | null
+  commitDiffText: string | null
+  /** In-flight network verb, and the last one-line result. */
+  netBusy: 'fetch' | 'pull' | 'push' | null
+  netNote: string | null
   snapshot: Snapshot | null
   comments: Comment[]
   selectedChangeId: string | null
@@ -28,6 +41,11 @@ export interface AppState {
   openProject(id: string): Promise<void>
   refreshProject(): Promise<void>
   selectChange(id: string | null): void
+  setCommentAnchor(anchor: { path: string; line: number } | null): void
+  setView(view: ViewMode): void
+  selectPath(path: string | null): Promise<void>
+  selectCommit(sha: string | null): Promise<void>
+  runNet(verb: 'fetch' | 'pull' | 'push'): Promise<void>
   addComment(input: { change: string; body: string; path?: string; line?: number; replyTo?: string }): Promise<void>
   resolveComment(id: string): Promise<void>
   toggleTerminal(): void
@@ -41,6 +59,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   currentProjectId: null,
   status: null,
   log: [],
+  refs: null,
+  view: 'changes',
+  selectedPath: null,
+  workingDiffText: null,
+  selectedCommit: null,
+  commitDiffText: null,
+  netBusy: null,
+  netNote: null,
   snapshot: null,
   comments: [],
   selectedChangeId: null,
@@ -83,6 +109,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       currentProjectId: id,
       status: null,
       log: [],
+      refs: null,
+      selectedPath: null,
+      workingDiffText: null,
+      selectedCommit: null,
+      commitDiffText: null,
       snapshot: null,
       comments: [],
       selectedChangeId: null,
@@ -95,9 +126,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   async refreshProject() {
     const id = get().currentProjectId
     if (!id) return
-    const [status, log, snapshot, comments] = await Promise.all([
+    const [status, log, refs, snapshot, comments] = await Promise.all([
       window.isomer.invoke('git:status', { projectId: id }),
-      window.isomer.invoke('git:log', { projectId: id, limit: 100 }),
+      window.isomer.invoke('git:log', { projectId: id, limit: 200 }),
+      window.isomer.invoke('git:refs', { projectId: id }),
       window.isomer.invoke('ism:snapshot', { projectId: id }),
       window.isomer.invoke('ism:comment-list', { projectId: id }),
     ])
@@ -107,10 +139,75 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({
       status: status.ok ? status.data : null,
       log: log.ok ? log.data : [],
+      refs: refs.ok ? refs.data : null,
       snapshot: snapshot.ok ? snapshot.data : null,
       comments: comments.ok ? comments.data : [],
       lastError: firstError([status, log, comments]),
     })
+    // Land where the work is: dirty worktree → changes; else a pending
+    // stack → stack; else history.
+    const entries = get().status?.entries ?? []
+    const snap = get().snapshot
+    const view: ViewMode =
+      entries.length > 0 ? 'changes' : snap && snap.commits.length > 0 ? 'stack' : 'history'
+    set({ view })
+    if (entries.length > 0 && get().selectedPath === null) {
+      void get().selectPath(entries[0].path)
+    }
+    if (snap && snap.commits.length > 0 && get().selectedChangeId === null) {
+      get().selectChange(snap.commits[snap.commits.length - 1].sha)
+    }
+    if (get().log.length > 0 && get().selectedCommit === null) {
+      void get().selectCommit(get().log[0].sha)
+    }
+  },
+
+  setView(view) {
+    set({ view })
+  },
+
+  async selectPath(path) {
+    const id = get().currentProjectId
+    set({ selectedPath: path, workingDiffText: null })
+    if (!id || !path) return
+    const entry = get().status?.entries.find((e) => e.path === path)
+    const r = await window.isomer.invoke('git:working-diff', {
+      projectId: id,
+      path,
+      untracked: entry?.code === '??',
+    })
+    if (get().currentProjectId !== id || get().selectedPath !== path) return
+    if (!r.ok) {
+      set({ lastError: r.error })
+      return
+    }
+    set({ workingDiffText: r.data })
+  },
+
+  async selectCommit(sha) {
+    const id = get().currentProjectId
+    set({ selectedCommit: sha, commitDiffText: null })
+    if (!id || !sha) return
+    const r = await window.isomer.invoke('git:commit-diff', { projectId: id, sha })
+    if (get().currentProjectId !== id || get().selectedCommit !== sha) return
+    if (!r.ok) {
+      set({ lastError: r.error })
+      return
+    }
+    set({ commitDiffText: r.data })
+  },
+
+  async runNet(verb) {
+    const id = get().currentProjectId
+    if (!id || get().netBusy) return
+    set({ netBusy: verb, netNote: null })
+    const r = await window.isomer.invoke(`git:${verb}`, { projectId: id })
+    if (get().currentProjectId !== id) {
+      set({ netBusy: null })
+      return
+    }
+    set({ netBusy: null, netNote: r.ok ? r.data : null, lastError: r.ok ? null : r.error })
+    if (verb !== 'fetch') await get().refreshProject()
   },
 
   selectChange(id) {

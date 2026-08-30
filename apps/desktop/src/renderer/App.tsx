@@ -1,8 +1,11 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { ChangesView } from './components/ChangesView'
+import { HistoryView } from './components/HistoryView'
 import { Inspector } from './components/Inspector'
 import { ProjectRail } from './components/ProjectRail'
 import { ReviewView } from './components/ReviewView'
+import { Sidebar } from './components/Sidebar'
 import { StackView } from './components/StackView'
 import { TerminalDrawer } from './components/TerminalDrawer'
 import { useAppStore } from './store/store'
@@ -15,6 +18,10 @@ export function App(): React.JSX.Element {
   const projects = useAppStore((s) => s.projects)
   const currentProjectId = useAppStore((s) => s.currentProjectId)
   const snapshot = useAppStore((s) => s.snapshot)
+  const view = useAppStore((s) => s.view)
+  const netBusy = useAppStore((s) => s.netBusy)
+  const netNote = useAppStore((s) => s.netNote)
+  const runNet = useAppStore((s) => s.runNet)
   const bootstrap = useAppStore((s) => s.bootstrap)
   const updateSettings = useAppStore((s) => s.updateSettings)
   const toggleTerminal = useAppStore((s) => s.toggleTerminal)
@@ -27,13 +34,28 @@ export function App(): React.JSX.Element {
   }, [bootstrap])
 
   const project = projects.find((p) => p.id === currentProjectId)
+  const netBtn = (verb: 'fetch' | 'pull' | 'push'): React.JSX.Element => (
+    <button
+      className="toolbar-btn"
+      disabled={netBusy !== null || !project}
+      onClick={() => void runNet(verb)}
+    >
+      {netBusy === verb ? '…' : t(`toolbar.${verb}`)}
+    </button>
+  )
 
   return (
     <div className="app-shell">
       <header className="titlebar">
         <span className="titlebar-project">{project?.name ?? t('app.title')}</span>
         {snapshot && <span className="titlebar-branch mono">{snapshot.branch}</span>}
+        <div className="toolbar">
+          {netBtn('fetch')}
+          {netBtn('pull')}
+          {netBtn('push')}
+        </div>
         <span className="spacer" />
+        {netNote && <span className="net-note mono">{netNote}</span>}
         {lastError && (
           <button className="error-chip" onClick={clearError} title={lastError.hint ?? ''}>
             {lastError.code}: {lastError.message}
@@ -42,11 +64,16 @@ export function App(): React.JSX.Element {
       </header>
       <div className="main-row">
         <ProjectRail />
-        <main className="columns">
-          <StackView />
-          <ReviewView />
-          <Inspector />
-        </main>
+        <Sidebar />
+        {view === 'changes' && <ChangesView />}
+        {view === 'history' && <HistoryView />}
+        {view === 'stack' && (
+          <main className="columns">
+            <StackView />
+            <ReviewView />
+            <Inspector />
+          </main>
+        )}
       </div>
       <TerminalDrawer />
       <footer className="statusbar">

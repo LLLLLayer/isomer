@@ -54,5 +54,26 @@
   "errors": {
     "generic": "Something failed",
     "hint": "Hint"
+  },
+  "sidebar": {
+    "localChanges": "Local Changes",
+    "allCommits": "All Commits",
+    "stack": "Change Stack",
+    "branches": "Branches",
+    "remotes": "Remotes",
+    "tags": "Tags",
+    "stashes": "Stashes"
+  },
+  "toolbar": {
+    "fetch": "Fetch",
+    "pull": "Pull",
+    "push": "Push"
+  },
+  "changes": {
+    "clean": "Working tree clean."
+  },
+  "diff": {
+    "empty": "No textual changes.",
+    "files": "{{count}} files"
   }
 }
