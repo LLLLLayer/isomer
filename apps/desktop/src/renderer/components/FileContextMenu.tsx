@@ -3,9 +3,17 @@ import { useTranslation } from 'react-i18next'
 import { Copy, ExternalLink, FolderOpen } from 'lucide-react'
 import { useAppStore } from '../store/store'
 
+export interface FileMenuItem {
+  icon?: React.JSX.Element
+  label: string
+  danger?: boolean
+  action: () => void
+}
+
 /** Right-click menu for repo files: reveal in Finder, open with the
- * default app, copy the repo-relative path. One instance per view. */
-export function useFileContextMenu(): {
+ * default app, copy the repo-relative path — plus view-specific extras
+ * (discard, history, blame, conflict sides). One instance per view. */
+export function useFileContextMenu(extra?: (path: string) => FileMenuItem[]): {
   onContextMenu: (e: React.MouseEvent, path: string) => void
   menu: React.JSX.Element | null
 } {
@@ -36,12 +44,14 @@ export function useFileContextMenu(): {
   }
 
   const item = (
-    icon: React.JSX.Element,
+    icon: React.JSX.Element | undefined,
     label: string,
     action: () => void,
+    danger = false,
   ): React.JSX.Element => (
     <button
-      className="menu-item"
+      key={label}
+      className={`menu-item${danger ? ' danger' : ''}`}
       onMouseDown={(e) => e.stopPropagation()}
       onClick={() => {
         action()
@@ -75,6 +85,8 @@ export function useFileContextMenu(): {
         {item(<Copy size={13} strokeWidth={1.8} />, t('files.copyPath'), () =>
           void navigator.clipboard.writeText(state.path),
         )}
+        {extra && extra(state.path).length > 0 && <div className="menu-sep" />}
+        {extra?.(state.path).map((it) => item(it.icon, it.label, it.action, it.danger))}
       </div>
     ),
   }

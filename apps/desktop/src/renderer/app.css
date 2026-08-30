@@ -352,16 +352,35 @@
 }
 
 .hunk-head {
-  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 12px;
   font-size: 11px;
   color: var(--fg-muted);
   background: var(--bg-raised);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
+  user-select: none;
+}
+
+.hunk-head-text {
+  flex: 1;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  user-select: none;
+}
+
+.hunk-actions {
+  display: flex;
+  gap: 4px;
+  font-family: var(--font-ui);
+}
+
+.hunk-actions .ghost-btn {
+  padding: 0 8px;
+  font-size: 10.5px;
 }
 
 .diff-table > .hunk-head:first-child,
@@ -1577,6 +1596,7 @@ button.side-header {
 
 [data-vibrancy] .columns,
 [data-vibrancy] .changes-view,
+[data-vibrancy] .changes-wrap,
 [data-vibrancy] .history-view,
 [data-vibrancy] .terminal-drawer,
 [data-vibrancy] .pane {
@@ -1790,6 +1810,10 @@ button.side-header {
 .menu-item:hover:not(:disabled) {
   background: var(--accent);
   color: var(--on-accent);
+}
+
+.menu-item.danger {
+  color: var(--err);
 }
 
 .menu-item:disabled {

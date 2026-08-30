@@ -11,8 +11,11 @@ import {
   Settings,
   SquareTerminal,
 } from 'lucide-react'
+import { useState } from 'react'
 import { ChangesView } from './components/ChangesView'
 import { HistoryView } from './components/HistoryView'
+import { OrganizeView } from './components/OrganizeView'
+import { QuickLaunch } from './components/QuickLaunch'
 import { Inspector } from './components/Inspector'
 import { ProjectRail } from './components/ProjectRail'
 import { ReviewView } from './components/ReviewView'
@@ -66,12 +69,27 @@ export function App(): React.JSX.Element {
   const clearError = useAppStore((s) => s.clearError)
   useTheme(settings.theme)
 
+  const [palette, setPalette] = useState(false)
+  const [pushMenu, setPushMenu] = useState(false)
+
   useEffect(() => {
     if (window.isomer.platform === 'darwin') {
       document.documentElement.dataset.vibrancy = '1'
     }
     void bootstrap()
   }, [bootstrap])
+
+  // Fork's Quick Launch: Cmd+P (Ctrl+P elsewhere).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'p') {
+        e.preventDefault()
+        setPalette((p) => !p)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   const project = projects.find((p) => p.id === currentProjectId)
   const terminalOpen = useAppStore((s) => s.terminalOpen)
@@ -89,6 +107,14 @@ export function App(): React.JSX.Element {
       className="toolbar-btn"
       disabled={netBusy !== null || !project}
       onClick={() => void runNet(verb)}
+      onContextMenu={
+        verb === 'push'
+          ? (e) => {
+              e.preventDefault()
+              setPushMenu(true)
+            }
+          : undefined
+      }
     >
       <span className="toolbar-icon">{netBusy === verb ? '…' : ICONS[verb]}</span>
       <span>{t(`toolbar.${verb}`)}</span>
@@ -161,6 +187,7 @@ export function App(): React.JSX.Element {
         {view === 'changes' && <ChangesView />}
         {view === 'history' && <HistoryView />}
         {view === 'stack' && <StackColumns />}
+        {view === 'organize' && <OrganizeView />}
         {terminalOpen && terminalDock === 'right' && (
           <>
             <Splitter axis="x" onDelta={(d) => resizeTermW(-d)} />
@@ -179,6 +206,37 @@ export function App(): React.JSX.Element {
         </>
       )}
       <SettingsPage />
+      {palette && <QuickLaunch onClose={() => setPalette(false)} />}
+      {pushMenu && (
+        <div className="modal-backdrop" onClick={() => setPushMenu(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <header className="modal-header">
+              <span>{t('toolbar.pushOptions')}</span>
+            </header>
+            <div className="push-options">
+              <button
+                className="ghost-btn"
+                onClick={() => {
+                  void runNet('push')
+                  setPushMenu(false)
+                }}
+              >
+                {t('toolbar.push')}
+              </button>
+              <button
+                className="ghost-btn danger"
+                onClick={() => {
+                  void runNet('push', { forceWithLease: true })
+                  setPushMenu(false)
+                }}
+              >
+                {t('toolbar.forcePush')}
+              </button>
+            </div>
+            <p className="settings-hint">{t('toolbar.forcePushHint')}</p>
+          </div>
+        </div>
+      )}
       <footer className="statusbar">
         <button className="icon-btn labeled" onClick={toggleTerminal}>
           <SquareTerminal size={14} strokeWidth={1.8} />

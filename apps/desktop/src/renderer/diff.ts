@@ -238,3 +238,62 @@ export function emphasisRanges(rows: UnifiedRow[]): Map<number, EmphRange> {
   }
   return out
 }
+
+/* ==== verbatim hunk extraction (index surgery) =========================== */
+
+export interface FileHunkPatches {
+  path: string
+  /** Full single-hunk patches: file header + one @@ block, verbatim. */
+  patches: string[]
+}
+
+/**
+ * Split raw `git diff` output into per-hunk patches that `git apply` accepts.
+ * Text is kept verbatim (headers included) — re-serialization would corrupt
+ * `\ No newline` markers and mode lines.
+ */
+export function extractHunkPatches(raw: string): FileHunkPatches[] {
+  const out: FileHunkPatches[] = []
+  const lines = raw.split('\n')
+  let header: string[] = []
+  let hunk: string[] = []
+  let path = ''
+  let sawHunk = false
+
+  const flushHunk = (): void => {
+    while (hunk.length > 0 && hunk[hunk.length - 1] === '') hunk.pop()
+    if (hunk.length > 0 && path !== '') {
+      const entry = out.find((f) => f.path === path)
+      const patch = [...header, ...hunk].join('\n') + '\n'
+      if (entry) entry.patches.push(patch)
+      else out.push({ path, patches: [patch] })
+    }
+    hunk = []
+  }
+
+  for (const line of lines) {
+    if (line.startsWith('diff --git ')) {
+      flushHunk()
+      header = [line]
+      sawHunk = false
+      const idx = line.lastIndexOf(' b/')
+      path = idx >= 0 ? line.slice(idx + 3) : ''
+      continue
+    }
+    if (line.startsWith('@@')) {
+      flushHunk()
+      sawHunk = true
+      hunk = [line]
+      continue
+    }
+    if (!sawHunk) {
+      // index/mode/---/+++ metadata belongs to the reusable header.
+      if (line !== '') header.push(line)
+      if (line.startsWith('+++ b/')) path = line.slice(6)
+      continue
+    }
+    hunk.push(line)
+  }
+  flushHunk()
+  return out
+}

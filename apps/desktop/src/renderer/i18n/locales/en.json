@@ -116,7 +116,10 @@
     "fetch": "Fetch",
     "pull": "Pull",
     "push": "Push",
-    "stash": "Stash"
+    "stash": "Stash",
+    "pushOptions": "Push options",
+    "forcePush": "Force push (--force-with-lease)",
+    "forcePushHint": "Force-with-lease refuses to overwrite work you have not seen. Right-click Push for these options."
   },
   "changes": {
     "clean": "Working tree clean.",
@@ -127,7 +130,13 @@
     "commitSubject": "Commit subject",
     "commitDescription": "Description",
     "amend": "Amend",
-    "commit": "Commit"
+    "commit": "Commit",
+    "stageHunk": "Stage hunk",
+    "unstageHunk": "Unstage hunk",
+    "discardHunk": "Discard hunk",
+    "discard": "Discard changes…",
+    "discardTitle": "Discard changes in {{path}}?",
+    "discardHunkTitle": "Discard this hunk in {{path}}?"
   },
   "diff": {
     "empty": "No textual changes.",
@@ -143,7 +152,9 @@
     },
     "pickFile": "Select a file to view its diff.",
     "today": "Today",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "search": "Search message, author, sha…",
+    "results": "{{count}} results"
   },
   "files": {
     "viewOptions": "View options",
@@ -152,7 +163,9 @@
     "viewAsCombined": "View as Combined List",
     "reveal": "Reveal in Finder",
     "openDefault": "Open with Default App",
-    "copyPath": "Copy Path"
+    "copyPath": "Copy Path",
+    "history": "File History",
+    "blame": "Blame"
   },
   "branch": {
     "checkout": "Checkout",
@@ -162,7 +175,12 @@
     "copyName": "Copy Branch Name",
     "newTitle": "New branch from {{from}}",
     "renameTitle": "Rename {{from}}",
-    "deleteTitle": "Delete branch {{name}}?"
+    "deleteTitle": "Delete branch {{name}}?",
+    "mergeInto": "Merge {{branch}} into {{current}}…",
+    "rebaseOnto": "Rebase current onto {{branch}}…",
+    "compare": "Compare with current…",
+    "mergeTitle": "Merge {{branch}} into {{current}}?",
+    "rebaseTitle": "Rebase {{current}} onto {{onto}}?"
   },
   "common": {
     "cancel": "Cancel",

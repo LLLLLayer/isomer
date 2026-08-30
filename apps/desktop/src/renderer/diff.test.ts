@@ -190,3 +190,31 @@ describe('intraline surrogate safety', () => {
     }
   })
 })
+
+import { extractHunkPatches } from './diff'
+
+describe('extractHunkPatches', () => {
+  it('yields apply-able verbatim patches, one per hunk', () => {
+    const raw =
+      'diff --git a/x.ts b/x.ts\n' +
+      'index 1111111..2222222 100644\n' +
+      '--- a/x.ts\n' +
+      '+++ b/x.ts\n' +
+      '@@ -1,1 +1,1 @@\n' +
+      '-const a = 1\n' +
+      '+const a = 2\n' +
+      '@@ -9,1 +9,2 @@\n' +
+      ' keep\n' +
+      '+added\n'
+    const files = extractHunkPatches(raw)
+    expect(files).toHaveLength(1)
+    expect(files[0].path).toBe('x.ts')
+    expect(files[0].patches).toHaveLength(2)
+    // Each patch carries the full header and exactly its own hunk.
+    expect(files[0].patches[0]).toContain('--- a/x.ts')
+    expect(files[0].patches[0]).toContain('-const a = 1')
+    expect(files[0].patches[0]).not.toContain('added')
+    expect(files[0].patches[1]).toContain('@@ -9,1 +9,2 @@')
+    expect(files[0].patches[1].endsWith('+added\n')).toBe(true)
+  })
+})

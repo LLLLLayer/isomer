@@ -1,12 +1,15 @@
-import { Fragment, useMemo } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Search, X } from 'lucide-react'
+import type { GitLogEntry } from '../../shared/ipc'
+import type { Result } from '../../shared/result'
 import { parseUnifiedDiff } from '../diff'
 import { dayKey, graphLayout } from '../graph'
 import { useAppStore } from '../store/store'
 import { useFileContextMenu } from './FileContextMenu'
+import { ConfirmModal, PromptModal } from './Modals'
 import { DiffView } from './DiffView'
 import { FileTreePanel } from './FileTreePanel'
-import { useState } from 'react'
 import { Splitter, usePaneSize } from '../resize'
 
 function fmtDate(ts: number): string {
@@ -30,6 +33,24 @@ export function HistoryView(): React.JSX.Element {
   const setDetailTab = useAppStore((s) => s.setDetailTab)
   const [treeFile, setTreeFile] = useState<string | null>(null)
   const fileMenu = useFileContextMenu()
+  const projectId = useAppStore((s) => s.currentProjectId)
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<GitLogEntry[] | null>(null)
+
+  // Debounced repo-wide search: message, author, sha prefix.
+  useEffect(() => {
+    const q = query.trim()
+    if (!projectId || q === '') {
+      setResults(null)
+      return
+    }
+    const timer = setTimeout(() => {
+      void window.isomer
+        .invoke('git:log-search', { projectId, query: q, limit: 100 })
+        .then((r) => setResults(r.ok ? r.data : []))
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [projectId, query])
 
   if (log.length === 0) {
     return (
@@ -60,8 +81,26 @@ export function HistoryView(): React.JSX.Element {
   return (
     <div className="history-view">
       {fileMenu.menu}
+      <div className="history-toolbar">
+        <Search size={13} strokeWidth={1.8} />
+        <input
+          className="history-search"
+          placeholder={t('history.search')}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        {query !== '' && (
+          <button className="icon-btn" onClick={() => setQuery('')}>
+            <X size={12} strokeWidth={2} />
+          </button>
+        )}
+        {results !== null && (
+          <span className="muted">{t('history.results', { count: results.length })}</span>
+        )}
+      </div>
       <div className="commit-list" style={{ height: listH, maxHeight: 'none' }}>
         <GraphList
+          entries={results}
           selected={selected}
           onSelect={(sha) => void selectCommit(sha)}
           decorations={decorations}
@@ -139,16 +178,60 @@ function laneColor(l: number): string {
 /** The commit list with a real topology rail: lanes from parent links,
  * day headers grouping commits into scannable clusters. */
 function GraphList({
+  entries,
   selected,
   onSelect,
   decorations,
 }: {
+  /** Search results override the store log (flat rail, no fake topology). */
+  entries: GitLogEntry[] | null
   selected: string | null
   onSelect: (sha: string) => void
   decorations: Map<string, string[]>
 }): React.JSX.Element {
   const { t } = useTranslation()
-  const log = useAppStore((s) => s.log)
+  const storeLog = useAppStore((s) => s.log)
+  const log = entries ?? storeLog
+  const refreshProject = useAppStore((s) => s.refreshProject)
+  const setError = useAppStore((s) => s.setError)
+  const branchOp = useAppStore((s) => s.branchOp)
+  const projectId = useAppStore((s) => s.currentProjectId)
+  const [menu, setMenu] = useState<{ x: number; y: number; sha: string } | null>(null)
+  const [modal, setModal] = useState<
+    | { kind: 'branch'; sha: string }
+    | { kind: 'tag'; sha: string }
+    | { kind: 'cherry-pick'; sha: string }
+    | { kind: 'revert'; sha: string }
+    | null
+  >(null)
+
+  useEffect(() => {
+    if (!menu) return
+    const close = (): void => setMenu(null)
+    window.addEventListener('mousedown', close)
+    return () => window.removeEventListener('mousedown', close)
+  }, [menu])
+
+  const run = (p: Promise<Result<unknown>>): void => {
+    void p.then((r) => {
+      if (!r.ok) setError(r.error)
+      void refreshProject()
+    })
+  }
+  const menuItem = (label: string, action: () => void, danger = false): React.JSX.Element => (
+    <button
+      key={label}
+      className={`menu-item${danger ? ' danger' : ''}`}
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={() => {
+        action()
+        setMenu(null)
+      }}
+    >
+      <span className="menu-check" />
+      {label}
+    </button>
+  )
   const rows = useMemo(() => graphLayout(log), [log])
   const lanes = Math.min(
     MAX_LANES,
@@ -197,6 +280,10 @@ function GraphList({
               className={`commit-row${e.sha === selected ? ' active' : ''}`}
               style={{ gridTemplateColumns: `${gw}px minmax(0, 1fr) 130px 80px 110px` }}
               onClick={() => onSelect(e.sha)}
+              onContextMenu={(ev) => {
+                ev.preventDefault()
+                setMenu({ x: ev.clientX, y: ev.clientY, sha: e.sha })
+              }}
             >
               <svg className="graph-svg" width={gw} height={ROW_H}>
                 {r.through.map(([a, b], k) =>
@@ -252,6 +339,72 @@ function GraphList({
           </Fragment>
         )
       })}
+      {menu && (
+        <div className="context-menu" style={{ left: menu.x, top: menu.y }}>
+          {menuItem(t('commit.copySha'), () => void navigator.clipboard.writeText(menu.sha))}
+          <div className="menu-sep" />
+          {menuItem(t('commit.newBranch'), () => setModal({ kind: 'branch', sha: menu.sha }))}
+          {menuItem(t('commit.newTag'), () => setModal({ kind: 'tag', sha: menu.sha }))}
+          {menuItem(t('commit.checkout'), () =>
+            void branchOp({ kind: 'checkout', branch: menu.sha }),
+          )}
+          <div className="menu-sep" />
+          {menuItem(t('commit.cherryPick'), () => setModal({ kind: 'cherry-pick', sha: menu.sha }))}
+          {menuItem(t('commit.revert'), () => setModal({ kind: 'revert', sha: menu.sha }), true)}
+        </div>
+      )}
+      {modal?.kind === 'branch' && (
+        <PromptModal
+          title={t('branch.newTitle', { from: modal.sha.slice(0, 8) })}
+          initial=""
+          onClose={() => setModal(null)}
+          onSubmit={(name) => {
+            void branchOp({ kind: 'create', name, from: modal.sha })
+            setModal(null)
+          }}
+        />
+      )}
+      {modal?.kind === 'tag' && projectId && (
+        <PromptModal
+          title={t('tag.newTitle', { sha: modal.sha.slice(0, 8) })}
+          initial=""
+          onClose={() => setModal(null)}
+          onSubmit={(name) => {
+            run(
+              window.isomer.invoke('git:tag-create', {
+                projectId,
+                name,
+                sha: modal.sha,
+                push: false,
+              }),
+            )
+            setModal(null)
+          }}
+        />
+      )}
+      {modal?.kind === 'cherry-pick' && projectId && (
+        <ConfirmModal
+          title={t('commit.cherryPickTitle', { sha: modal.sha.slice(0, 8) })}
+          command={`git cherry-pick ${modal.sha.slice(0, 8)}`}
+          onClose={() => setModal(null)}
+          onConfirm={() => {
+            run(window.isomer.invoke('git:cherry-pick', { projectId, sha: modal.sha }))
+            setModal(null)
+          }}
+        />
+      )}
+      {modal?.kind === 'revert' && projectId && (
+        <ConfirmModal
+          title={t('commit.revertTitle', { sha: modal.sha.slice(0, 8) })}
+          command={`git revert --no-edit ${modal.sha.slice(0, 8)}`}
+          danger
+          onClose={() => setModal(null)}
+          onConfirm={() => {
+            run(window.isomer.invoke('git:revert', { projectId, sha: modal.sha }))
+            setModal(null)
+          }}
+        />
+      )}
     </>
   )
 }

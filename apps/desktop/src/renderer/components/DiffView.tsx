@@ -22,9 +22,12 @@ export interface ReviewHooks {
 export function DiffView({
   files,
   review,
+  hunkBar,
 }: {
   files: FileDiff[]
   review?: ReviewHooks
+  /** Optional per-hunk action bar (stage/discard surgery), by hunk ordinal. */
+  hunkBar?: (path: string, hunkIndex: number) => React.ReactNode
 }): React.JSX.Element {
   const { t } = useTranslation()
   const layout = useAppStore((s) => s.settings.diffLayout)
@@ -78,7 +81,14 @@ export function DiffView({
         <DiffViewMenu />
       </div>
       {files.map((f) => (
-        <FileCard key={f.path} file={f} split={split} review={review} threads={threads} />
+        <FileCard
+          key={f.path}
+          file={f}
+          split={split}
+          review={review}
+          threads={threads}
+          hunkBar={hunkBar}
+        />
       ))}
     </div>
   )
@@ -135,11 +145,13 @@ function FileCard({
   split,
   review,
   threads,
+  hunkBar,
 }: {
   file: FileDiff
   split: boolean
   review?: ReviewHooks
   threads: Map<string, Comment[]>
+  hunkBar?: (path: string, hunkIndex: number) => React.ReactNode
 }): React.JSX.Element {
   const [collapsed, setCollapsed] = useState(false)
   const lang = langFor(f.path)
@@ -196,13 +208,26 @@ function FileCard({
     )
   }
 
+  // Hunk ordinal per gap row (both layouts render gaps in source order).
+  const gapOrdinals = useMemo(() => {
+    const map = new Map<number, number>()
+    let ord = 0
+    f.rows.forEach((r, i) => {
+      if (r.kind === 'gap') map.set(i, ord++)
+    })
+    return map
+  }, [f.rows])
+
+  const hunkHead = (key: number, text: string, ordinal: number): React.JSX.Element => (
+    <div key={key} className="hunk-head mono">
+      <span className="hunk-head-text">{text}</span>
+      {hunkBar && <span className="hunk-actions">{hunkBar(f.path, ordinal)}</span>}
+    </div>
+  )
+
   const unifiedRow = (row: UnifiedRow, i: number): React.JSX.Element => {
     if (row.kind === 'gap') {
-      return (
-        <div key={i} className="hunk-head mono">
-          {row.text}
-        </div>
-      )
+      return hunkHead(i, row.text, gapOrdinals.get(i) ?? 0)
     }
     const kind = row.kind === 'context' ? 'ctx' : row.kind
     return (
@@ -223,15 +248,14 @@ function FileCard({
     )
   }
 
-  const splitBody = (): React.JSX.Element => (
+  const splitBody = (): React.JSX.Element => {
+    let gapOrd = -1
+    return (
     <div className="diff-table split">
       {splitRows(f.rows).map((row, i) => {
         if (row.gap !== undefined) {
-          return (
-            <div key={i} className="hunk-head mono">
-              {row.gap}
-            </div>
-          )
+          gapOrd++
+          return hunkHead(i, row.gap, gapOrd)
         }
         const pair =
           row.left?.kind === 'del' && row.right?.kind === 'add'
@@ -259,7 +283,8 @@ function FileCard({
         )
       })}
     </div>
-  )
+    )
+  }
 
   return (
     <article className="diff-hunk">

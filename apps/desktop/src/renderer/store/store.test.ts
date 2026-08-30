@@ -46,6 +46,7 @@ describe('app store', () => {
       'git:log': () => ({ ok: true, data: [] }),
       'repo:watch': () => undefined,
       'git:refs': () => ({ ok: true, data: { current: 'feat', locals: { feat: 'aaaa' }, remotes: {}, tags: {}, stashes: 0, submodules: [] } }),
+      'git:stash-list': () => ({ ok: true, data: [] }),
       'ism:snapshot': () => ({ ok: false, error: { code: 'E101', message: 'empty stack' } }),
       'ism:comment-list': () => ({ ok: true, data: [] }),
     })
@@ -89,6 +90,7 @@ describe('app store', () => {
       'git:log': () => ({ ok: true, data: [] }),
       'repo:watch': () => undefined,
       'git:refs': () => ({ ok: true, data: { current: '', locals: {}, remotes: {}, tags: {}, stashes: 0, submodules: [] } }),
+      'git:stash-list': () => ({ ok: true, data: [] }),
       'ism:snapshot': () => ({ ok: false, error: { code: 'E101', message: 'x' } }),
       'ism:comment-list': () => ({ ok: true, data: [] }),
     })

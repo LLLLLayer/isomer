@@ -116,7 +116,10 @@
     "fetch": "拉取远端",
     "pull": "拉取合并",
     "push": "推送",
-    "stash": "贮藏"
+    "stash": "贮藏",
+    "pushOptions": "推送选项",
+    "forcePush": "强制推送（--force-with-lease）",
+    "forcePushHint": "force-with-lease 不会覆盖你未见过的远端提交。右键推送按钮可打开此选项。"
   },
   "changes": {
     "clean": "工作区是干净的。",
@@ -127,7 +130,13 @@
     "commitSubject": "提交标题",
     "commitDescription": "描述",
     "amend": "修补上一提交",
-    "commit": "提交"
+    "commit": "提交",
+    "stageHunk": "暂存此块",
+    "unstageHunk": "取消暂存此块",
+    "discardHunk": "丢弃此块",
+    "discard": "丢弃更改…",
+    "discardTitle": "丢弃 {{path}} 的更改？",
+    "discardHunkTitle": "丢弃 {{path}} 中的这个改动块？"
   },
   "diff": {
     "empty": "没有文本变更。",
@@ -143,7 +152,9 @@
     },
     "pickFile": "选择一个文件查看它的 diff。",
     "today": "今天",
-    "yesterday": "昨天"
+    "yesterday": "昨天",
+    "search": "搜索信息、作者、SHA…",
+    "results": "{{count}} 个结果"
   },
   "files": {
     "viewOptions": "视图选项",
@@ -152,7 +163,9 @@
     "viewAsCombined": "以完整路径查看",
     "reveal": "在 Finder 中显示",
     "openDefault": "用默认应用打开",
-    "copyPath": "复制路径"
+    "copyPath": "复制路径",
+    "history": "文件历史",
+    "blame": "Blame"
   },
   "branch": {
     "checkout": "检出",
@@ -162,7 +175,12 @@
     "copyName": "复制分支名",
     "newTitle": "从 {{from}} 新建分支",
     "renameTitle": "重命名 {{from}}",
-    "deleteTitle": "删除分支 {{name}}？"
+    "deleteTitle": "删除分支 {{name}}？",
+    "mergeInto": "将 {{branch}} 合并到 {{current}}…",
+    "rebaseOnto": "将当前分支变基到 {{branch}}…",
+    "compare": "与当前分支对比…",
+    "mergeTitle": "将 {{branch}} 合并到 {{current}}？",
+    "rebaseTitle": "将 {{current}} 变基到 {{onto}}？"
   },
   "common": {
     "cancel": "取消",

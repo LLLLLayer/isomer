@@ -6,6 +6,7 @@ import type {
   GitStatusSummary,
   IsmDetection,
   Project,
+  StashEntry,
   UpdateInfo,
 } from '../../shared/ipc'
 import type { Comment, Snapshot } from '../../shared/ism-types'
@@ -16,7 +17,7 @@ import i18next from 'i18next'
 import { setLanguage } from '../i18n'
 import { storage } from '../storage'
 
-export type ViewMode = 'changes' | 'history' | 'stack'
+export type ViewMode = 'changes' | 'history' | 'stack' | 'organize'
 export type ChangeArea = 'unstaged' | 'staged'
 export type DetailTab = 'commit' | 'changes' | 'tree'
 
@@ -27,6 +28,7 @@ export interface AppState {
   status: GitStatusSummary | null
   log: GitLogEntry[]
   refs: GitRefs | null
+  stashes: StashEntry[]
   view: ViewMode
   /** Changes view: selected file (in one of the two areas) and its diff. */
   selectedPath: string | null
@@ -92,7 +94,7 @@ export interface AppState {
       | { kind: 'rename'; from: string; to: string }
       | { kind: 'delete'; name: string },
   ): Promise<void>
-  runNet(verb: 'fetch' | 'pull' | 'push'): Promise<void>
+  runNet(verb: 'fetch' | 'pull' | 'push', opts?: { forceWithLease?: boolean }): Promise<void>
   addComment(input: { change: string; body: string; path?: string; line?: number; replyTo?: string }): Promise<void>
   resolveComment(id: string): Promise<void>
   toggleSidebar(): void
@@ -129,6 +131,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   status: null,
   log: [],
   refs: null,
+  stashes: [],
   view: 'changes',
   selectedPath: null,
   selectedArea: 'unstaged',
@@ -209,6 +212,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       status: null,
       log: [],
       refs: null,
+      stashes: [],
       selectedPath: null,
       workingDiffText: null,
       selectedCommit: null,
@@ -232,10 +236,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   async refreshProject(initial = false) {
     const id = get().currentProjectId
     if (!id) return
-    const [status, log, refs, snapshot, comments] = await Promise.all([
+    const [status, log, refs, stash, snapshot, comments] = await Promise.all([
       window.isomer.invoke('git:status', { projectId: id }),
       window.isomer.invoke('git:log', { projectId: id, limit: 200 }),
       window.isomer.invoke('git:refs', { projectId: id }),
+      window.isomer.invoke('git:stash-list', { projectId: id }),
       window.isomer.invoke('ism:snapshot', { projectId: id }),
       window.isomer.invoke('ism:comment-list', { projectId: id }),
     ])
@@ -246,6 +251,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       status: status.ok ? status.data : null,
       log: log.ok ? log.data : [],
       refs: refs.ok ? refs.data : null,
+      stashes: stash.ok ? stash.data : [],
       snapshot: snapshot.ok ? snapshot.data : null,
       comments: comments.ok ? comments.data : [],
       lastError: firstError([status, log, comments]),
@@ -259,7 +265,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const forced = consumeForcedView()
       if (forced === 'settings') get().openSettings()
       const view: ViewMode =
-        forced && ['changes', 'history', 'stack'].includes(forced)
+        forced && ['changes', 'history', 'stack', 'organize'].includes(forced)
           ? (forced as ViewMode)
           : entries.length > 0
             ? 'changes'
@@ -430,11 +436,17 @@ export const useAppStore = create<AppState>((set, get) => ({
     await get().refreshProject()
   },
 
-  async runNet(verb) {
+  async runNet(verb, opts) {
     const id = get().currentProjectId
     if (!id || get().netBusy) return
     set({ netBusy: verb, netNote: null })
-    const r = await window.isomer.invoke(`git:${verb}`, { projectId: id })
+    const r =
+      verb === 'push'
+        ? await window.isomer.invoke('git:push', {
+            projectId: id,
+            forceWithLease: opts?.forceWithLease ?? false,
+          })
+        : await window.isomer.invoke(`git:${verb}`, { projectId: id })
     if (get().currentProjectId !== id) {
       set({ netBusy: null })
       return
