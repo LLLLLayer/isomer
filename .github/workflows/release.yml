@@ -33,7 +33,7 @@ jobs:
           npm test
           # Stamp the app with the tag version — a mismatched app.getVersion()
           # would make every install (even the newest) see an update forever.
-          npm version --no-git-tag-version "${GITHUB_REF_NAME#v}"
+          npm version --no-git-tag-version --allow-same-version "${GITHUB_REF_NAME#v}"
           npm run build
           npx electron-builder --mac --publish never
         env:
