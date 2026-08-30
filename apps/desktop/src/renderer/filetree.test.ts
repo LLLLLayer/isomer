@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildFileTree } from './filetree'
+import { buildFileTree, splitPath } from './filetree'
 
 describe('buildFileTree', () => {
   it('nests by directory and collapses single-child chains', () => {
@@ -21,5 +21,12 @@ describe('buildFileTree', () => {
     expect(tree).toHaveLength(1)
     expect(tree[0].name).toBe('src')
     expect(tree[0].children.map((c) => c.name)).toEqual(['a', 'b'])
+  })
+})
+
+describe('splitPath', () => {
+  it('splits directory and basename', () => {
+    expect(splitPath('apps/desktop/src/a.ts')).toEqual({ base: 'a.ts', dir: 'apps/desktop/src' })
+    expect(splitPath('README.md')).toEqual({ base: 'README.md', dir: '' })
   })
 })

@@ -1,8 +1,10 @@
 import { useTranslation } from 'react-i18next'
 import { parseUnifiedDiff } from '../diff'
-import { buildFileTree, type TreeNode } from '../filetree'
+
 import { useAppStore } from '../store/store'
 import { DiffView } from './DiffView'
+import { FileTreePanel } from './FileTreePanel'
+import { useState } from 'react'
 import { Splitter, usePaneSize } from '../resize'
 
 function fmtDate(ts: number): string {
@@ -10,19 +12,6 @@ function fmtDate(ts: number): string {
   const d = new Date(ts * 1000)
   const p = (n: number): string => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
-}
-
-function Tree({ nodes }: { nodes: TreeNode[] }): React.JSX.Element {
-  return (
-    <ul className="file-tree">
-      {nodes.map((n) => (
-        <li key={n.path}>
-          <span className={n.isFile ? 'tree-file' : 'tree-dir'}>{n.name}</span>
-          {n.children.length > 0 && <Tree nodes={n.children} />}
-        </li>
-      ))}
-    </ul>
-  )
 }
 
 /** Fork-style All Commits: graph rail, ref decorations, author/sha/date
@@ -37,6 +26,7 @@ export function HistoryView(): React.JSX.Element {
   const info = useAppStore((s) => s.commitInfo)
   const tab = useAppStore((s) => s.detailTab)
   const setDetailTab = useAppStore((s) => s.setDetailTab)
+  const [treeFile, setTreeFile] = useState<string | null>(null)
 
   if (log.length === 0) {
     return (
@@ -123,7 +113,22 @@ export function HistoryView(): React.JSX.Element {
           )}
           {tab === 'changes' &&
             (diffText === null ? <p className="empty">…</p> : <DiffView files={files} />)}
-          {tab === 'tree' && <Tree nodes={buildFileTree(files.map((f) => f.path))} />}
+          {tab === 'tree' && (
+            <div className="tree-split">
+              <FileTreePanel
+                paths={files.map((f) => f.path)}
+                selected={treeFile}
+                onSelect={setTreeFile}
+              />
+              <div className="tree-diff">
+                {treeFile ? (
+                  <DiffView files={files.filter((f) => f.path === treeFile)} />
+                ) : (
+                  <p className="empty">{t('history.pickFile')}</p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </div>

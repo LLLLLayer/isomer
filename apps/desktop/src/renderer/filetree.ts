@@ -36,3 +36,9 @@ export function buildFileTree(paths: string[]): TreeNode[] {
   }
   return root.children.map(collapse).sort(order)
 }
+
+/** "a/b/c.ts" → { base: "c.ts", dir: "a/b" } (Fork's "View as List" row). */
+export function splitPath(path: string): { base: string; dir: string } {
+  const idx = path.lastIndexOf('/')
+  return idx < 0 ? { base: path, dir: '' } : { base: path.slice(idx + 1), dir: path.slice(0, idx) }
+}

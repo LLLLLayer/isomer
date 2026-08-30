@@ -4,6 +4,11 @@ import { useAppStore } from '../store/store'
 import { parseUnifiedDiff } from '../diff'
 import { DiffView } from './DiffView'
 import { Splitter, usePaneSize } from '../resize'
+import { splitPath } from '../filetree'
+import { storage } from '../storage'
+import { FileListMenu, type FileListMode } from './FileListMenu'
+import { FileTreePanel } from './FileTreePanel'
+import { useState } from 'react'
 
 /** Fork-style local changes: Unstaged / Staged areas with stage buttons,
  * the selected file's diff, and the commit box (staged set only). */
@@ -29,27 +34,68 @@ export function ChangesView(): React.JSX.Element {
   const unstaged = entries.filter((e) => e.code === '??' || (e.code[1] ?? '.') !== '.')
   const staged = entries.filter((e) => e.code !== '??' && (e.code[0] ?? '.') !== '.')
 
-  const fileRow = (e: { code: string; path: string }, area: ChangeArea): React.JSX.Element => (
-    <button
-      key={`${area}:${e.path}`}
-      className={`file-row${e.path === selectedPath && area === selectedArea ? ' active' : ''}`}
-      title={e.path}
-      onClick={() => void selectPath(e.path, area)}
-    >
-      <span className={`status-code s-${(area === 'staged' ? e.code[0] : e.code === '??' ? '?' : e.code[1]) ?? 'M'}`}>
-        {area === 'staged' ? e.code[0] : e.code === '??' ? '??' : e.code[1]}
-      </span>
-      <span className="file-name">{e.path}</span>
-    </button>
+  const codeOf = (e: { code: string }, area: ChangeArea): string =>
+    (area === 'staged' ? e.code[0] : e.code === '??' ? '??' : e.code[1]) ?? 'M'
+
+  const statusChip = (e: { code: string }, area: ChangeArea): React.JSX.Element => (
+    <span className={`status-code s-${codeOf(e, area).replace('??', '?')}`}>{codeOf(e, area)}</span>
   )
 
+  const fileRow = (e: { code: string; path: string }, area: ChangeArea): React.JSX.Element => {
+    const { base, dir } = splitPath(e.path)
+    return (
+      <button
+        key={`${area}:${e.path}`}
+        className={`file-row${e.path === selectedPath && area === selectedArea ? ' active' : ''}`}
+        title={e.path}
+        onClick={() => void selectPath(e.path, area)}
+      >
+        {statusChip(e, area)}
+        {listMode === 'list' ? (
+          <span className="file-name plain">
+            {base}
+            {dir !== '' && <span className="file-dir">{dir}</span>}
+          </span>
+        ) : (
+          <span className="file-name">{e.path}</span>
+        )}
+      </button>
+    )
+  }
+
+  const areaList = (
+    list: { code: string; path: string }[],
+    area: ChangeArea,
+  ): React.JSX.Element =>
+    listMode === 'tree' ? (
+      <FileTreePanel
+        paths={list.map((e) => e.path)}
+        selected={area === selectedArea ? selectedPath : null}
+        onSelect={(path) => void selectPath(path, area)}
+        badge={(path) => {
+          const e = list.find((x) => x.path === path)
+          return e ? statusChip(e, area) : null
+        }}
+      />
+    ) : (
+      <>{list.map((e) => fileRow(e, area))}</>
+    )
+
   const [colW, resizeCol] = usePaneSize('stage-column', 280, 180, 460)
+  const [listMode, setListMode] = useState<FileListMode>(
+    (storage.get('fileListMode') as FileListMode) || 'list',
+  )
+  const changeMode = (m: FileListMode): void => {
+    storage.set('fileListMode', m)
+    setListMode(m)
+  }
   return (
     <div className="changes-view">
       <aside className="stage-column" style={{ width: colW }}>
         <div className="area-header">
           <span>{t('changes.unstaged')}</span>
           <span className="spacer" />
+          <FileListMenu mode={listMode} onChange={changeMode} />
           <button
             className="ghost-btn"
             disabled={unstaged.length === 0}
@@ -58,7 +104,7 @@ export function ChangesView(): React.JSX.Element {
             {t('changes.stageAll')}
           </button>
         </div>
-        <div className="area-list">{unstaged.map((e) => fileRow(e, 'unstaged'))}</div>
+        <div className="area-list">{areaList(unstaged, 'unstaged')}</div>
         <div className="area-header">
           <span>{t('changes.staged')}</span>
           <span className="spacer" />
@@ -70,7 +116,7 @@ export function ChangesView(): React.JSX.Element {
             {t('changes.unstageAll')}
           </button>
         </div>
-        <div className="area-list">{staged.map((e) => fileRow(e, 'staged'))}</div>
+        <div className="area-list">{areaList(staged, 'staged')}</div>
       </aside>
       <Splitter axis="x" onDelta={resizeCol} />
       <section className="changes-main">

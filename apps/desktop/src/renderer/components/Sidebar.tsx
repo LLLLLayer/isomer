@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FileDiff, History, Layers } from 'lucide-react'
 import { useAppStore } from '../store/store'
@@ -54,13 +54,13 @@ export function Sidebar(): React.JSX.Element {
   ): React.JSX.Element => (
     <button className={`side-item${view === key ? ' active' : ''}`} onClick={() => setView(key)}>
       <span className="side-icon">{ICONS[key]}</span>
-      <span>{label}</span>
+      <span className="side-label">{label}</span>
       <span className="spacer" />
       {count !== undefined && count > 0 && <span className="side-count">{count}</span>}
     </button>
   )
 
-  const refList = (names: string[], current?: string): React.JSX.Element => (
+  const refList = (names: string[], current?: string, branchy = false): React.JSX.Element => (
     <>
       {names.filter(match).map((n) => (
         <div key={n} className={`side-ref${n === current ? ' current' : ''}`} title={n}>
@@ -85,7 +85,7 @@ export function Sidebar(): React.JSX.Element {
       {refs && (
         <>
           <Section title={t('sidebar.branches')}>
-            {refList(Object.keys(refs.locals), refs.current)}
+            {refList(Object.keys(refs.locals), refs.current, true)}
           </Section>
           <Section title={t('sidebar.remotes')}>
             {refList(Object.keys(refs.remotes).filter((n) => !n.endsWith('/HEAD')))}
