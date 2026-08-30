@@ -1,13 +1,17 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { parseHunkPatch, sideBySideRows } from '../diff'
 import { useAppStore } from '../store/store'
 
-/** CR area skeleton: hunk list for the selected change; side-by-side vs
- * unified toggle is wired, actual diff text rendering lands in A1. */
+/** CR area: real diff text per hunk, side-by-side or unified. Clicking a
+ * new-side line number anchors the next comment to path:line. */
 export function ReviewView(): React.JSX.Element {
   const { t } = useTranslation()
   const snapshot = useAppStore((s) => s.snapshot)
   const selected = useAppStore((s) => s.selectedChangeId)
+  const patches = useAppStore((s) => s.patches)
+  const anchor = useAppStore((s) => s.commentAnchor)
+  const setCommentAnchor = useAppStore((s) => s.setCommentAnchor)
   const [sideBySide, setSideBySide] = useState(true)
 
   const commit = snapshot?.commits.find((c) => c.sha === selected)
@@ -21,6 +25,12 @@ export function ReviewView(): React.JSX.Element {
   }
 
   const hunks = snapshot.hunks.filter((h) => commit.hunks.includes(h.id))
+  const pathOf = (id: string): string => id.split(':')[0]
+
+  const anchorClick = (path: string, line: number): void => {
+    if (anchor && anchor.path === path && anchor.line === line) setCommentAnchor(null)
+    else setCommentAnchor({ path, line })
+  }
 
   return (
     <section className="pane review">
@@ -37,18 +47,82 @@ export function ReviewView(): React.JSX.Element {
         </div>
       </header>
       <p className="hunk-count">{t('review.hunks', { count: hunks.length })}</p>
-      <ul className="hunk-list">
-        {hunks.map((h) => (
-          <li key={h.id} className="hunk-row">
-            <span className={`kind-pill ${h.kind}`}>{h.kind}</span>
-            <span className="hunk-id">{h.id}</span>
-            <span className="linestat">
-              <span className="plus">+{h.lines.add}</span>
-              <span className="minus">-{h.lines.del}</span>
-            </span>
-          </li>
-        ))}
-      </ul>
+      {hunks.map((h) => {
+        const path = pathOf(h.id)
+        const patch = patches[h.id]
+        const parsed = patch ? parseHunkPatch(patch) : null
+        return (
+          <article key={h.id} className="diff-hunk">
+            <header className="diff-file">
+              <span className={`kind-pill ${h.kind}`}>{h.kind}</span>
+              <span className="hunk-id">{path}</span>
+              <span className="linestat">
+                <span className="plus">+{h.lines.add}</span>
+                <span className="minus">-{h.lines.del}</span>
+              </span>
+            </header>
+            {patch === undefined && <p className="diff-note muted">…</p>}
+            {patch !== undefined && parsed === null && (
+              <p className="diff-note muted">{patch.trim()}</p>
+            )}
+            {parsed && sideBySide && (
+              <div className="diff-table split">
+                {sideBySideRows(parsed).map((row, i) => (
+                  <div key={i} className="diff-split-row">
+                    <span className="lineno">{row.left?.lineNo ?? ''}</span>
+                    <span className={`code${row.left ? ' del' : ' void'}`}>
+                      {row.left?.text ?? ''}
+                    </span>
+                    <button
+                      className={`lineno clickable${
+                        anchor && anchor.path === path && anchor.line === row.right?.lineNo
+                          ? ' anchored'
+                          : ''
+                      }`}
+                      disabled={!row.right}
+                      onClick={() => row.right && anchorClick(path, row.right.lineNo)}
+                      title={t('review.anchorHint')}
+                    >
+                      {row.right?.lineNo ?? ''}
+                    </button>
+                    <span className={`code${row.right ? ' add' : ' void'}`}>
+                      {row.right?.text ?? ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {parsed && !sideBySide && (
+              <div className="diff-table unified">
+                {parsed.removed.map((text, i) => (
+                  <div key={`d${i}`} className="diff-uni-row">
+                    <span className="lineno">{parsed.oldStart + i}</span>
+                    <span className="lineno" />
+                    <span className="code del">-{text}</span>
+                  </div>
+                ))}
+                {parsed.added.map((text, i) => (
+                  <div key={`a${i}`} className="diff-uni-row">
+                    <span className="lineno" />
+                    <button
+                      className={`lineno clickable${
+                        anchor && anchor.path === path && anchor.line === parsed.newStart + i
+                          ? ' anchored'
+                          : ''
+                      }`}
+                      onClick={() => anchorClick(path, parsed.newStart + i)}
+                      title={t('review.anchorHint')}
+                    >
+                      {parsed.newStart + i}
+                    </button>
+                    <span className="code add">+{text}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </article>
+        )
+      })}
     </section>
   )
 }

@@ -15,6 +15,10 @@ export interface AppState {
   snapshot: Snapshot | null
   comments: Comment[]
   selectedChangeId: string | null
+  /** Patch text per hunk id, fetched on change selection. */
+  patches: Record<string, string>
+  /** Pending file/line anchor for the next comment (set from the diff). */
+  commentAnchor: { path: string; line: number } | null
   terminalOpen: boolean
   lastError: AppError | null
 
@@ -40,6 +44,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   snapshot: null,
   comments: [],
   selectedChangeId: null,
+  patches: {},
+  commentAnchor: null,
   terminalOpen: false,
   lastError: null,
 
@@ -80,6 +86,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       snapshot: null,
       comments: [],
       selectedChangeId: null,
+      patches: {},
+      commentAnchor: null,
     })
     await get().refreshProject()
   },
@@ -106,7 +114,30 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   selectChange(id) {
-    set({ selectedChangeId: id })
+    set({ selectedChangeId: id, commentAnchor: null })
+    const projectId = get().currentProjectId
+    const snapshot = get().snapshot
+    if (!projectId || !snapshot || !id) return
+    const commit = snapshot.commits.find((c) => c.sha === id)
+    if (!commit) return
+    const missing = commit.hunks.filter((h) => !(h in get().patches))
+    if (missing.length === 0) return
+    void window.isomer
+      .invoke('ism:hunks', { projectId, ids: missing })
+      .then((r) => {
+        if (get().currentProjectId !== projectId) return
+        if (!r.ok) {
+          set({ lastError: r.error })
+          return
+        }
+        const patches = { ...get().patches }
+        for (const hp of r.data) patches[hp.id] = hp.patch
+        set({ patches })
+      })
+  },
+
+  setCommentAnchor(anchor) {
+    set({ commentAnchor: anchor })
   },
 
   async addComment(input) {

@@ -76,6 +76,12 @@ export function registerIpc(exec: Exec): { dispose(): void } {
     const args = ['inspect', ...(base ? ['--base', base] : [])]
     return ism.run(dir, args)
   })
+  handle('ism:hunks', async ({ projectId, ids }) => {
+    const dir = cwd(projectId)
+    if (!dir) return NO_PROJECT
+    if (ids.length === 0) return { ok: true, data: [] }
+    return ism.run(dir, ['show', 'hunk', ...ids])
+  })
   handle('ism:verify', async ({ projectId }) => {
     const dir = cwd(projectId)
     return dir ? ism.run(dir, ['verify']) : NO_PROJECT

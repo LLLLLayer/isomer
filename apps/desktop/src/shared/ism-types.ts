@@ -100,6 +100,13 @@ export interface Comment {
   resolved: boolean
 }
 
+/** One entry of `ism show hunk <id>...`. */
+export interface HunkPatch {
+  id: string
+  commit: string
+  patch: string
+}
+
 export interface IsmErrorReport {
   code: string
   message: string

@@ -21,7 +21,8 @@
     "empty": "选择一个 change 开始评审。",
     "sideBySide": "左右对比",
     "unified": "单栏",
-    "hunks": "{{count}} 个改动块"
+    "hunks": "{{count}} 个改动块",
+    "anchorHint": "评论这一行"
   },
   "inspector": {
     "title": "详情",

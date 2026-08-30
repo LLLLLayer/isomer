@@ -9,6 +9,8 @@ export function Inspector(): React.JSX.Element {
   const comments = useAppStore((s) => s.comments)
   const addComment = useAppStore((s) => s.addComment)
   const resolveComment = useAppStore((s) => s.resolveComment)
+  const anchor = useAppStore((s) => s.commentAnchor)
+  const setCommentAnchor = useAppStore((s) => s.setCommentAnchor)
   const [draft, setDraft] = useState('')
   const [unresolvedOnly, setUnresolvedOnly] = useState(false)
 
@@ -68,10 +70,26 @@ export function Inspector(): React.JSX.Element {
             onSubmit={(e) => {
               e.preventDefault()
               if (draft.trim() === '') return
-              void addComment({ change: changeId, body: draft })
+              void addComment({
+                change: changeId,
+                body: draft,
+                path: anchor?.path,
+                line: anchor?.line,
+              })
               setDraft('')
+              setCommentAnchor(null)
             }}
           >
+            {anchor && (
+              <span className="anchor-chip">
+                <span className="mono">
+                  {anchor.path}:{anchor.line}
+                </span>
+                <button type="button" onClick={() => setCommentAnchor(null)}>
+                  ×
+                </button>
+              </span>
+            )}
             <textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}

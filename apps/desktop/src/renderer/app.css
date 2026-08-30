@@ -334,6 +334,113 @@
 .linestat .plus { color: var(--ok); }
 .linestat .minus { color: var(--err); }
 
+.diff-hunk {
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.diff-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.diff-note {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 8px 10px;
+  margin: 0;
+}
+
+.diff-table {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-x: auto;
+}
+
+.diff-split-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px minmax(0, 1fr);
+}
+
+.diff-uni-row {
+  display: grid;
+  grid-template-columns: 44px 44px minmax(0, 1fr);
+}
+
+.lineno {
+  text-align: right;
+  padding: 0 8px;
+  color: var(--fg-muted);
+  background: var(--bg-raised);
+  user-select: none;
+  border: none;
+  font: inherit;
+}
+
+button.lineno.clickable {
+  cursor: pointer;
+}
+
+button.lineno.clickable:hover {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-raised));
+}
+
+button.lineno.anchored {
+  color: var(--on-accent);
+  background: var(--accent);
+}
+
+.code {
+  padding: 0 10px;
+  white-space: pre;
+}
+
+.code.del {
+  background: color-mix(in srgb, var(--err) 9%, var(--bg));
+}
+
+.code.add {
+  background: color-mix(in srgb, var(--ok) 9%, var(--bg));
+}
+
+.code.void {
+  background: color-mix(in srgb, var(--fg) 3%, var(--bg));
+}
+
+.anchor-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  font-size: 11px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-radius: 6px;
+  padding: 2px 4px 2px 8px;
+}
+
+.anchor-chip .mono {
+  font-family: var(--font-mono);
+}
+
+.anchor-chip button {
+  border: none;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0 4px;
+}
+
 /* ==== inspector ========================================================= */
 
 .inspector section h3 {

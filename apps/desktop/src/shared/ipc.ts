@@ -6,7 +6,7 @@
  * contract. Neither side ever touches raw channel strings elsewhere.
  */
 
-import type { ApplyOutcome, Comment, Snapshot, VerifyOutcome } from './ism-types'
+import type { ApplyOutcome, Comment, HunkPatch, Snapshot, VerifyOutcome } from './ism-types'
 import type { Result } from './result'
 import type { Settings } from './theme'
 
@@ -47,6 +47,7 @@ export interface InvokeContracts {
   'git:status': { req: { projectId: string }; res: Result<GitStatusSummary> }
   'git:log': { req: { projectId: string; limit: number }; res: Result<GitLogEntry[]> }
   'ism:snapshot': { req: { projectId: string; base?: string }; res: Result<Snapshot> }
+  'ism:hunks': { req: { projectId: string; ids: string[] }; res: Result<HunkPatch[]> }
   'ism:verify': { req: { projectId: string }; res: Result<VerifyOutcome> }
   'ism:apply': { req: { projectId: string; planPath: string }; res: Result<ApplyOutcome> }
   'ism:undo': { req: { projectId: string }; res: Result<unknown> }
@@ -98,6 +99,7 @@ export const INVOKE_CHANNELS = [
   'git:status',
   'git:log',
   'ism:snapshot',
+  'ism:hunks',
   'ism:verify',
   'ism:apply',
   'ism:undo',

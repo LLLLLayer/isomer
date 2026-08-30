@@ -21,7 +21,8 @@
     "empty": "Select a change to review.",
     "sideBySide": "Side by side",
     "unified": "Unified",
-    "hunks": "{{count}} hunks"
+    "hunks": "{{count}} hunks",
+    "anchorHint": "Comment on this line"
   },
   "inspector": {
     "title": "Details",
