@@ -26,7 +26,21 @@
     "proven": "重组已证明——树未变",
     "approve": "通过评审",
     "unapprove": "撤销通过",
-    "approved": "已通过"
+    "approved": "已通过",
+    "submit": "提交 PR",
+    "submitTitle": "将变更栈提交为 PR 链",
+    "ghMissing": "未安装 gh CLI（brew install gh）——仅可预览。",
+    "ghUnauth": "gh 未登录（gh auth login）——仅可预览。",
+    "willCreate": "新建",
+    "willUpdate": "更新 #{{number}}",
+    "retargetTo": "基底 → {{base}}",
+    "orphanNote": "PR #{{number}}（{{branch}}）已不对应任何变更——请手动关闭。",
+    "unresolvedWarn": "此栈还有 {{count}} 条未解决评论。",
+    "trunkNote": "最底部 PR 落在 {{trunk}}。分支是变更的强制推送镜像。",
+    "submitRun": "新建 / 更新 {{count}} 个 PR",
+    "submitting": "提交中…",
+    "doneNote": "完成——PR 链与变更栈一致。",
+    "viewPr": "打开"
   },
   "review": {
     "title": "评审",
