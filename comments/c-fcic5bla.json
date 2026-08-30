@@ -1,0 +1,11 @@
+{
+  "id": "c-fcic5bla",
+  "change": "i-lnddqerk",
+  "path": "CLAUDE.md",
+  "line": 21,
+  "body": "Desktop app section: keep these commands in sync with apps/desktop package.json scripts when they change.",
+  "author_name": "yangjie.layer",
+  "author_email": "yangjie.layer@bytedance.com",
+  "created_at": "1788083918",
+  "resolved": false
+}
