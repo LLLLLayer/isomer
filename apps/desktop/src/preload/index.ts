@@ -13,6 +13,7 @@ const pushAllowed: ReadonlySet<string> = new Set(PUSH_CHANNELS)
  * exposed; the renderer sees exactly the IsomerApi contract.
  */
 const api: IsomerApi = {
+  platform: process.platform,
   invoke: (channel: InvokeChannel, req) => {
     if (!invokeAllowed.has(channel)) {
       return Promise.reject(new Error(`unknown IPC channel: ${String(channel)}`))

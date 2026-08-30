@@ -32,6 +32,9 @@ export function App(): React.JSX.Element {
   useTheme(settings.theme)
 
   useEffect(() => {
+    if (window.isomer.platform === 'darwin') {
+      document.documentElement.dataset.vibrancy = '1'
+    }
     void bootstrap()
   }, [bootstrap])
 

@@ -1,4 +1,4 @@
-import { BrowserWindow, app, dialog, ipcMain } from 'electron'
+import { BrowserWindow, app, dialog, ipcMain, nativeTheme } from 'electron'
 import type { InvokeChannel, InvokeContracts, PushChannel, PushContracts } from '../shared/ipc'
 import { err } from '../shared/result'
 import type { Exec } from './services/exec'
@@ -48,8 +48,16 @@ export function registerIpc(exec: Exec): { dispose(): void } {
     const r = await dialog.showOpenDialog({ properties: ['openDirectory'] })
     return r.canceled || r.filePaths.length === 0 ? null : r.filePaths[0]
   })
+  const applyNativeTheme = (): void => {
+    nativeTheme.themeSource = settings.get().theme
+  }
+  applyNativeTheme()
   handle('settings:get', async () => settings.get())
-  handle('settings:set', async (patch) => settings.update(patch))
+  handle('settings:set', async (patch) => {
+    const updated = settings.update(patch)
+    applyNativeTheme()
+    return updated
+  })
   handle('projects:list', async () => projects.list())
   handle('projects:add', async ({ path }) => {
     if (!(await git.isRepository(path))) {

@@ -22,6 +22,16 @@ function createWindow(): void {
     minHeight: 600,
     show: false,
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+    // macOS glass: the sidebar material blurs the desktop through any
+    // transparent region of the page (the renderer keeps content panes
+    // opaque and lets the chrome areas go translucent).
+    ...(process.platform === 'darwin'
+      ? {
+          vibrancy: 'sidebar' as const,
+          visualEffectState: 'followWindow' as const,
+          backgroundColor: '#00000000',
+        }
+      : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.mjs'),
       contextIsolation: true,

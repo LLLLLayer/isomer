@@ -181,6 +181,7 @@ export const _pushCoverage: AssertAllPush = true
 
 /** The surface preload exposes as `window.isomer`. */
 export interface IsomerApi {
+  platform: NodeJS.Platform
   invoke<C extends InvokeChannel>(
     channel: C,
     req: InvokeContracts[C]['req'],
