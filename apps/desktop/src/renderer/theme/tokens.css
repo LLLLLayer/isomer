@@ -12,6 +12,12 @@
   --ok: #1a7f37;
   --warn: #bc4c00;
   --err: #cf222e;
+  --syn-kw: #cf222e;
+  --syn-str: #0a3069;
+  --syn-num: #0550ae;
+  --syn-cmt: #6e7781;
+  --syn-fn: #8250df;
+  --syn-type: #953800;
 }
 
 :root[data-theme='dark'] {
@@ -25,6 +31,12 @@
   --ok: #3fb950;
   --warn: #d29922;
   --err: #f85149;
+  --syn-kw: #ff7b72;
+  --syn-str: #a5d6ff;
+  --syn-num: #79c0ff;
+  --syn-cmt: #8b949e;
+  --syn-fn: #d2a8ff;
+  --syn-type: #ffa657;
 }
 
 :root {
