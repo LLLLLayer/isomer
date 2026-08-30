@@ -13,7 +13,8 @@
     "untracked": "未跟踪",
     "anomalies": "异常",
     "lastOp": "最近操作",
-    "count": "{{count}} 个变更"
+    "count": "{{count}} 个变更",
+    "history": "最近历史"
   },
   "review": {
     "title": "评审",

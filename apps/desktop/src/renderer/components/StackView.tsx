@@ -5,15 +5,31 @@ import { useAppStore } from '../store/store'
 export function StackView(): React.JSX.Element {
   const { t } = useTranslation()
   const snapshot = useAppStore((s) => s.snapshot)
+  const log = useAppStore((s) => s.log)
   const comments = useAppStore((s) => s.comments)
   const selected = useAppStore((s) => s.selectedChangeId)
   const selectChange = useAppStore((s) => s.selectChange)
 
   if (!snapshot || snapshot.commits.length === 0) {
+    // On the trunk there is no pending stack; show recent history instead —
+    // organized repos carry Isomer-Change identities right in their log.
     return (
       <section className="pane stack">
-        <header className="pane-title">{t('stack.title')}</header>
-        <p className="empty">{t('stack.empty')}</p>
+        <header className="pane-title">{t('stack.history')}</header>
+        {log.length === 0 && <p className="empty">{t('stack.empty')}</p>}
+        <ol className="stack-list">
+          {log.map((e) => (
+            <li key={e.sha}>
+              <div className="change-card static">
+                <span className="summary">{e.title}</span>
+                <span className="badges">
+                  <span className="chip">{e.changeId ?? t('stack.untracked')}</span>
+                  <span className="sha">{e.sha.slice(0, 8)}</span>
+                </span>
+              </div>
+            </li>
+          ))}
+        </ol>
       </section>
     )
   }

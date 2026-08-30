@@ -190,6 +190,14 @@
   background: color-mix(in srgb, var(--accent) 6%, var(--bg-raised));
 }
 
+.change-card.static {
+  cursor: default;
+}
+
+.change-card.static:hover {
+  background: var(--bg-raised);
+}
+
 .change-card .summary {
   font-size: 13px;
   font-weight: 500;

@@ -13,7 +13,8 @@
     "untracked": "untracked",
     "anomalies": "Anomalies",
     "lastOp": "Last operation",
-    "count": "{{count}} changes"
+    "count": "{{count}} changes",
+    "history": "Recent history"
   },
   "review": {
     "title": "Review",
