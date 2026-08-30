@@ -1,0 +1,6 @@
+{
+  "id": "i-gehfuzjv",
+  "name": "soft-radii",
+  "summary": "Soften every corner onto a four-step radius ladder",
+  "body": "6/10/14/18px tokens replace the flat 6px: chips stay tight, buttons\nand inputs round to 10, cards and panels to 14, the modal to 18, and\nsegmented inners derive concentrically from their container."
+}

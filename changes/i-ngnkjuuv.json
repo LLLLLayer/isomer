@@ -1,0 +1,6 @@
+{
+  "id": "i-ngnkjuuv",
+  "name": "pty-exec-bit-heal",
+  "summary": "Heal node-pty's spawn-helper exec bit before every spawn",
+  "body": "npm does not always preserve the execute bit on the prebuilt\nspawn-helper; the symptom is posix_spawnp failed and a terminal that\ndies on open. chmod it idempotently before spawning — self-healing,\nso a reinstall can never bring the bug back. Verified inside a real\nElectron process."
+}

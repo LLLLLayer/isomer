@@ -1,0 +1,9 @@
+{
+  "id": "i-m53y6mcc",
+  "name": "workspace-resize-dock",
+  "summary": "Draggable pane sizes and a dockable terminal",
+  "body": "Every seam is now a splitter with pointer-captured dragging and\npersisted sizes (sidebar, stage column, commit list, stack and\ninspector columns, terminal): a small usePaneSize hook over a\nstorage wrapper with an in-memory fallback, unit-tested. The\nterminal docks at the bottom or the right of the workspace and the\nchoice persists; a pty failure now shows the actual error with a\nretry button instead of flash-closing the drawer; the statusbar's\nempty area drags the window.",
+  "deps": [
+    "pty-exec-bit-heal"
+  ]
+}
