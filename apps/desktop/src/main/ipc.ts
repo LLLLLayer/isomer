@@ -1,5 +1,6 @@
 import { BrowserWindow, app, dialog, ipcMain, nativeTheme, net, shell } from 'electron'
-import { realpath } from 'node:fs/promises'
+import { mkdtemp, realpath, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path'
 import type { InvokeChannel, InvokeContracts, PushChannel, PushContracts } from '../shared/ipc'
 import { err } from '../shared/result'
@@ -336,7 +337,32 @@ export function registerIpc(exec: Exec): { dispose(): void } {
     const dir = cwd(projectId)
     return dir ? ism.run(dir, ['verify']) : NO_PROJECT
   })
-  handle('ism:apply', async ({ projectId, planPath }) => {
+  /** Serialize a renderer-built plan to a temp file for the CLI (D23:
+   * the CLI is the only interface; the renderer never touches disk). */
+  const withPlanFile = async <T>(
+    plan: unknown,
+    body: (path: string) => Promise<T>,
+  ): Promise<T> => {
+    const dir = await mkdtemp(join(tmpdir(), 'ism-plan-'))
+    const file = join(dir, 'plan.json')
+    await writeFile(file, JSON.stringify(plan))
+    try {
+      return await body(file)
+    } finally {
+      void rm(dir, { recursive: true, force: true })
+    }
+  }
+  handle('ism:check', async ({ projectId, plan }) => {
+    const dir = cwd(projectId)
+    if (!dir) return NO_PROJECT
+    return withPlanFile(plan, (file) => ism.run(dir, ['check', file]))
+  })
+  handle('ism:apply', async ({ projectId, plan }) => {
+    const dir = cwd(projectId)
+    if (!dir) return NO_PROJECT
+    return withPlanFile(plan, (file) => ism.run(dir, ['apply', file]))
+  })
+  handle('ism:ops', async ({ projectId, limit }) => {
     const dir = cwd(projectId)
     return dir ? ism.run(dir, ['ops', '--limit', String(limit ?? 50)]) : NO_PROJECT
   })

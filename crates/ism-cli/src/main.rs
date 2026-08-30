@@ -61,6 +61,12 @@ enum Cmd {
     },
     /// Revert the latest ism operation on this branch (append-only op log).
     Undo,
+    /// List op-log records for this repo as JSON, newest first.
+    Ops {
+        /// Maximum number of ops to return.
+        #[arg(long, default_value_t = 50)]
+        limit: usize,
+    },
     /// Review comments anchored to changes (stored on refs/isomer/data).
     Comment {
         #[command(subcommand)]
@@ -267,6 +273,26 @@ fn run() -> Result<(), IsmError> {
         Cmd::Undo => {
             let outcome = ism_core::engine::undo(&git)?;
             println!("{}", serde_json::to_string_pretty(&outcome)?);
+            Ok(())
+        }
+        Cmd::Ops { limit } => {
+            let ops = ism_core::oplog::walk(&git, limit)?;
+            let rows: Vec<serde_json::Value> = ops
+                .into_iter()
+                .map(|(sha, op)| {
+                    serde_json::json!({
+                        "sha": sha,
+                        "kind": op.kind,
+                        "branch": op.branch,
+                        "timestamp": op.timestamp,
+                        "old_head": op.old_head,
+                        "new_head": op.new_head,
+                        "old_tree": op.old_tree,
+                        "new_tree": op.new_tree,
+                    })
+                })
+                .collect();
+            println!("{}", serde_json::to_string_pretty(&rows)?);
             Ok(())
         }
         Cmd::Skill { action } => match action {

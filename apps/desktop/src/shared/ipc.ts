@@ -28,6 +28,46 @@ export interface GitStatusSummary {
   entries: { code: string; path: string; origPath?: string }[]
 }
 
+export interface StashEntry {
+  index: number
+  message: string
+  timestamp: number
+}
+
+export interface ReflogEntry {
+  selector: string
+  sha: string
+  action: string
+  timestamp: number
+}
+
+export interface BlameLine {
+  line: number
+  sha: string
+  author: string
+  timestamp: number
+  summary: string
+  text: string
+}
+
+export interface BranchCompare {
+  ahead: GitLogEntry[]
+  behind: GitLogEntry[]
+}
+
+/** One record of the ism op log (refs/isomer/data), serde snake_case. */
+export interface IsmOp {
+  sha: string
+  kind: 'apply' | 'undo' | 'void'
+  branch: string
+  /** Epoch seconds, as a string. */
+  timestamp: string
+  old_head: string
+  new_head: string
+  old_tree: string
+  new_tree: string
+}
+
 export interface GitLogEntry {
   sha: string
   /** Parent shas (2+ on merges) — drives the history graph rail. */
@@ -163,8 +203,12 @@ export interface InvokeContracts {
   'ism:snapshot': { req: { projectId: string; base?: string }; res: Result<Snapshot> }
   'ism:hunks': { req: { projectId: string; ids: string[] }; res: Result<HunkPatch[]> }
   'ism:verify': { req: { projectId: string }; res: Result<VerifyOutcome> }
-  'ism:apply': { req: { projectId: string; planPath: string }; res: Result<ApplyOutcome> }
+  /** Plan objects are serialized to a temp file by main; the CLI stays the
+   * only interface (D23) and the renderer never touches the filesystem. */
+  'ism:check': { req: { projectId: string; plan: unknown }; res: Result<unknown> }
+  'ism:apply': { req: { projectId: string; plan: unknown }; res: Result<ApplyOutcome> }
   'ism:undo': { req: { projectId: string }; res: Result<unknown> }
+  'ism:ops': { req: { projectId: string; limit?: number }; res: Result<IsmOp[]> }
   'ism:comment-list': {
     req: { projectId: string; unresolvedOnly?: boolean }
     res: Result<Comment[]>
@@ -266,8 +310,10 @@ export const INVOKE_CHANNELS = [
   'ism:snapshot',
   'ism:hunks',
   'ism:verify',
+  'ism:check',
   'ism:apply',
   'ism:undo',
+  'ism:ops',
   'ism:comment-list',
   'ism:comment-add',
   'ism:comment-resolve',

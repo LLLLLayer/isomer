@@ -110,7 +110,8 @@
     "stashes": "Stashes",
     "filter": "Filter",
     "submodules": "Submodules",
-    "toggle": "Toggle sidebar"
+    "toggle": "Toggle sidebar",
+    "organize": "Organize"
   },
   "toolbar": {
     "fetch": "Fetch",
@@ -191,5 +192,87 @@
     "minutes": "{{count}}m ago",
     "hours": "{{count}}h ago",
     "days": "{{count}}d ago"
+  },
+  "conflict": {
+    "takeOurs": "Take ours",
+    "takeTheirs": "Take theirs",
+    "markResolved": "Mark resolved",
+    "continue": "Continue",
+    "abort": "Abort",
+    "inProgress": {
+      "merge": "Merge in progress — resolve conflicts, then continue.",
+      "rebase": "Rebase in progress — resolve conflicts, then continue.",
+      "cherry-pick": "Cherry-pick in progress — resolve conflicts, then continue.",
+      "revert": "Revert in progress — resolve conflicts, then continue."
+    }
+  },
+  "insight": {
+    "none": "Nothing here."
+  },
+  "compare": {
+    "title": "{{a}} ⟷ {{b}}",
+    "ahead": "Only on current ({{count}})",
+    "behind": "Only on {{branch}} ({{count}})"
+  },
+  "reflog": {
+    "title": "Reflog"
+  },
+  "stash": {
+    "apply": "Apply",
+    "pop": "Pop",
+    "drop": "Drop"
+  },
+  "tag": {
+    "delete": "Delete tag…",
+    "deleteRemote": "Delete tag (local + remote)…",
+    "deleteTitle": "Delete tag {{name}}?",
+    "newTitle": "Tag {{sha}} as…"
+  },
+  "remote": {
+    "add": "Add remote",
+    "addTitle": "Add remote origin (URL)",
+    "copyUrl": "Copy URL",
+    "setUrl": "Edit URL…",
+    "setUrlTitle": "New URL for {{name}}",
+    "remove": "Remove…",
+    "removeTitle": "Remove remote {{name}}?"
+  },
+  "submodule": {
+    "update": "Update submodules"
+  },
+  "commit": {
+    "copySha": "Copy SHA",
+    "newBranch": "Create branch here…",
+    "newTag": "Create tag here…",
+    "checkout": "Checkout (detached)",
+    "cherryPick": "Cherry-pick…",
+    "revert": "Revert…",
+    "cherryPickTitle": "Cherry-pick {{sha}} onto the current branch?",
+    "revertTitle": "Revert {{sha}}?"
+  },
+  "quick": {
+    "placeholder": "Jump to view, branch, commit, or action…",
+    "view": "view",
+    "action": "action",
+    "checkout": "checkout"
+  },
+  "organize": {
+    "title": "Organize",
+    "empty": "Nothing to organize — the branch is at the trunk.",
+    "status": "{{nodes}} changes · {{assigned}}/{{total}} hunks assigned",
+    "addChange": "New change",
+    "reset": "Reset",
+    "check": "Check",
+    "apply": "Apply",
+    "checkOk": "Check passed — apply is guaranteed to succeed.",
+    "proof": "Proof: tree unchanged,",
+    "undo": "Undo",
+    "deleteHint": "Only empty changes can be removed",
+    "summaryPlaceholder": "Commit summary (one line)",
+    "descriptionPlaceholder": "Why this change exists (body)…",
+    "hunksOf": "Hunks of {{name}}",
+    "pickChange": "Select a change",
+    "noHunks": "No hunks — move some here or remove this change.",
+    "opsTitle": "Operations"
   }
 }

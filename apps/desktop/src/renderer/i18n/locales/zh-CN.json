@@ -110,7 +110,8 @@
     "stashes": "贮藏",
     "filter": "筛选",
     "submodules": "子模块",
-    "toggle": "收起/展开侧边栏"
+    "toggle": "收起/展开侧边栏",
+    "organize": "整理"
   },
   "toolbar": {
     "fetch": "拉取远端",
@@ -191,5 +192,87 @@
     "minutes": "{{count}} 分钟前",
     "hours": "{{count}} 小时前",
     "days": "{{count}} 天前"
+  },
+  "conflict": {
+    "takeOurs": "采用我方（ours）",
+    "takeTheirs": "采用对方（theirs）",
+    "markResolved": "标记已解决",
+    "continue": "继续",
+    "abort": "中止",
+    "inProgress": {
+      "merge": "合并进行中——解决冲突后继续。",
+      "rebase": "变基进行中——解决冲突后继续。",
+      "cherry-pick": "拣选进行中——解决冲突后继续。",
+      "revert": "回滚进行中——解决冲突后继续。"
+    }
+  },
+  "insight": {
+    "none": "空空如也。"
+  },
+  "compare": {
+    "title": "{{a}} ⟷ {{b}}",
+    "ahead": "仅在当前分支（{{count}}）",
+    "behind": "仅在 {{branch}}（{{count}}）"
+  },
+  "reflog": {
+    "title": "Reflog"
+  },
+  "stash": {
+    "apply": "应用",
+    "pop": "弹出",
+    "drop": "丢弃"
+  },
+  "tag": {
+    "delete": "删除标签…",
+    "deleteRemote": "删除标签（本地与远端）…",
+    "deleteTitle": "删除标签 {{name}}？",
+    "newTitle": "为 {{sha}} 打标签…"
+  },
+  "remote": {
+    "add": "添加远程",
+    "addTitle": "添加远程 origin（URL）",
+    "copyUrl": "复制 URL",
+    "setUrl": "修改 URL…",
+    "setUrlTitle": "{{name}} 的新 URL",
+    "remove": "移除…",
+    "removeTitle": "移除远程 {{name}}？"
+  },
+  "submodule": {
+    "update": "更新子模块"
+  },
+  "commit": {
+    "copySha": "复制 SHA",
+    "newBranch": "从此新建分支…",
+    "newTag": "在此打标签…",
+    "checkout": "检出（游离 HEAD）",
+    "cherryPick": "拣选（cherry-pick）…",
+    "revert": "回滚（revert）…",
+    "cherryPickTitle": "将 {{sha}} 拣选到当前分支？",
+    "revertTitle": "回滚 {{sha}}？"
+  },
+  "quick": {
+    "placeholder": "跳转到视图、分支、提交或操作…",
+    "view": "视图",
+    "action": "操作",
+    "checkout": "检出"
+  },
+  "organize": {
+    "title": "整理",
+    "empty": "没有可整理的内容——分支与主干一致。",
+    "status": "{{nodes}} 个变更 · 已分配 {{assigned}}/{{total}} 个改动块",
+    "addChange": "新建变更",
+    "reset": "重置",
+    "check": "检查",
+    "apply": "应用",
+    "checkOk": "检查通过——应用必定成功。",
+    "proof": "证明：代码树未变，",
+    "undo": "撤销",
+    "deleteHint": "只能删除空变更",
+    "summaryPlaceholder": "提交标题（一行）",
+    "descriptionPlaceholder": "这个变更为什么存在（正文）…",
+    "hunksOf": "{{name}} 的改动块",
+    "pickChange": "选择一个变更",
+    "noHunks": "没有改动块——移一些进来，或删除这个变更。",
+    "opsTitle": "操作记录"
   }
 }
