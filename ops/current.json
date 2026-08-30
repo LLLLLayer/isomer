@@ -1,97 +1,40 @@
 {
   "kind": "apply",
-  "branch": "feat/repo-manager",
-  "old_head": "e5fa60b9ee1507b0f610d5f072af1476acceb31c",
-  "new_head": "971cb2d48ab8d1f6f9f565c39222bef2001be3c9",
-  "base": "23198854681eef0462a3a0e614774ccc03048364",
-  "old_tree": "b3c91136c1585e022443372c363312f83a28c1cd",
-  "new_tree": "b3c91136c1585e022443372c363312f83a28c1cd",
-  "plan_digest": "sha256:fc32fb10cbbee005bd1139b1c32606a75a4b0a68f002d29c0cca5671ee42fde5",
-  "snapshot_digest": "sha256:b41384a1a2a0cd370e35697a6a3cd644245958862885169d51f673b65640ba71",
+  "branch": "main",
+  "old_head": "1aa3838781906fa04cda7747550936e77d3ec31e",
+  "new_head": "13f7cfa66baa8536bf872e3096705de33ea2f194",
+  "base": "31fd1319cb66d47e0e83866b04c6c8fdd3190002",
+  "old_tree": "2b97d988ef59349866197530fe24367148c0f682",
+  "new_tree": "2b97d988ef59349866197530fe24367148c0f682",
+  "plan_digest": "sha256:156408af194946f09a4cbd762a2dd679fbc6b9afa1bb7e946e88a23a1794feea",
+  "snapshot_digest": "sha256:ba4524f779bdb88ba3f9afa60c476af7c7cfb8ba5489bdde85b429c8ffc5d8c2",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:b41384a1a2a0cd370e35697a6a3cd644245958862885169d51f673b65640ba71",
-    "base": "23198854681eef0462a3a0e614774ccc03048364",
-    "head": "e5fa60b9ee1507b0f610d5f072af1476acceb31c",
+    "snapshot_digest": "sha256:ba4524f779bdb88ba3f9afa60c476af7c7cfb8ba5489bdde85b429c8ffc5d8c2",
+    "base": "31fd1319cb66d47e0e83866b04c6c8fdd3190002",
+    "head": "1aa3838781906fa04cda7747550936e77d3ec31e",
     "nodes": [
       {
-        "name": "repo-registry-model",
-        "summary": "The registry learns pins, groups, and health",
+        "name": "docs-round-four",
+        "summary": "docs: the words catch up with round four",
         "from": [
-          "apps/desktop/src/main/services/projects.test.ts:1#0313",
-          "apps/desktop/src/main/services/projects.ts:59#f2fe",
-          "apps/desktop/src/renderer/repos.test.ts:1#3530",
-          "apps/desktop/src/renderer/repos.ts:1#af68",
-          "apps/desktop/src/main/services/projects.test.ts:33#16c6",
-          "apps/desktop/src/main/services/projects.ts:2#6206",
-          "apps/desktop/src/main/services/projects.ts:20#e6eb",
-          "apps/desktop/src/main/services/projects.ts:33#42d4",
-          "apps/desktop/src/main/services/projects.ts:70#2c6d",
-          "apps/desktop/src/main/services/projects.ts:75#8807"
-        ]
-      },
-      {
-        "name": "repo-manager-ipc",
-        "summary": "Overview, update, clone: the manager's three verbs",
-        "from": [
-          "apps/desktop/src/main/ipc.ts:5#fc9c",
-          "apps/desktop/src/main/ipc.ts:153#ce87",
-          "apps/desktop/src/shared/ipc.ts:18#e6cb",
-          "apps/desktop/src/shared/ipc.ts:173#7647",
-          "apps/desktop/src/shared/ipc.ts:333#1f76",
-          "apps/desktop/src/main/ipc.ts:2#0ff7",
-          "apps/desktop/src/main/ipc.ts:153#1ae7",
-          "apps/desktop/src/main/ipc.ts:167#b09d",
-          "apps/desktop/src/main/ipc.ts:175#64ad",
-          "apps/desktop/src/main/ipc.ts:177#3243",
-          "apps/desktop/src/main/ipc.ts:194#591f",
-          "apps/desktop/src/main/ipc.ts:199#3224",
-          "apps/desktop/src/main/ipc.ts:202#b123",
-          "apps/desktop/src/main/ipc.ts:205#cda5",
-          "apps/desktop/src/main/ipc.ts:212#7e89",
-          "apps/desktop/src/main/ipc.ts:214#aa15",
-          "apps/desktop/src/main/ipc.ts:222#c295",
-          "apps/desktop/src/main/ipc.ts:228#fd7a",
-          "apps/desktop/src/main/ipc.ts:232#b39f",
-          "apps/desktop/src/main/ipc.ts:259#938b",
-          "apps/desktop/src/main/ipc.ts:263#558b",
-          "apps/desktop/src/shared/ipc.ts:173#014a",
-          "apps/desktop/src/shared/ipc.ts:175#ba14"
-        ]
-      },
-      {
-        "name": "repo-manager-ui",
-        "summary": "One window, every repository",
-        "from": [
-          "apps/desktop/src/renderer/App.tsx:23#dd79",
-          "apps/desktop/src/renderer/App.tsx:210#c2b8",
-          "apps/desktop/src/renderer/app.css:2451#c544",
-          "apps/desktop/src/renderer/components/ProjectRail.tsx:2#fe0e",
-          "apps/desktop/src/renderer/components/ProjectRail.tsx:11#d8b3",
-          "apps/desktop/src/renderer/components/ProjectRail.tsx:28#21c2",
-          "apps/desktop/src/renderer/components/RepoManager.tsx:1#096c",
-          "apps/desktop/src/renderer/i18n/locales/en.json:321#13f5",
-          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:321#1faf",
-          "apps/desktop/src/renderer/store/store.ts:9#a6e7",
-          "apps/desktop/src/renderer/store/store.ts:67#99e5",
-          "apps/desktop/src/renderer/store/store.ts:115#ad65",
-          "apps/desktop/src/renderer/store/store.ts:189#6205",
-          "apps/desktop/src/renderer/store/store.ts:608#f196",
-          "apps/desktop/src/renderer/app.css:2561#281f",
-          "apps/desktop/src/renderer/components/RepoManager.tsx:145#307c",
-          "apps/desktop/src/renderer/store/store.test.ts:48#317a",
-          "apps/desktop/src/renderer/store/store.test.ts:93#b7dc",
-          "apps/desktop/src/renderer/store/store.ts:264#5cab",
-          "apps/desktop/src/renderer/store/store.ts:636#c578"
+          "CLAUDE.md:31#8a20",
+          "CLAUDE.md:64#c63f",
+          "README.md:62#942a",
+          "README.md:65#2bf4",
+          "README.md:71#4548",
+          "README.md:94#8356",
+          "apps/desktop/README.md:24#d8d6",
+          "apps/desktop/README.md:27#2251",
+          "apps/desktop/README.md:46#7466",
+          "apps/desktop/README.md:65#976b"
         ]
       }
     ],
     "order": [
-      "repo-registry-model",
-      "repo-manager-ipc",
-      "repo-manager-ui"
+      "docs-round-four"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788116206"
+  "timestamp": "1788116331"
 }
