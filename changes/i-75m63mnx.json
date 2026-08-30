@@ -1,0 +1,6 @@
+{
+  "id": "i-75m63mnx",
+  "name": "repo-watcher",
+  "summary": "Watch .git and refresh: the app now tracks external reality",
+  "body": "The stale-status bug: the UI kept the state loaded at launch, so an\nism apply from a terminal left it showing files that no longer existed.\nA debounced fs.watch on the active project's .git pushes repo:changed;\nall git reads run with --no-optional-locks so our own refreshes never\ntrigger the watcher. Debouncer is unit-tested with fake timers."
+}

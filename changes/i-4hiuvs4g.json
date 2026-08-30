@@ -1,0 +1,9 @@
+{
+  "id": "i-4hiuvs4g",
+  "name": "fork-parity",
+  "summary": "Model the client on Fork: staging, commit box, detail tabs",
+  "body": "Modeled directly on Fork running side-by-side (closed source — its\ninteraction patterns, our implementation): icon toolbar with a repo/\nbranch card and Stash; sidebar with pinned views, a filter field and\ncollapsible Branches/Remotes/Tags/Stashes/Submodules (refs now carry\ntip shas for decorations); Local Changes with Unstaged/Staged areas,\nstage/unstage (git add / restore --staged), per-area diffs (--cached\nfor staged) and a subject/description/amend commit box that commits\nthe staged set; All Commits with a graph rail, branch/tag badges and\na Commit / Changes / File Tree detail panel (collapsed-chain file\ntree, unit-tested). Views land where the work is and refreshes never\nyank the selection or view.",
+  "deps": [
+    "repo-watcher"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "id": "i-nbouiv6f",
+  "name": "syntax-highlighting",
+  "summary": "Colorize diffs with line-scoped highlight.js",
+  "body": "Sixteen registered languages picked by extension, highlighted line by\nline (never breaks diff alignment; the GitHub Desktop trade-off), with\ntoken colors mapped onto the theme layer for light and dark. hljs\nescapes content — the injection test proves markup cannot leak.",
+  "deps": [
+    "fork-parity"
+  ]
+}
