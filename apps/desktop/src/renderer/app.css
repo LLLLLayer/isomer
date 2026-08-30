@@ -49,10 +49,16 @@
 }
 
 .columns {
-  display: grid;
-  grid-template-columns: 300px minmax(0, 1fr) 320px;
+  display: flex;
   flex: 1;
+  min-width: 0;
   min-height: 0;
+  overflow: hidden;
+}
+
+.columns > .pane {
+  flex: 1;
+  min-width: 0;
 }
 
 /* ==== project rail ====================================================== */

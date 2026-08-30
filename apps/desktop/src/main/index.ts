@@ -51,11 +51,27 @@ function createWindow(): void {
     }
     if (SHOT) {
       setTimeout(() => {
-        void win.webContents.capturePage().then((img) => {
-          writeFileSync(SHOT, img.toPNG())
-          console.log('ISOMER_SHOT_OK')
-          app.exit(0)
-        })
+        const probe = `JSON.stringify((() => {
+          const info = (el) => {
+            const r = el.getBoundingClientRect()
+            const cs = getComputedStyle(el)
+            return { cls: el.className && el.className.slice ? el.className.slice(0, 40) : '',
+              x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height),
+              disp: cs.display, wrap: cs.flexWrap, dir: cs.flexDirection }
+          }
+          const cols = document.querySelector('.columns')
+          if (!cols) return { none: true }
+          return { self: info(cols), kids: [...cols.children].map(info) }
+        })())`
+        void win.webContents
+          .executeJavaScript(probe)
+          .then((r: string) => console.log('LAYOUT:', r))
+          .then(() => win.webContents.capturePage())
+          .then((img) => {
+            writeFileSync(SHOT, img.toPNG())
+            console.log('ISOMER_SHOT_OK')
+            app.exit(0)
+          })
       }, 2500)
     }
   })
@@ -68,10 +84,18 @@ function createWindow(): void {
     void shell.openExternal(url)
     return { action: 'deny' }
   })
+  // Shot tooling: force the initial view (e.g. ISOMER_SHOT_VIEW=stack).
+  const viewQuery = process.env.ISOMER_SHOT_VIEW
+    ? { view: process.env.ISOMER_SHOT_VIEW }
+    : undefined
   if (process.env.ELECTRON_RENDERER_URL) {
-    void win.loadURL(process.env.ELECTRON_RENDERER_URL)
+    const url = new URL(process.env.ELECTRON_RENDERER_URL)
+    if (viewQuery) url.searchParams.set('view', viewQuery.view)
+    void win.loadURL(url.toString())
   } else {
-    void win.loadFile(join(__dirname, '../renderer/index.html'))
+    void win.loadFile(join(__dirname, '../renderer/index.html'), {
+      query: viewQuery,
+    })
   }
 }
 

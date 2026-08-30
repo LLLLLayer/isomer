@@ -198,8 +198,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (initial) {
       // Land where the work is: dirty worktree → changes; else a pending
       // stack → stack; else history. Refreshes never yank the view away.
+      // Shot tooling may force the landing view via ?view=.
+      const forced = new URLSearchParams(window.location.search).get('view') as ViewMode | null
       const view: ViewMode =
-        entries.length > 0 ? 'changes' : snap && snap.commits.length > 0 ? 'stack' : 'history'
+        forced && ['changes', 'history', 'stack'].includes(forced)
+          ? forced
+          : entries.length > 0
+            ? 'changes'
+            : snap && snap.commits.length > 0
+              ? 'stack'
+              : 'history'
       set({ view })
     }
     // Reconcile selections with the new reality.
