@@ -1,0 +1,6 @@
+{
+  "id": "i-h2fjcsus",
+  "name": "stack-history-fallback",
+  "summary": "Show recent history when the branch has no pending stack",
+  "body": "On the trunk the merge-base collapses and the stack pane was a bare\nempty-state — useless for exactly the repos ism has already organized.\nIt now falls back to the recent log, where every commit shows its\nIsomer-Change identity chip straight from the trailer; history cards\nare static (no hunk data to review)."
+}
