@@ -1,64 +1,75 @@
 {
   "kind": "apply",
   "branch": "feat/stack-pr",
-  "old_head": "c9c957b89655da5a6566023306df837e23584d45",
-  "new_head": "2b37f7ce9b6d6587c05738e0ade4accc09e1868e",
+  "old_head": "99d7f0c80fcedb4698d1295efa7a2e356d50173c",
+  "new_head": "d7b1ed5a69e0cfb87fe4a3997a1667552d78afe7",
   "base": "2b210a701956adb524064ca8bef23a4442ea945f",
-  "old_tree": "88aebaec2433f4734b661fe5f8a8e86f52949f2c",
-  "new_tree": "88aebaec2433f4734b661fe5f8a8e86f52949f2c",
-  "plan_digest": "sha256:3531cfe0275e22081bebe0c017782e177261c11f7fc82c3b991d1cfdfd4fcb9d",
-  "snapshot_digest": "sha256:bc1e165733d7aa847618ecef04ad5dfb6e18c764c9ff5546b6e6c21622b28b65",
+  "old_tree": "9d78019b8beaa67d0e8c7b8e08acac76b7fac909",
+  "new_tree": "9d78019b8beaa67d0e8c7b8e08acac76b7fac909",
+  "plan_digest": "sha256:2ac347689537faa1fbe49e794041b89eee8437447688dd631ecb82fd59e88e54",
+  "snapshot_digest": "sha256:4006fc625dbe7240fde7e1c07e0fb2fb0433c48a17cda98798e214ba9345e4da",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:bc1e165733d7aa847618ecef04ad5dfb6e18c764c9ff5546b6e6c21622b28b65",
+    "snapshot_digest": "sha256:4006fc625dbe7240fde7e1c07e0fb2fb0433c48a17cda98798e214ba9345e4da",
     "base": "2b210a701956adb524064ca8bef23a4442ea945f",
-    "head": "c9c957b89655da5a6566023306df837e23584d45",
+    "head": "99d7f0c80fcedb4698d1295efa7a2e356d50173c",
     "nodes": [
       {
         "name": "stackpr-plan-model",
         "summary": "The PR chain, planned purely",
         "from": [
-          "apps/desktop/src/main/services/stackplan.test.ts:1#df28",
-          "apps/desktop/src/main/services/stackplan.ts:1#794f"
+          "apps/desktop/src/main/services/stackplan.test.ts:1#8dd9",
+          "apps/desktop/src/main/services/stackplan.ts:1#dcbf"
         ]
       },
       {
         "name": "stackpr-execution",
         "summary": "Main executes the chain through the user's own gh",
         "from": [
-          "apps/desktop/src/main/ipc.ts:5#2528",
-          "apps/desktop/src/main/ipc.ts:15#e13c",
-          "apps/desktop/src/main/ipc.ts:46#7e6d",
-          "apps/desktop/src/main/ipc.ts:374#6762",
-          "apps/desktop/src/main/services/git.ts:583#ef79",
-          "apps/desktop/src/main/services/stack.ts:1#cf81",
-          "apps/desktop/src/shared/ipc.ts:20#8fe6",
-          "apps/desktop/src/shared/ipc.ts:237#45ca",
-          "apps/desktop/src/shared/ipc.ts:346#db9f"
+          "apps/desktop/src/main/ipc.ts:5#5cb1",
+          "apps/desktop/src/main/ipc.ts:15#a1a6",
+          "apps/desktop/src/main/ipc.ts:46#1777",
+          "apps/desktop/src/main/ipc.ts:374#2013",
+          "apps/desktop/src/main/services/git.ts:583#89a1",
+          "apps/desktop/src/main/services/stack.ts:1#0acd",
+          "apps/desktop/src/shared/ipc.ts:20#2a0c",
+          "apps/desktop/src/shared/ipc.ts:237#9f24",
+          "apps/desktop/src/shared/ipc.ts:346#1d0f",
+          "apps/desktop/src/main/services/stack.ts:100#9202"
         ]
       },
       {
         "name": "stackpr-ui",
         "summary": "One button from stack to chain",
         "from": [
-          "apps/desktop/src/renderer/app.css:323#9650",
-          "apps/desktop/src/renderer/components/StackView.tsx:8#4ba9",
-          "apps/desktop/src/renderer/components/StackView.tsx:19#f0bb",
-          "apps/desktop/src/renderer/components/StackView.tsx:34#a2ae",
-          "apps/desktop/src/renderer/components/StackView.tsx:86#3851",
-          "apps/desktop/src/renderer/components/StackView.tsx:95#f9ad",
-          "apps/desktop/src/renderer/components/SubmitStack.tsx:1#84d3",
-          "apps/desktop/src/renderer/i18n/locales/en.json:29#9fcd",
-          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:29#3c78"
+          "apps/desktop/src/renderer/app.css:323#bf1e",
+          "apps/desktop/src/renderer/components/StackView.tsx:8#e5b2",
+          "apps/desktop/src/renderer/components/StackView.tsx:19#c139",
+          "apps/desktop/src/renderer/components/StackView.tsx:34#61ef",
+          "apps/desktop/src/renderer/components/StackView.tsx:86#e226",
+          "apps/desktop/src/renderer/components/StackView.tsx:95#3094",
+          "apps/desktop/src/renderer/components/SubmitStack.tsx:1#4ea5",
+          "apps/desktop/src/renderer/i18n/locales/en.json:29#21a8",
+          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:29#5e53"
+        ]
+      },
+      {
+        "name": "shot-delay-knob",
+        "summary": "Shot tooling learns to wait",
+        "from": [
+          "apps/desktop/src/main/index.ts:54#62bb",
+          "apps/desktop/src/main/index.ts:58#b30a",
+          "apps/desktop/src/main/index.ts:94#8759"
         ]
       }
     ],
     "order": [
       "stackpr-plan-model",
       "stackpr-execution",
-      "stackpr-ui"
+      "stackpr-ui",
+      "shot-delay-knob"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788113747"
+  "timestamp": "1788114108"
 }
