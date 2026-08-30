@@ -1,37 +1,54 @@
 {
   "kind": "apply",
   "branch": "main",
-  "old_head": "20fd193a90be31d6ba8b58ed73936c1ba6fcd78f",
-  "new_head": "0f1f5f3ba94b2862bab97c15b3ce83aeb032159c",
-  "base": "9dcde41d5fbbacb4c2e48325a8445f09ee6bbf88",
-  "old_tree": "0511be5f2be39963148b81ef1f78395bd89cd0f7",
-  "new_tree": "0511be5f2be39963148b81ef1f78395bd89cd0f7",
-  "plan_digest": "sha256:5feb3c86b8e551996e65f2aad52b8c2d4ef7491ae04b575991159232d77fb937",
-  "snapshot_digest": "sha256:cfc75f9f7f15103ccaa5aa45b38741d7bbedac237cda3cc81ce87d9fd922b265",
+  "old_head": "8e952a41e8988ad9d9df1bc06c7ee256073c9626",
+  "new_head": "d001dae984cbda16b56a20bc86fbf3a7b5a6f5a9",
+  "base": "0f1f5f3ba94b2862bab97c15b3ce83aeb032159c",
+  "old_tree": "6334cc97e4c63137ea470a51898aad2889748a94",
+  "new_tree": "6334cc97e4c63137ea470a51898aad2889748a94",
+  "plan_digest": "sha256:060ad8738a94e07b7251ee01c179adb8daac03aa631dc09261dc8619af7f64f4",
+  "snapshot_digest": "sha256:34079af515b00e2b43eaabb1d5a4f9f4f6ede0dbeccabd8797c3a5b8e4ba3623",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:cfc75f9f7f15103ccaa5aa45b38741d7bbedac237cda3cc81ce87d9fd922b265",
-    "base": "9dcde41d5fbbacb4c2e48325a8445f09ee6bbf88",
-    "head": "20fd193a90be31d6ba8b58ed73936c1ba6fcd78f",
+    "snapshot_digest": "sha256:34079af515b00e2b43eaabb1d5a4f9f4f6ede0dbeccabd8797c3a5b8e4ba3623",
+    "base": "0f1f5f3ba94b2862bab97c15b3ce83aeb032159c",
+    "head": "8e952a41e8988ad9d9df1bc06c7ee256073c9626",
     "nodes": [
       {
-        "name": "foundation-hardening",
-        "summary": "Post-batch hardening: conflict probe, slug loops, search rail",
+        "name": "select-to-comment",
+        "summary": "Select code, comment in place; the detail pane stops floating",
         "from": [
-          "apps/desktop/src/main/services/git.ts:136#cabf",
-          "apps/desktop/src/renderer/components/HistoryView.tsx:235#1626",
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:80#304a",
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:171#a566",
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:173#fb8d",
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:213#9afe",
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:301#493a"
+          "apps/desktop/src/main/index.ts:1#4822",
+          "apps/desktop/src/main/index.ts:58#b098",
+          "apps/desktop/src/renderer/app.css:657#3da6",
+          "apps/desktop/src/renderer/app.css:767#4889",
+          "apps/desktop/src/renderer/app.css:771#76bc",
+          "apps/desktop/src/renderer/app.css:776#b825",
+          "apps/desktop/src/renderer/app.css:2690#25e5",
+          "apps/desktop/src/renderer/components/DiffView.tsx:3#0902",
+          "apps/desktop/src/renderer/components/DiffView.tsx:18#99cd",
+          "apps/desktop/src/renderer/components/DiffView.tsx:63#bcd4",
+          "apps/desktop/src/renderer/components/DiffView.tsx:124#d11b",
+          "apps/desktop/src/renderer/components/DiffView.tsx:161#d36a",
+          "apps/desktop/src/renderer/components/DiffView.tsx:221#ce22",
+          "apps/desktop/src/renderer/components/DiffView.tsx:229#23ec",
+          "apps/desktop/src/renderer/components/DiffView.tsx:276#3855",
+          "apps/desktop/src/renderer/components/DiffView.tsx:278#8a17",
+          "apps/desktop/src/renderer/components/DiffView.tsx:282#69c9",
+          "apps/desktop/src/renderer/components/DiffView.tsx:285#eaf4",
+          "apps/desktop/src/renderer/components/DiffView.tsx:322#51a0",
+          "apps/desktop/src/renderer/components/DiffView.tsx:359#075e",
+          "apps/desktop/src/renderer/components/DiffView.tsx:466#f8d7",
+          "apps/desktop/src/renderer/components/Inspector.tsx:142#96e3",
+          "apps/desktop/src/renderer/components/Inspector.tsx:168#7e6f",
+          "apps/desktop/src/renderer/components/ReviewView.tsx:43#c968"
         ]
       }
     ],
     "order": [
-      "foundation-hardening"
+      "select-to-comment"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788101719"
+  "timestamp": "1788103368"
 }
