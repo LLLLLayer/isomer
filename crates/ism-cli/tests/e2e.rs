@@ -695,3 +695,255 @@ fn skill_install_project_and_user() {
     assert!(out.status.success());
     assert!(home.path().join(".claude/skills/ism/SKILL.md").exists());
 }
+
+#[test]
+fn split_commit_mints_fresh_ids_never_duplicates_the_trailer() {
+    let r = Repo::new();
+    r.write("f.txt", "1\n2\n3\n4\n5\n");
+    r.commit_all("base");
+    r.git(&["checkout", "-q", "-b", "feat"]);
+    r.write("f.txt", "1\nX\n3\nY\n5\n");
+    r.commit_all("two edits");
+
+    // First apply gives the commit a trailer.
+    let snap = inspect(&r);
+    let all: Vec<String> = snap["hunks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|h| h["id"].as_str().unwrap().to_string())
+        .collect();
+    assert_eq!(all.len(), 2);
+    let plan = serde_json::json!({
+        "version": 1, "snapshot_digest": snap["snapshot_digest"],
+        "nodes": [{"name": "both", "from": all, "summary": "Both edits"}],
+        "order": ["both"]
+    });
+    let p = r.write_plan(&plan);
+    let (code, json, raw) = r.ism(&["apply", p.to_str().unwrap()]);
+    assert_eq!(code, 0, "apply1 failed: {raw}");
+    let original_id = json.unwrap()["changes"][0]["id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+
+    // Now split that single trailer-bearing commit into two nodes: neither
+    // owns the whole source commit, so BOTH must get fresh identities.
+    let snap2 = inspect(&r);
+    let hunks2: Vec<String> = snap2["hunks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|h| h["id"].as_str().unwrap().to_string())
+        .collect();
+    let plan2 = serde_json::json!({
+        "version": 1, "snapshot_digest": snap2["snapshot_digest"],
+        "nodes": [
+            {"name": "first", "from": [hunks2[0]], "summary": "First edit"},
+            {"name": "second", "from": [hunks2[1]], "summary": "Second edit"}
+        ],
+        "order": ["first", "second"]
+    });
+    let p2 = r.write_plan(&plan2);
+    let (code, json, raw) = r.ism(&["apply", p2.to_str().unwrap()]);
+    assert_eq!(code, 0, "apply2 failed: {raw}");
+    let ids: Vec<String> = json.unwrap()["changes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| c["id"].as_str().unwrap().to_string())
+        .collect();
+    assert_ne!(ids[0], ids[1], "split halves share an identity");
+    assert!(
+        !ids.contains(&original_id),
+        "a split half inherited the trailer"
+    );
+    // And the tool's own output must scan clean.
+    let snap3 = inspect(&r);
+    assert!(
+        !snap3["anomalies"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|a| a["kind"] == "duplicate_id"),
+        "duplicate_id on our own output: {}",
+        snap3["anomalies"]
+    );
+}
+
+#[test]
+fn submodule_gitlink_bumps_reorganize_as_whole_file_units() {
+    let r = Repo::new();
+    r.write("readme.txt", "hello\n");
+    let base_sha = r.commit_all("base");
+    r.git(&["checkout", "-q", "-b", "feat"]);
+    // Forge gitlink entries without submodule machinery: any commit sha works.
+    r.git(&[
+        "update-index",
+        "--add",
+        "--cacheinfo",
+        &format!("160000,{base_sha},sub"),
+    ]);
+    let c1 = r.git(&["commit", "-q", "-m", "add gitlink"]).is_empty();
+    let _ = c1;
+    let bump_sha = {
+        r.write("readme.txt", "hello\nworld\n");
+        // Precise add: `add -A` would stage the worktree-absent gitlink as
+        // a deletion (there is no real submodule checkout in this fixture).
+        r.git(&["add", "readme.txt"]);
+        r.git(&["commit", "-q", "-m", "edit readme"]);
+        r.git(&["rev-parse", "HEAD"])
+    };
+    r.git(&[
+        "update-index",
+        "--add",
+        "--cacheinfo",
+        &format!("160000,{bump_sha},sub"),
+    ]);
+    r.git(&["commit", "-q", "-m", "bump gitlink"]);
+
+    let snap = inspect(&r);
+    let sub = hunks_of(&snap, "sub");
+    let readme = hunks_of(&snap, "readme.txt");
+    assert_eq!(sub.len(), 2, "gitlink hunks: {:?}", snap["hunks"]);
+    assert_eq!(readme.len(), 1);
+    // Reorder: readme edit first, then both gitlink steps.
+    let plan = serde_json::json!({
+        "version": 1, "snapshot_digest": snap["snapshot_digest"],
+        "nodes": [
+            {"name": "readme", "from": readme, "summary": "Edit readme"},
+            {"name": "gitlinks", "from": sub, "summary": "Add and bump gitlink"}
+        ],
+        "order": ["readme", "gitlinks"]
+    });
+    let p = r.write_plan(&plan);
+    let head_before = r.git(&["rev-parse", "HEAD"]);
+    let tree_before = r.git(&["rev-parse", "HEAD^{tree}"]);
+    let (code, _, raw) = r.ism(&["apply", p.to_str().unwrap()]);
+    assert_eq!(code, 0, "apply failed: {raw}");
+    assert_ne!(r.git(&["rev-parse", "HEAD"]), head_before);
+    assert_eq!(r.git(&["rev-parse", "HEAD^{tree}"]), tree_before);
+}
+
+#[test]
+fn created_then_truncated_file_is_empty_not_deleted() {
+    let r = Repo::new();
+    r.write("base.txt", "b\n");
+    r.commit_all("base");
+    r.git(&["checkout", "-q", "-b", "feat"]);
+    r.write("newfile.txt", "a\nb\n");
+    r.commit_all("create newfile");
+    r.write("newfile.txt", "");
+    r.commit_all("truncate newfile");
+
+    let snap = inspect(&r);
+    let hunks: Vec<String> = snap["hunks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|h| h["id"].as_str().unwrap().to_string())
+        .collect();
+    // Identity plan (same grouping, same order) must pass and apply.
+    let plan = serde_json::json!({
+        "version": 1, "snapshot_digest": snap["snapshot_digest"],
+        "nodes": [
+            {"name": "create", "from": [hunks[0].clone()], "summary": "Create newfile"},
+            {"name": "truncate", "from": [hunks[1].clone()], "summary": "Truncate newfile"}
+        ],
+        "order": ["create", "truncate"]
+    });
+    let p = r.write_plan(&plan);
+    let tree_before = r.git(&["rev-parse", "HEAD^{tree}"]);
+    let (code, _, raw) = r.ism(&["apply", p.to_str().unwrap()]);
+    assert_eq!(code, 0, "apply failed: {raw}");
+    assert_eq!(r.git(&["rev-parse", "HEAD^{tree}"]), tree_before);
+    // The intermediate commit ends with the file present and non-empty.
+    let shown = r.git(&["show", "HEAD~1:newfile.txt"]);
+    assert_eq!(shown, "a\nb");
+}
+
+#[test]
+fn plan_hygiene_rejections_are_e001() {
+    let r = messy_repo();
+    let snap = inspect(&r);
+    let all: Vec<String> = snap["hunks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|h| h["id"].as_str().unwrap().to_string())
+        .collect();
+
+    // Trailer smuggled into the body.
+    let plan = serde_json::json!({
+        "version": 1, "snapshot_digest": snap["snapshot_digest"],
+        "nodes": [{"name": "all", "from": all, "summary": "ok",
+                   "body": "quoting\nIsomer-Change: i-zzzzzzzz\nis not allowed"}],
+        "order": ["all"]
+    });
+    let p = r.write_plan(&plan);
+    let (code, json, _) = r.ism(&["check", p.to_str().unwrap()]);
+    assert_eq!(code, 1);
+    assert_eq!(json.unwrap()["errors"][0]["code"], "E001");
+
+    // Multi-line summary.
+    let plan = serde_json::json!({
+        "version": 1, "snapshot_digest": snap["snapshot_digest"],
+        "nodes": [{"name": "all", "from": all, "summary": "two\nlines"}],
+        "order": ["all"]
+    });
+    let p = r.write_plan(&plan);
+    let (code, json, _) = r.ism(&["check", p.to_str().unwrap()]);
+    assert_eq!(code, 1);
+    assert_eq!(json.unwrap()["errors"][0]["code"], "E001");
+
+    // A node that resolves to zero hunks.
+    let plan = serde_json::json!({
+        "version": 1, "snapshot_digest": snap["snapshot_digest"],
+        "nodes": [
+            {"name": "all", "from": all, "summary": "everything"},
+            {"name": "ghost", "from": [], "summary": "empty commit"}
+        ],
+        "order": ["all", "ghost"]
+    });
+    let p = r.write_plan(&plan);
+    let (code, json, _) = r.ism(&["check", p.to_str().unwrap()]);
+    assert_eq!(code, 1);
+    assert_eq!(json.unwrap()["errors"][0]["code"], "E001");
+}
+
+#[test]
+fn sql_comment_lines_roundtrip_through_reorganization() {
+    let r = Repo::new();
+    r.write("q.sql", "-- header comment\nselect 1;\n-- footer\n");
+    r.commit_all("base");
+    r.git(&["checkout", "-q", "-b", "feat"]);
+    r.write("q.sql", "-- new header\nselect 1;\n-- footer\n");
+    r.commit_all("edit header comment");
+    r.write("other.txt", "o\n");
+    r.commit_all("add other");
+
+    let snap = inspect(&r);
+    let sql = hunks_of(&snap, "q.sql");
+    let other = hunks_of(&snap, "other.txt");
+    assert_eq!((sql.len(), other.len()), (1, 1));
+    // The parser must see the real content, not a truncated hunk.
+    let stats = &snap["hunks"].as_array().unwrap()[0]["lines"];
+    assert_eq!(stats["add"], 1);
+    assert_eq!(stats["del"], 1);
+
+    let plan = serde_json::json!({
+        "version": 1, "snapshot_digest": snap["snapshot_digest"],
+        "nodes": [
+            {"name": "other", "from": other, "summary": "Add other"},
+            {"name": "sql", "from": sql, "summary": "Edit header comment"}
+        ],
+        "order": ["other", "sql"]
+    });
+    let p = r.write_plan(&plan);
+    let tree_before = r.git(&["rev-parse", "HEAD^{tree}"]);
+    let head_before = r.git(&["rev-parse", "HEAD"]);
+    let (code, _, raw) = r.ism(&["apply", p.to_str().unwrap()]);
+    assert_eq!(code, 0, "apply failed: {raw}");
+    assert_ne!(r.git(&["rev-parse", "HEAD"]), head_before);
+    assert_eq!(r.git(&["rev-parse", "HEAD^{tree}"]), tree_before);
+}
