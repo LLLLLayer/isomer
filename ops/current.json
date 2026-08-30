@@ -1,45 +1,53 @@
 {
   "kind": "apply",
   "branch": "main",
-  "old_head": "a6eeb4756b1980456694c1aa741226537dc5f73c",
-  "new_head": "f74258983cbdcd7fdf3174f20f5a37ad89efb94f",
-  "base": "d001dae984cbda16b56a20bc86fbf3a7b5a6f5a9",
-  "old_tree": "1f00f37ea2cda74901fb93da8b75b2743bb9a4a9",
-  "new_tree": "1f00f37ea2cda74901fb93da8b75b2743bb9a4a9",
-  "plan_digest": "sha256:1c77c94fb1be5349e878e9746777b56c01f34c5e51b8dedd6d91dc28fcffc9b9",
-  "snapshot_digest": "sha256:55d1f90751784eb66c61744cbc40bc94710d47a46bf4883d85ed9aca838a6b6a",
+  "old_head": "a553be68efc5461a4386419303aee8aa14b87650",
+  "new_head": "d34c23ec74a4e9bd0bd04241647c2be9ae6a3312",
+  "base": "f74258983cbdcd7fdf3174f20f5a37ad89efb94f",
+  "old_tree": "7b93cba351055c48a625a404a2a174fb68d02f21",
+  "new_tree": "7b93cba351055c48a625a404a2a174fb68d02f21",
+  "plan_digest": "sha256:1bf65d168707fe72c43cc97213161d714b9778cf0a6082f748b7f2a050675afb",
+  "snapshot_digest": "sha256:17b623c93fc4d9248aecd7314e1b25f4d30cb452efcb5d20dba08b609635b584",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:55d1f90751784eb66c61744cbc40bc94710d47a46bf4883d85ed9aca838a6b6a",
-    "base": "d001dae984cbda16b56a20bc86fbf3a7b5a6f5a9",
-    "head": "a6eeb4756b1980456694c1aa741226537dc5f73c",
+    "snapshot_digest": "sha256:17b623c93fc4d9248aecd7314e1b25f4d30cb452efcb5d20dba08b609635b584",
+    "base": "f74258983cbdcd7fdf3174f20f5a37ad89efb94f",
+    "head": "a553be68efc5461a4386419303aee8aa14b87650",
     "nodes": [
       {
-        "name": "composer-dock",
-        "summary": "Composer docks at the bottom; the selection pill grows up",
+        "name": "one-composer-full-panes",
+        "summary": "One composer at a time; panes fill their frames; settings breathe",
         "from": [
-          "apps/desktop/src/renderer/app.css:768#98ec",
-          "apps/desktop/src/renderer/app.css:772#64ca",
-          "apps/desktop/src/renderer/app.css:775#4e44",
-          "apps/desktop/src/renderer/app.css:2697#c3c2",
-          "apps/desktop/src/renderer/app.css:2701#b26e",
-          "apps/desktop/src/renderer/app.css:2704#97d3",
-          "apps/desktop/src/renderer/app.css:2706#5003",
-          "apps/desktop/src/renderer/components/DiffView.tsx:68#7293",
-          "apps/desktop/src/renderer/components/DiffView.tsx:102#eecf",
-          "apps/desktop/src/renderer/components/DiffView.tsx:107#8cb7",
-          "apps/desktop/src/renderer/components/DiffView.tsx:138#59aa",
-          "apps/desktop/src/renderer/components/Inspector.tsx:141#d797",
-          "apps/desktop/src/renderer/components/Inspector.tsx:143#ce88",
-          "artwork/reference-study/first-preview.png:0#6e6e",
-          "artwork/reference-study/first.svg:1#2607"
+          "apps/desktop/src/renderer/app.css:1726#9a05",
+          "apps/desktop/src/renderer/app.css:1743#03ca",
+          "apps/desktop/src/renderer/app.css:1747#df88",
+          "apps/desktop/src/renderer/app.css:1765#2191",
+          "apps/desktop/src/renderer/app.css:2045#4c7d",
+          "apps/desktop/src/renderer/app.css:2047#5312",
+          "apps/desktop/src/renderer/components/DiffView.tsx:101#6adc",
+          "apps/desktop/src/renderer/components/DiffView.tsx:121#7472",
+          "apps/desktop/src/renderer/components/DiffView.tsx:151#5603",
+          "apps/desktop/src/renderer/components/SettingsPage.tsx:6#f20c",
+          "apps/desktop/src/renderer/components/SettingsPage.tsx:37#c5e8",
+          "apps/desktop/src/renderer/components/SettingsPage.tsx:92#ea93",
+          "apps/desktop/src/renderer/components/SettingsPage.tsx:102#0dd6",
+          "apps/desktop/src/renderer/components/SettingsPage.tsx:107#7954",
+          "artwork/reference-study/first-preview.png:0#2fb8",
+          "artwork/reference-study/first.svg:27#ccc5",
+          "artwork/reference-study/first.svg:47#292a",
+          "artwork/reference-study/first.svg:51#2e53",
+          "artwork/reference-study/first.svg:107#d4c1",
+          "artwork/reference-study/first.svg:123#ed80",
+          "artwork/reference-study/first.svg:125#b4b9",
+          "artwork/reference-study/first.svg:173#63e1",
+          "artwork/reference-study/first.svg:179#3648"
         ]
       }
     ],
     "order": [
-      "composer-dock"
+      "one-composer-full-panes"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788108885"
+  "timestamp": "1788109884"
 }
