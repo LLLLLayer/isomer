@@ -318,5 +318,24 @@
     "depConflicts": "{{count}} 处依赖冲突",
     "depConflictTip": "{{hunk}} 依赖 {{dep}}，但后者在更靠后的草稿“{{name}}”中",
     "depNeedsLater": "硬依赖位于更靠后的草稿——应用将失败。"
+  },
+  "manager": {
+    "title": "仓库管理",
+    "refresh": "刷新",
+    "addExisting": "添加已有…",
+    "clone": "克隆",
+    "cloning": "克隆中…",
+    "clonePlaceholder": "https://github.com/you/repo.git 或 git@…",
+    "pinned": "置顶",
+    "recent": "最近",
+    "empty": "还没有仓库——添加或克隆一个。",
+    "pin": "置顶",
+    "unpin": "取消置顶",
+    "groupPlaceholder": "分组",
+    "remove": "从列表移除",
+    "removeSure": "确认？",
+    "missing": "目录已不存在或不再是仓库。",
+    "missingShort": "缺失",
+    "dirty": "{{count}} 个文件有改动"
   }
 }

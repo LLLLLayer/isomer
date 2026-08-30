@@ -20,6 +20,7 @@ import { Inspector } from './components/Inspector'
 import { ProjectRail } from './components/ProjectRail'
 import { ReviewView } from './components/ReviewView'
 import { SettingsPage } from './components/SettingsPage'
+import { RepoManager } from './components/RepoManager'
 import { Sidebar } from './components/Sidebar'
 import { StackView } from './components/StackView'
 import { TerminalDrawer } from './components/TerminalDrawer'
@@ -206,6 +207,7 @@ export function App(): React.JSX.Element {
         </>
       )}
       <SettingsPage />
+      <RepoManager />
       {palette && <QuickLaunch onClose={() => setPalette(false)} />}
       {pushMenu && (
         <div className="modal-backdrop" onClick={() => setPushMenu(false)}>

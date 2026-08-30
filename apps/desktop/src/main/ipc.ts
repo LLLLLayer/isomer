@@ -1,8 +1,16 @@
 import { BrowserWindow, app, dialog, ipcMain, nativeTheme, net, shell } from 'electron'
+import { existsSync } from 'node:fs'
 import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path'
-import type { InvokeChannel, InvokeContracts, PushChannel, PushContracts, StackSubmitOutcome } from '../shared/ipc'
+import type {
+  InvokeChannel,
+  InvokeContracts,
+  ProjectHealth,
+  PushChannel,
+  PushContracts,
+  StackSubmitOutcome,
+} from '../shared/ipc'
 import type { Snapshot } from '../shared/ism-types'
 import type { Result } from '../shared/result'
 import { err } from '../shared/result'
@@ -142,7 +150,90 @@ export function registerIpc(exec: Exec): { dispose(): void } {
     }
     return { ok: true, data: projects.add(path) }
   })
-  handle('projects:remove', async ({ id }) => projects.remove(id))
+  handle('projects:remove', async ({ id }) => {
+    projects.remove(id)
+    // Removing the watched repo must release the FSEvents handle — the
+    // directory is plausibly about to be deleted from disk.
+    if (watchedProject === id) {
+      watcher.dispose()
+      watchedProject = null
+    }
+  })
+  handle('projects:update', async ({ id, group, pinned, touch }) =>
+    projects.update(id, { group, pinned, touch }),
+  )
+  handle('projects:overview', async () => {
+    const list = projects.list()
+    // Per-repo 5s race: one hung probe (dead network mount) must not starve
+    // every other repo's badges. A timed-out repo reads as missing.
+    const raced = <T,>(p: Promise<T>, fallback: T): Promise<T> =>
+      Promise.race([
+        p,
+        new Promise<T>((res) => setTimeout(() => res(fallback), 5_000)),
+      ])
+    return Promise.all(
+      list.map((p): Promise<ProjectHealth> => {
+        const gone = { id: p.id, branch: null, dirty: 0, ahead: 0, behind: 0, missing: true }
+        const probe = async (): Promise<ProjectHealth> => {
+          try {
+            if (!(await git.isRepository(p.path))) return gone
+          } catch {
+            return gone
+          }
+          const st = await git.status(p.path)
+          if (!st.ok) return gone
+          return {
+            id: p.id,
+            branch: st.data.branch,
+            dirty: st.data.entries.length,
+            ahead: st.data.ahead,
+            behind: st.data.behind,
+            missing: false,
+          }
+        }
+        return raced(probe(), gone)
+      }),
+    )
+  })
+  handle('projects:clone', async ({ url, parentDir }) => {
+    if (!/^(https:\/\/[^/]+\/.|git@|ssh:\/\/)/.test(url)) {
+      return err({
+        code: 'BAD_CLONE_URL',
+        message: 'only https:// or ssh (git@) clone URLs with a repository path are accepted',
+      })
+    }
+    // Directory name from the last path (or scp-style colon) segment.
+    const name =
+      /\/([^/:]+?)(?:\.git)?\/?$/.exec(url)?.[1] ?? /:([^/:]+?)(?:\.git)?$/.exec(url)?.[1] ?? ''
+    if (!name || name === '.' || name === '..') {
+      return err({ code: 'BAD_CLONE_URL', message: 'cannot derive a directory name' })
+    }
+    const target = join(parentDir, name)
+    const preExisting = existsSync(target)
+    try {
+      // Never prompt: a credential/hostkey question would wedge the UI
+      // until the timeout kill. Fail fast with git's own message instead.
+      const r = await exec('git', ['clone', url, target], {
+        cwd: parentDir,
+        timeoutMs: 600_000,
+        env: { GIT_TERMINAL_PROMPT: '0', GIT_SSH_COMMAND: 'ssh -oBatchMode=yes' },
+      })
+      if (r.code !== 0) {
+        // A SIGKILLed clone cannot clean up after itself; a half-written
+        // target would block every retry with "destination already exists".
+        if (!preExisting) await rm(target, { recursive: true, force: true })
+        const tail = r.stderr.trim().split('\n').slice(-2).join('\n')
+        return err({
+          code: 'CLONE_FAILED',
+          message: r.code === -1 ? `clone timed out\n${tail}` : tail || 'git clone failed',
+        })
+      }
+    } catch (e) {
+      if (!preExisting) await rm(target, { recursive: true, force: true }).catch(() => undefined)
+      return err({ code: 'CLONE_FAILED', message: e instanceof Error ? e.message : String(e) })
+    }
+    return { ok: true, data: projects.add(target) }
+  })
 
   handle('git:status', async ({ projectId }) => {
     const dir = cwd(projectId)
@@ -165,9 +256,11 @@ export function registerIpc(exec: Exec): { dispose(): void } {
     const dir = cwd(projectId)
     return dir ? git.commitDiff(dir, sha) : NO_PROJECT
   })
+  let watchedProject: string | null = null
   handle('repo:watch', async ({ projectId }) => {
     const dir = cwd(projectId)
     if (!dir) return
+    watchedProject = projectId
     watcher.watch(dir, () => push('repo:changed', { projectId }))
   })
   handle('git:stage', async ({ projectId, paths }) => {
