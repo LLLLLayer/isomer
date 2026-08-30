@@ -2,7 +2,9 @@ import { BrowserWindow, app, dialog, ipcMain, nativeTheme, net, shell } from 'el
 import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path'
-import type { InvokeChannel, InvokeContracts, PushChannel, PushContracts } from '../shared/ipc'
+import type { InvokeChannel, InvokeContracts, PushChannel, PushContracts, StackSubmitOutcome } from '../shared/ipc'
+import type { Snapshot } from '../shared/ism-types'
+import type { Result } from '../shared/result'
 import { err } from '../shared/result'
 import type { Exec } from './services/exec'
 import { GitService } from './services/git'
@@ -10,6 +12,8 @@ import { IsmService } from './services/ism'
 import { ProjectRegistry, projectsFile } from './services/projects'
 import { PtyService } from './services/pty'
 import { SettingsStore, settingsFile } from './services/settings'
+import { StackService } from './services/stack'
+import { type StackChange, planStack } from './services/stackplan'
 import { checkForUpdate } from './services/updates'
 import { RepoWatcher } from './services/watcher'
 
@@ -39,6 +43,7 @@ export function registerIpc(exec: Exec): { dispose(): void } {
   const projects = new ProjectRegistry(projectsFile(userData))
   const git = new GitService(exec)
   const ism = new IsmService(exec, () => settings.get().ismPath)
+  const stack = new StackService(exec)
   const pty = new PtyService({
     onData: (payload) => push('pty:data', payload),
     onExit: (id, exitCode) => push('pty:exit', { id, exitCode }),
@@ -415,6 +420,143 @@ export function registerIpc(exec: Exec): { dispose(): void } {
   handle('ism:ops', async ({ projectId, limit }) => {
     const dir = cwd(projectId)
     return dir ? ism.run(dir, ['ops', '--limit', String(limit ?? 50)]) : NO_PROJECT
+  })
+
+  /* ==== stacked PRs: change stack → PR chain ============================ */
+
+  const STACK_PREFIX = 'stack/'
+  /** The current stack as submit units. Every commit must carry an
+   * Isomer-Change identity — that id is what lets sync find the same PR
+   * after a reorganize rewrites every sha. */
+  const stackChanges = async (dir: string): Promise<Result<StackChange[]>> => {
+    const snap = await ism.run<Snapshot>(dir, ['inspect'])
+    if (!snap.ok) return snap
+    if (snap.data.commits.length === 0) {
+      return err({
+        code: 'EMPTY_STACK',
+        message: 'nothing to submit — the branch has no pending stack',
+        hint: 'commit work on a branch ahead of the trunk first',
+      })
+    }
+    const changes: StackChange[] = []
+    const seen = new Set<string>()
+    for (const c of snap.data.commits) {
+      if (c.change_id === null) {
+        return err({
+          code: 'NO_IDENTITY',
+          message: `commit ${c.sha.slice(0, 7)} has no Isomer-Change identity`,
+          hint: 'organize the stack first (Organize view) so every change is durable',
+        })
+      }
+      if (seen.has(c.change_id)) {
+        // ism models this as the duplicate_id anomaly (a cherry-pick can
+        // copy the trailer); two changes on one PR would silently last-win.
+        return err({
+          code: 'DUPLICATE_IDENTITY',
+          message: `two commits carry ${c.change_id}`,
+          hint: 'reorganize the stack so every change id is unique',
+        })
+      }
+      seen.add(c.change_id)
+      changes.push({
+        id: c.change_id,
+        name: c.title,
+        summary: c.title,
+        description: await git.commitBody(dir, c.sha),
+        sha: c.sha,
+      })
+    }
+    return { ok: true, data: changes }
+  }
+
+  const stackPlanFor = async (
+    dir: string,
+  ): Promise<Result<{ plan: ReturnType<typeof planStack>; gh: 'ok' | 'missing' | 'unauthenticated'; trunk: string }>> => {
+    const gh = await stack.ghState(dir)
+    const changes = await stackChanges(dir)
+    if (!changes.ok) return changes
+    const prs = gh === 'ok' ? await stack.openPrs(dir) : { ok: true as const, data: [] }
+    if (!prs.ok) return prs
+    const trunk = await stack.defaultBranch(dir)
+    return {
+      ok: true,
+      data: { plan: planStack(changes.data, prs.data, { trunk, prefix: STACK_PREFIX }), gh, trunk },
+    }
+  }
+
+  handle('stack:preview', async ({ projectId }) => {
+    const dir = cwd(projectId)
+    if (!dir) return NO_PROJECT
+    const r = await stackPlanFor(dir)
+    if (!r.ok) return r
+    const { plan, gh, trunk } = r.data
+    return {
+      ok: true,
+      data: {
+        gh,
+        trunk,
+        actions: plan.actions.map((a) => ({
+          id: a.push.change.id,
+          branch: a.push.branch,
+          base: a.push.base,
+          summary: a.push.change.summary,
+          kind: a.kind,
+          number: a.kind === 'update' ? a.number : null,
+          retarget: a.kind === 'update' ? a.retarget : null,
+        })),
+        orphans: plan.orphans.map((o) => ({ number: o.number, branch: o.headRefName })),
+      },
+    }
+  })
+
+  handle('stack:submit', async ({ projectId }) => {
+    const dir = cwd(projectId)
+    if (!dir) return NO_PROJECT
+    const r = await stackPlanFor(dir)
+    if (!r.ok) return r
+    const { plan, gh } = r.data
+    if (gh !== 'ok') {
+      return err({
+        code: 'GH_UNAVAILABLE',
+        message: gh === 'missing' ? 'the gh CLI is not installed' : 'gh is not authenticated',
+        hint: gh === 'missing' ? 'brew install gh' : 'run `gh auth login` in a terminal',
+      })
+    }
+    const results: StackSubmitOutcome['results'] = []
+    // Bottom-up: a PR's base branch must exist before the PR is created.
+    for (const action of plan.actions) {
+      const pushed = await stack.pushBranch(dir, action.push.change.sha, action.push.branch)
+      if (!pushed.ok) return pushed
+      if (action.kind === 'create') {
+        const created = await stack.createPr(dir, {
+          head: action.push.branch,
+          base: action.push.base,
+          title: action.title,
+          body: action.body,
+        })
+        if (!created.ok) return created
+        results.push({
+          id: action.push.change.id,
+          branch: action.push.branch,
+          number: created.data.number,
+          url: created.data.url,
+        })
+      } else {
+        const edited = await stack.editPr(dir, action.number, {
+          title: action.title,
+          body: action.body,
+          retarget: action.retarget,
+        })
+        if (!edited.ok) return edited
+        results.push({
+          id: action.push.change.id,
+          branch: action.push.branch,
+          number: action.number,
+          url: null,
+        })
+      }
+    }
+    return { ok: true, data: { results } }
   })
   handle('ism:undo', async ({ projectId }) => {
     const dir = cwd(projectId)

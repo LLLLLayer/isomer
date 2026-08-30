@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronRight,
   Copy,
+  GitPullRequest,
   Link2,
   ShieldCheck,
   Unlink,
@@ -15,6 +16,7 @@ import { appliedProof, verifyCommands } from '../proof'
 import { changeDeps } from '../stackdeps'
 import { useAppStore } from '../store/store'
 import { relTime } from '../time'
+import { SubmitStackModal } from './SubmitStack'
 
 /** The change stack: base→head as cards with the evidence only ism has —
  * change-level dependency edges (with the pinning line identities), the
@@ -29,6 +31,7 @@ export function StackView(): React.JSX.Element {
   const toggleApproval = useAppStore((s) => s.toggleApproval)
   const projectId = useAppStore((s) => s.currentProjectId)
   const [latestOp, setLatestOp] = useState<IsmOp | null>(null)
+  const [submitOpen, setSubmitOpen] = useState(false)
 
   const stacked = snapshot !== null && snapshot.commits.length > 0
   useEffect(() => {
@@ -80,8 +83,16 @@ export function StackView(): React.JSX.Element {
             {t('stack.unresolvedTotal', { count: totalUnresolved })}
           </span>
         )}
+        <button
+          className="icon-btn labeled"
+          title={t('stack.submitTitle')}
+          onClick={() => setSubmitOpen(true)}
+        >
+          <GitPullRequest size={12} strokeWidth={1.8} /> {t('stack.submit')}
+        </button>
         <span>{t('stack.count', { count: commits.length })}</span>
       </header>
+      {submitOpen && <SubmitStackModal onClose={() => setSubmitOpen(false)} />}
       {proven && latestOp && (
         <div className="proof-strip">
           <ShieldCheck size={13} strokeWidth={1.8} />

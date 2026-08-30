@@ -13,6 +13,9 @@ const SMOKE = process.env.ISOMER_SMOKE === '1'
 /** Self-screenshot mode: render, capture the page to this path, quit.
  * Shown inactive (no focus steal); used for docs and visual checks. */
 const SHOT = process.env.ISOMER_SHOT
+// Garbage in the env var must not produce setTimeout(NaN) → instant fire.
+const shotDelayRaw = Number(process.env.ISOMER_SHOT_DELAY)
+const SHOT_DELAY = Number.isFinite(shotDelayRaw) && shotDelayRaw > 0 ? shotDelayRaw : 2500
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -51,10 +54,11 @@ function createWindow(): void {
     }
     if (SHOT) {
       // Watchdog: a wedged capture must never leave a zombie instance.
+      // Scales with ISOMER_SHOT_DELAY so long driven flows can finish.
       setTimeout(() => {
         console.error('ISOMER_SHOT_TIMEOUT')
         app.exit(2)
-      }, 20_000)
+      }, SHOT_DELAY + 17_500)
       setTimeout(() => {
         // Optional interaction script: drive the UI (selections, clicks)
         // before the capture so flows are verifiable, not just layouts.
@@ -90,7 +94,7 @@ function createWindow(): void {
             console.log('ISOMER_SHOT_OK')
             app.exit(0)
           })
-      }, 2500)
+      }, SHOT_DELAY)
     }
   })
   win.webContents.on('did-fail-load', (_e, code, desc) => {

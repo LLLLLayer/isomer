@@ -320,6 +320,87 @@
   flex: none;
 }
 
+/* ---- stacked-PR submit ------------------------------------------------ */
+
+.stackpr .stackpr-error {
+  color: var(--err);
+  font-size: 12px;
+}
+
+.stackpr-warn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--warn);
+  font-size: 11.5px;
+  margin: 0 0 8px;
+}
+
+.stackpr-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stackpr-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  font-size: 11.5px;
+}
+
+.stackpr-list .mono {
+  font-family: var(--font-mono);
+}
+
+.stackpr-kind {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stackpr-kind.create {
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 12%, transparent);
+}
+
+.stackpr-kind.update {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.stackpr-summary {
+  color: var(--fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.stackpr-retarget {
+  color: var(--warn);
+  font-size: 10.5px;
+}
+
+.stackpr-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  margin-top: 10px;
+}
+
 .anomalies {
   margin-top: 14px;
   display: flex;
