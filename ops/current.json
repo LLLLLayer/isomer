@@ -1,85 +1,62 @@
 {
   "kind": "apply",
-  "branch": "feat/stack-evidence",
-  "old_head": "1f3982f2dc6d90617d9de62b765462b2c3f58b66",
-  "new_head": "48b2affa737904caca6df8211aed2c6abee91d71",
+  "branch": "feat/conflict-editor",
+  "old_head": "6e10f70917df2a3dbea72d0228918956329b8c0c",
+  "new_head": "740255e843061c29fda508035e9e6a25ad5fb158",
   "base": "f19014fceb8a5d3d6b757d52083a829fca7c92e0",
-  "old_tree": "20ce5ea6e821f16c4c36cb7a2492a2dcf7f54aaf",
-  "new_tree": "20ce5ea6e821f16c4c36cb7a2492a2dcf7f54aaf",
-  "plan_digest": "sha256:12b8b197fc06bad5fe6ae51af27bfed682e8e507ac9d40e10d8bffaa8c7fdc6f",
-  "snapshot_digest": "sha256:84e8b19b797fda6b9a1d84f6635934f7d1e0ceb05ac91f56d634c6b9e8aefecd",
+  "old_tree": "582bfd816157f1f663e0b72002c88680cd2c53f0",
+  "new_tree": "582bfd816157f1f663e0b72002c88680cd2c53f0",
+  "plan_digest": "sha256:c90a1093c4ba82166b95d8da029fd2f56c266698971abc641edc9ad90afad5a0",
+  "snapshot_digest": "sha256:9e7418d4fd2d3141672dd7e1fbc51e41e45cecf8943862e2327dd754df45018e",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:84e8b19b797fda6b9a1d84f6635934f7d1e0ceb05ac91f56d634c6b9e8aefecd",
+    "snapshot_digest": "sha256:9e7418d4fd2d3141672dd7e1fbc51e41e45cecf8943862e2327dd754df45018e",
     "base": "f19014fceb8a5d3d6b757d52083a829fca7c92e0",
-    "head": "1f3982f2dc6d90617d9de62b765462b2c3f58b66",
+    "head": "6e10f70917df2a3dbea72d0228918956329b8c0c",
     "nodes": [
       {
-        "name": "dep-and-proof-model",
-        "summary": "Lift hunk deps to change edges; bottle the proof",
+        "name": "conflict-parse-model",
+        "summary": "Parse and resolve conflict markers, purely",
         "from": [
-          "apps/desktop/src/renderer/proof.test.ts:1#4d96",
-          "apps/desktop/src/renderer/proof.ts:1#d9c2",
-          "apps/desktop/src/renderer/stackdeps.test.ts:1#3fea",
-          "apps/desktop/src/renderer/stackdeps.ts:1#06af"
+          "apps/desktop/src/renderer/conflicts.test.ts:1#8ff1",
+          "apps/desktop/src/renderer/conflicts.ts:1#69e9"
         ]
       },
       {
-        "name": "stack-view-evidence",
-        "summary": "The stack shows its evidence: edges, proof, approvals",
+        "name": "conflict-ipc",
+        "summary": "Main lends the editor its hands: stages in, resolution out",
         "from": [
-          "apps/desktop/src/renderer/app.css:242#0687",
-          "apps/desktop/src/renderer/components/StackView.tsx:1#cbb0",
-          "apps/desktop/src/renderer/components/StackView.tsx:3#42b5",
-          "apps/desktop/src/renderer/components/StackView.tsx:14#3ee5",
-          "apps/desktop/src/renderer/components/StackView.tsx:19#d802",
-          "apps/desktop/src/renderer/components/StackView.tsx:28#933c",
-          "apps/desktop/src/renderer/components/StackView.tsx:59#5cdf",
-          "apps/desktop/src/renderer/components/StackView.tsx:64#9ce7",
-          "apps/desktop/src/renderer/components/StackView.tsx:72#a032",
-          "apps/desktop/src/renderer/components/StackView.tsx:79#2237",
-          "apps/desktop/src/renderer/components/StackView.tsx:97#6801",
-          "apps/desktop/src/renderer/components/StackView.tsx:101#f992",
-          "apps/desktop/src/renderer/components/StackView.tsx:108#6787",
-          "apps/desktop/src/renderer/components/StackView.tsx:142#8269",
-          "apps/desktop/src/renderer/i18n/locales/en.json:20#9f16",
-          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:20#f48d",
-          "apps/desktop/src/renderer/store/store.ts:52#ae9b",
-          "apps/desktop/src/renderer/store/store.ts:102#48b7",
-          "apps/desktop/src/renderer/store/store.ts:118#b7a9",
-          "apps/desktop/src/renderer/store/store.ts:170#82d2",
-          "apps/desktop/src/renderer/store/store.ts:246#dc5d",
-          "apps/desktop/src/renderer/store/store.ts:529#889c"
+          "apps/desktop/src/main/ipc.ts:2#7918",
+          "apps/desktop/src/main/ipc.ts:300#1018",
+          "apps/desktop/src/main/services/git.ts:577#677b",
+          "apps/desktop/src/shared/ipc.ts:20#85f5",
+          "apps/desktop/src/shared/ipc.ts:202#4e7f",
+          "apps/desktop/src/shared/ipc.ts:320#946d"
         ]
       },
       {
-        "name": "organize-live-advisory",
-        "summary": "Organize warns before the check would fail",
+        "name": "conflict-editor-ui",
+        "summary": "A dedicated three-pane conflict editor",
         "from": [
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:4#cb21",
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:8#7a0a",
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:19#eee9",
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:76#82b9",
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:124#56ea",
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:218#f6b9",
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:292#9a46",
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:296#8d21",
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:329#6977",
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:396#1b8e",
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:398#0c81",
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:457#df9a",
-          "apps/desktop/src/renderer/components/OrganizeView.tsx:464#bfdb",
-          "apps/desktop/src/renderer/i18n/locales/en.json:285#77a2",
-          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:285#963f"
+          "apps/desktop/src/renderer/app.css:2289#5d8f",
+          "apps/desktop/src/renderer/components/ChangesView.tsx:16#6260",
+          "apps/desktop/src/renderer/components/ChangesView.tsx:52#a650",
+          "apps/desktop/src/renderer/components/ChangesView.tsx:69#5bef",
+          "apps/desktop/src/renderer/components/ChangesView.tsx:211#9739",
+          "apps/desktop/src/renderer/components/ChangesView.tsx:354#0690",
+          "apps/desktop/src/renderer/components/ConflictEditor.tsx:1#3b4a",
+          "apps/desktop/src/renderer/components/Insights.tsx:11#6acb",
+          "apps/desktop/src/renderer/i18n/locales/en.json:207#553f",
+          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:207#2f27"
         ]
       }
     ],
     "order": [
-      "dep-and-proof-model",
-      "stack-view-evidence",
-      "organize-live-advisory"
+      "conflict-parse-model",
+      "conflict-ipc",
+      "conflict-editor-ui"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788112524"
+  "timestamp": "1788113146"
 }
