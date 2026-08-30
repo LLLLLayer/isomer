@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, ChevronDown, ChevronRight, Columns2, Copy, MessageSquarePlus } from 'lucide-react'
+import { Check, ChevronDown, ChevronRight, Columns2, Copy, MessageSquarePlus, X } from 'lucide-react'
 import type { Comment } from '../../shared/ism-types'
 import type { EmphRange, FileDiff, UnifiedRow } from '../diff'
 import { emphasisRanges, intraline, splitRows } from '../diff'
@@ -15,6 +15,8 @@ export interface ReviewHooks {
   comments: Comment[]
   onResolve: (id: string) => void
   onReply: (parent: Comment, body: string) => void
+  /** Create a line-anchored comment directly (selection popover / inline). */
+  onAddComment: (path: string, line: number, body: string) => void
 }
 
 /** The one diff renderer: split or unified (persisted preference), hunk
@@ -58,6 +60,54 @@ export function DiffView({
     return map
   }, [review?.comments])
 
+  // Select-to-comment: a floating button near the selection opens an
+  // inline composer anchored to the selection's post-image line.
+  const [selPop, setSelPop] = useState<{
+    x: number
+    y: number
+    path: string
+    line: number
+    quote: string
+  } | null>(null)
+  const [draftAt, setDraftAt] = useState<{ path: string; line: number; quote: string } | null>(
+    null,
+  )
+
+  const onMouseUp = (): void => {
+    if (!review) return
+    setTimeout(() => {
+      const sel = window.getSelection()
+      if (!sel || sel.isCollapsed || sel.rangeCount === 0) {
+        setSelPop(null)
+        return
+      }
+      const range = sel.getRangeAt(0)
+      if (!containerRef.current?.contains(range.commonAncestorContainer)) {
+        setSelPop(null)
+        return
+      }
+      const rowOf = (node: Node | null): HTMLElement | null => {
+        let el: HTMLElement | null =
+          node instanceof HTMLElement ? node : (node?.parentElement ?? null)
+        while (el && el.dataset.line === undefined) el = el.parentElement
+        return el
+      }
+      const row = rowOf(sel.focusNode) ?? rowOf(sel.anchorNode)
+      if (!row?.dataset.line || !row.dataset.path) {
+        setSelPop(null)
+        return
+      }
+      const rect = range.getBoundingClientRect()
+      setSelPop({
+        x: Math.min(rect.right, window.innerWidth - 120),
+        y: Math.max(rect.top - 34, 8),
+        path: row.dataset.path,
+        line: Number(row.dataset.line),
+        quote: sel.toString().slice(0, 400),
+      })
+    }, 0)
+  }
+
   // Bring the anchored line into view (set from a comment or a click).
   const anchorKey = review?.anchor ? `${review.anchor.path}:${review.anchor.line}` : null
   useEffect(() => {
@@ -71,7 +121,27 @@ export function DiffView({
     return <p className="empty">{t('diff.empty')}</p>
   }
   return (
-    <div className="diff-view" ref={containerRef}>
+    <div
+      className="diff-view"
+      ref={containerRef}
+      onMouseUp={onMouseUp}
+      onScroll={() => setSelPop(null)}
+    >
+      {selPop && review && (
+        <button
+          className="sel-comment-btn"
+          style={{ left: selPop.x, top: selPop.y }}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
+            review.onAnchor(selPop.path, selPop.line)
+            setDraftAt({ path: selPop.path, line: selPop.line, quote: selPop.quote })
+            setSelPop(null)
+            window.getSelection()?.removeAllRanges()
+          }}
+        >
+          <MessageSquarePlus size={13} strokeWidth={2} /> {t('inspector.addComment')}
+        </button>
+      )}
       <div className="diff-toolbar">
         <span className="muted">{t('diff.files', { count: files.length })}</span>
         <span className="spacer" />
@@ -88,6 +158,8 @@ export function DiffView({
           review={review}
           threads={threads}
           hunkBar={hunkBar}
+          draftAt={draftAt}
+          onCloseDraft={() => setDraftAt(null)}
         />
       ))}
     </div>
@@ -146,12 +218,16 @@ function FileCard({
   review,
   threads,
   hunkBar,
+  draftAt,
+  onCloseDraft,
 }: {
   file: FileDiff
   split: boolean
   review?: ReviewHooks
   threads: Map<string, Comment[]>
   hunkBar?: (path: string, hunkIndex: number) => React.ReactNode
+  draftAt: { path: string; line: number; quote: string } | null
+  onCloseDraft: () => void
 }): React.JSX.Element {
   const [collapsed, setCollapsed] = useState(false)
   const lang = langFor(f.path)
@@ -197,13 +273,24 @@ function FileCard({
     )
 
   const inline = (line: number | null): React.JSX.Element | null => {
+    if (!review || line === null) return null
     const thread = threadAt(line)
-    if (!thread || !review) return null
+    const draft = draftAt !== null && draftAt.path === f.path && draftAt.line === line
+    if (!thread && !draft) return null
     return (
       <div className="inline-threads">
-        {thread.map((parent) => (
+        {thread?.map((parent) => (
           <InlineThread key={parent.id} parent={parent} review={review} />
         ))}
+        {draft && (
+          <InlineDraft
+            path={f.path}
+            line={line}
+            quote={draftAt.quote}
+            review={review}
+            onClose={onCloseDraft}
+          />
+        )}
       </div>
     )
   }
@@ -232,7 +319,12 @@ function FileCard({
     const kind = row.kind === 'context' ? 'ctx' : row.kind
     return (
       <div key={i}>
-        <div className={`diff-row uni ${kind}${anchored(row.newNo) ? ' anchored' : ''}`}>
+        <div
+          className={`diff-row uni ${kind}${anchored(row.newNo) ? ' anchored' : ''}`}
+          {...(review && row.newNo !== null
+            ? { 'data-path': f.path, 'data-line': row.newNo }
+            : {})}
+        >
           <span className="lineno">{row.oldNo ?? ''}</span>
           {linenoBtn(row.newNo)}
           <span className={`marker ${kind}`}>
@@ -264,7 +356,10 @@ function FileCard({
         const line = row.right?.lineNo ?? null
         return (
           <div key={i}>
-            <div className={`diff-row split${anchored(line) ? ' anchored' : ''}`}>
+            <div
+              className={`diff-row split${anchored(line) ? ' anchored' : ''}`}
+              {...(review && line !== null ? { 'data-path': f.path, 'data-line': line } : {})}
+            >
               <span className="lineno">{row.left?.lineNo ?? ''}</span>
               <span
                 className={`code ${row.left ? (row.left.kind === 'del' ? 'del' : 'ctx') : 'void'}`}
@@ -364,6 +459,79 @@ function InlineThread({
         <button type="submit" className="ghost-btn" disabled={reply.trim() === ''}>
           {t('inspector.reply')}
         </button>
+      </form>
+    </div>
+  )
+}
+
+/** Inline composer opened from the selection popover (or a line anchor):
+ * quotes the selection, submits a path:line-anchored comment in place. */
+function InlineDraft({
+  path,
+  line,
+  quote,
+  review,
+  onClose,
+}: {
+  path: string
+  line: number
+  quote: string
+  review: ReviewHooks
+  onClose: () => void
+}): React.JSX.Element {
+  const { t } = useTranslation()
+  const [body, setBody] = useState('')
+  const submit = (): void => {
+    if (body.trim() === '') return
+    const quoted =
+      quote.trim() !== ''
+        ? quote
+            .split('\n')
+            .slice(0, 6)
+            .map((l) => `> ${l}`)
+            .join('\n') + '\n\n'
+        : ''
+    review.onAddComment(path, line, quoted + body)
+    onClose()
+  }
+  return (
+    <div className="inline-thread draft">
+      <div className="inline-draft-head">
+        <span className="mono muted">
+          {path}:{line}
+        </span>
+        <span className="spacer" />
+        <button className="icon-btn" onClick={onClose}>
+          <X size={12} strokeWidth={2} />
+        </button>
+      </div>
+      {quote.trim() !== '' && <blockquote className="inline-quote mono">{quote}</blockquote>}
+      <form
+        className="inline-draft-form"
+        onSubmit={(e) => {
+          e.preventDefault()
+          submit()
+        }}
+      >
+        <textarea
+          autoFocus
+          rows={2}
+          value={body}
+          placeholder={t('inspector.addComment')}
+          onChange={(e) => setBody(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit()
+            if (e.key === 'Escape') onClose()
+          }}
+        />
+        <div className="inline-draft-actions">
+          <button type="button" className="ghost-btn" onClick={onClose}>
+            {t('common.cancel')}
+          </button>
+          <button type="submit" className="primary-btn" disabled={body.trim() === ''}>
+            {t('inspector.addComment')}
+          </button>
+        </div>
       </form>
     </div>
   )

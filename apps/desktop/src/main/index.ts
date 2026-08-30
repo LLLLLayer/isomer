@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { BrowserWindow, app, shell } from 'electron'
 import { registerIpc } from './ipc'
@@ -55,6 +55,19 @@ function createWindow(): void {
         console.error('ISOMER_SHOT_TIMEOUT')
         app.exit(2)
       }, 20_000)
+      setTimeout(() => {
+        // Optional interaction script: drive the UI (selections, clicks)
+        // before the capture so flows are verifiable, not just layouts.
+        const shotJs = process.env.ISOMER_SHOT_JS
+        if (shotJs) {
+          try {
+            const code = readFileSync(shotJs, 'utf8')
+            void win.webContents.executeJavaScript(`(async () => { ${code} })()`)
+          } catch (e) {
+            console.error('ISOMER_SHOT_JS failed:', e)
+          }
+        }
+      }, 1200)
       setTimeout(() => {
         const probe = `JSON.stringify((() => {
           const info = (el) => {

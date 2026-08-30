@@ -40,6 +40,7 @@ export function ReviewView(): React.JSX.Element {
     onResolve: (commentId) => void resolveComment(commentId),
     onReply: (parent: Comment, body: string) =>
       void addComment({ change: parent.change, body, replyTo: parent.id }),
+    onAddComment: (path, line, body) => void addComment({ change: id, body, path, line }),
   })
 
   // Stack mode: rebuild renderable files from the change's U0 hunk patches.

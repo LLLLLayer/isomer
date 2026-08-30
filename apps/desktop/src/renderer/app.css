@@ -654,7 +654,8 @@ button.lineno.anchored:hover .lineno-num {
 }
 
 .inspector .empty {
-  padding: 24px 8px;
+  padding: 14px 4px 4px;
+  text-align: left;
 }
 
 .comment-anchor {
@@ -764,12 +765,15 @@ input[type='checkbox'] {
 }
 
 .comment-form {
-  flex: none;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 10px 0 14px;
+  padding: 12px 0 14px;
+}
+
+.comment-list:not(:empty) + .comment-form {
   border-top: 1px solid var(--border);
+  margin-top: 12px;
 }
 
 .comment-form textarea {
@@ -2682,4 +2686,76 @@ button.side-header {
   display: flex;
   gap: 8px;
   padding: 4px 0 8px;
+}
+
+/* ==== select-to-comment ================================================= */
+
+.sel-comment-btn {
+  position: fixed;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--fg);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 4px 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--fg) 25%, transparent);
+}
+
+.inline-thread.draft {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+.inline-draft-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 0;
+  font-size: 11px;
+}
+
+.inline-quote {
+  margin: 6px 12px;
+  padding: 4px 10px;
+  border-left: 3px solid var(--border);
+  color: var(--fg-muted);
+  font-size: 11.5px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.inline-draft-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 12px 10px;
+}
+
+.inline-draft-form textarea {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--fg);
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  padding: 6px 9px;
+  resize: vertical;
+  outline: none;
+}
+
+.inline-draft-form textarea:focus {
+  border-color: var(--accent);
+}
+
+.inline-draft-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
