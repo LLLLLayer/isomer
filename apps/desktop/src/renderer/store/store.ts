@@ -6,6 +6,7 @@ import type {
   GitStatusSummary,
   IsmDetection,
   Project,
+  ProjectHealth,
   StashEntry,
   UpdateInfo,
 } from '../../shared/ipc'
@@ -63,6 +64,9 @@ export interface AppState {
   terminalDock: 'bottom' | 'right'
   /** Text queued for the terminal (agent summon); sent once a pty exists. */
   pendingTerminalInput: string | null
+  managerOpen: boolean
+  /** Repo health per project id, loaded when the manager opens. */
+  overview: Record<string, ProjectHealth>
   settingsOpen: boolean
   /** null = no newer release; undefined = not checked yet. */
   updateInfo: UpdateInfo | null | undefined
@@ -108,6 +112,12 @@ export interface AppState {
   clearPendingTerminalInput(): void
   openSettings(): void
   closeSettings(): void
+  openManager(): void
+  closeManager(): void
+  loadOverview(): Promise<void>
+  updateProject(id: string, patch: { group?: string | null; pinned?: boolean }): Promise<void>
+  removeProject(id: string): Promise<void>
+  cloneRepo(url: string): Promise<boolean>
   checkUpdate(): Promise<void>
   detectIsm(): Promise<void>
   openExternal(url: string): Promise<void>
@@ -176,6 +186,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   terminalOpen: false,
   terminalDock: storage.get('terminalDock') === 'right' ? 'right' : 'bottom',
   pendingTerminalInput: null,
+  managerOpen: false,
+  overview: {},
   settingsOpen: false,
   updateInfo: undefined,
   updateStatus: 'idle',
@@ -249,6 +261,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       commentAnchor: null,
       commitBodies: {},
     })
+    // Recency is user-visible in the manager: opening IS the touch.
+    void window.isomer
+      .invoke('projects:update', { id, touch: true })
+      .then((projects) => set({ projects }))
     void window.isomer.invoke('repo:watch', { projectId: id })
     if (get().pendingTerminalInput) set({ pendingTerminalInput: null })
     await get().refreshProject(true)
@@ -591,6 +607,76 @@ export const useAppStore = create<AppState>((set, get) => ({
   async openExternal(url) {
     const r = await window.isomer.invoke('shell:open-external', { url })
     if (!r.ok) set({ lastError: r.error })
+  },
+
+  openManager() {
+    set({ managerOpen: true })
+    void get().loadOverview()
+  },
+
+  closeManager() {
+    set({ managerOpen: false })
+  },
+
+  async loadOverview() {
+    const health = await window.isomer.invoke('projects:overview', undefined)
+    set({ overview: Object.fromEntries(health.map((h) => [h.id, h])) })
+  },
+
+  async updateProject(id, patch) {
+    const projects = await window.isomer.invoke('projects:update', { id, ...patch })
+    set({ projects })
+  },
+
+  async removeProject(id) {
+    await window.isomer.invoke('projects:remove', { id })
+    const projects = await window.isomer.invoke('projects:list', undefined)
+    set({ projects })
+    if (get().currentProjectId === id) {
+      if (projects.length > 0) {
+        await get().openProject(projects[0].id)
+      } else {
+        // No repo left: clear EVERYTHING the removed repo rendered, not
+        // just the id — a dead branch badge and history would linger.
+        set({
+          currentProjectId: null,
+      status: null,
+      log: [],
+      refs: null,
+      stashes: [],
+      selectedPath: null,
+      workingDiffText: null,
+      selectedCommit: null,
+      commitDiffText: null,
+      commitInfo: null,
+      commitSubject: '',
+      commitDescription: '',
+      commitAmend: false,
+      snapshot: null,
+      comments: [],
+      approvals: readApprovals(id),
+      selectedChangeId: null,
+      patches: {},
+      commentAnchor: null,
+      commitBodies: {},
+        })
+      }
+    }
+  },
+
+  async cloneRepo(url) {
+    const parentDir = await window.isomer.invoke('dialog:pick-directory', undefined)
+    if (!parentDir) return false
+    const r = await window.isomer.invoke('projects:clone', { url, parentDir })
+    if (!r.ok) {
+      set({ lastError: r.error })
+      return false
+    }
+    const projects = await window.isomer.invoke('projects:list', undefined)
+    set({ projects })
+    await get().loadOverview()
+    await get().openProject(r.data.id)
+    return true
   },
 
   openSettings() {

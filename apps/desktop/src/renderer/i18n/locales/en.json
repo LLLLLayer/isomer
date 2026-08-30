@@ -318,5 +318,24 @@
     "depConflicts": "{{count}} dependency conflicts",
     "depConflictTip": "{{hunk}} needs {{dep}}, which sits in the later draft “{{name}}”",
     "depNeedsLater": "Hard dependency sits in a later draft — apply would fail."
+  },
+  "manager": {
+    "title": "Repositories",
+    "refresh": "Refresh",
+    "addExisting": "Add existing…",
+    "clone": "Clone",
+    "cloning": "Cloning…",
+    "clonePlaceholder": "https://github.com/you/repo.git or git@…",
+    "pinned": "Pinned",
+    "recent": "Recent",
+    "empty": "No repositories yet — add or clone one.",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "groupPlaceholder": "group",
+    "remove": "Remove from list",
+    "removeSure": "Sure?",
+    "missing": "Directory is gone or no longer a repository.",
+    "missingShort": "missing",
+    "dirty": "{{count}} changed files"
   }
 }
