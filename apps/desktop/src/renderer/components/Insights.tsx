@@ -8,7 +8,7 @@ import { relTime } from '../time'
 import { DiffView } from './DiffView'
 
 /** Shared shell: a wide modal with a title bar and scrollable body. */
-function Wide({
+export function Wide({
   title,
   onClose,
   children,

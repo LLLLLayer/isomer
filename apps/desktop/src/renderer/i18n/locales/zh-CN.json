@@ -204,7 +204,25 @@
       "rebase": "变基进行中——解决冲突后继续。",
       "cherry-pick": "拣选进行中——解决冲突后继续。",
       "revert": "回滚进行中——解决冲突后继续。"
-    }
+    },
+    "openEditor": "打开冲突编辑器…",
+    "resolveCount": "解决 {{count}} 个冲突文件…",
+    "editorTitle": "解决冲突",
+    "result": "结果",
+    "ours": "我方",
+    "theirs": "对方",
+    "noMarkers": "未找到完整的冲突标记——文件可能是二进制、使用了自定义长度标记、或已解决。请使用文件菜单中的“采用我方/对方”；未确认内容前不要直接标记为已解决。",
+    "useOurs": "我方",
+    "useBoth": "两者",
+    "useTheirs": "对方",
+    "edit": "手动编辑",
+    "keepEdit": "保留编辑",
+    "undecided": "选择一侧——或手动编辑。",
+    "baseLabel": "共同祖先",
+    "progress": "已解决 {{decided}} / {{total}}",
+    "allOurs": "全部我方",
+    "allTheirs": "全部对方",
+    "saveStage": "保存并暂存"
   },
   "insight": {
     "none": "空空如也。"
