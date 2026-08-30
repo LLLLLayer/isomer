@@ -31,6 +31,9 @@ jobs:
           npm ci
           npm run typecheck
           npm test
+          # Stamp the app with the tag version — a mismatched app.getVersion()
+          # would make every install (even the newest) see an update forever.
+          npm version --no-git-tag-version "${GITHUB_REF_NAME#v}"
           npm run build
           npx electron-builder --mac --publish never
         env:
@@ -40,9 +43,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Idempotent: a re-run (or pre-created draft) uploads with --clobber
+          # instead of failing on the existing release.
           gh release create "${{ github.ref_name }}" \
             --title "Isomer ${{ github.ref_name }}" \
             --generate-notes \
+            ism-${{ github.ref_name }}-darwin-arm64.tar.gz \
+            apps/desktop/release/*.dmg \
+            apps/desktop/release/*-mac.zip \
+          || gh release upload --clobber "${{ github.ref_name }}" \
             ism-${{ github.ref_name }}-darwin-arm64.tar.gz \
             apps/desktop/release/*.dmg \
             apps/desktop/release/*-mac.zip

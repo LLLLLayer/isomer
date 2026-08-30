@@ -45,7 +45,7 @@
     "esbuild@0.25.12": true
   },
   "build": {
-    "appId": "com.isomer.desktop",
+    "appId": "dev.isomer.desktop",
     "productName": "Isomer",
     "files": [
       "out/**"
@@ -70,6 +70,7 @@
         }
       ]
     },
-    "publish": null
+    "publish": null,
+    "afterPack": "./scripts/adhoc-sign.cjs"
   }
 }
