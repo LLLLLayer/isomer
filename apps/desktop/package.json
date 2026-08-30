@@ -71,6 +71,8 @@
       ]
     },
     "publish": null,
-    "afterPack": "./scripts/adhoc-sign.cjs"
-  }
+    "afterPack": "./scripts/adhoc-sign.cjs",
+    "npmRebuild": false
+  },
+  "author": "LLLLLayer"
 }
