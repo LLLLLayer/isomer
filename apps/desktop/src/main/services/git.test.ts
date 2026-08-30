@@ -56,12 +56,13 @@ describe('parseStatusV2', () => {
 describe('parseLog', () => {
   it('splits unit-separator fields and extracts change trailers', () => {
     const raw =
-      'aaaa\x1fFix util\x1fAda\x1fada@example.com\x1f1700000000\x1fi-abcdefgh\n' +
-      'bbbb\x1fwip\x1fBo\x1fbo@example.com\x1f1700000001\x1f\n'
+      'aaaa\x1fbbbb\x1fFix util\x1fAda\x1fada@example.com\x1f1700000000\x1fi-abcdefgh\n' +
+      'bbbb\x1f\x1fwip\x1fBo\x1fbo@example.com\x1f1700000001\x1f\n'
     const log = parseLog(raw)
     expect(log).toHaveLength(2)
     expect(log[0]).toEqual({
       sha: 'aaaa',
+      parents: ['bbbb'],
       title: 'Fix util',
       authorName: 'Ada',
       authorEmail: 'ada@example.com',
@@ -73,7 +74,7 @@ describe('parseLog', () => {
 
   it('treats multiple trailers (a squash of changes) as having no identity', () => {
     // With separator=%x2C two trailers arrive comma-joined.
-    const raw = 'cccc\x1fsquash\x1fA\x1fa@x\x1f1700000002\x1fi-aaaaaaaa,i-bbbbbbbb\n'
+    const raw = 'cccc\x1fdddd eeee\x1fsquash\x1fA\x1fa@x\x1f1700000002\x1fi-aaaaaaaa,i-bbbbbbbb\n'
     expect(parseLog(raw)[0].changeId).toBeNull()
   })
 })

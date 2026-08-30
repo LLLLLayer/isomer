@@ -1350,7 +1350,7 @@ button.side-header {
   background: var(--bg-raised);
 }
 
-.commit-subject {
+.commit-box .commit-subject {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1360,7 +1360,7 @@ button.side-header {
   outline: none;
 }
 
-.commit-subject:focus {
+.commit-box .commit-subject:focus {
   border-color: var(--accent);
 }
 
@@ -1431,36 +1431,43 @@ button.side-header {
   flex-shrink: 0;
 }
 
-.graph-cell {
-  position: relative;
+.graph-svg {
+  display: block;
   align-self: stretch;
+  overflow: visible;
+}
+
+.graph-svg line,
+.graph-svg path {
+  fill: none;
+  stroke-width: 1.5;
+}
+
+.graph-svg circle {
+  stroke-width: 1.5;
+}
+
+.day-row {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
 }
 
-.graph-cell::before {
-  content: '';
+.day-row .graph-svg {
   position: absolute;
+  left: 8px;
   top: 0;
   bottom: 0;
-  width: 2px;
-  background: color-mix(in srgb, var(--warn) 55%, transparent);
 }
 
-.graph-cell.first::before {
-  top: 50%;
-}
-
-.graph-cell.last::before {
-  bottom: 50%;
-}
-
-.graph-cell .graph-dot {
-  position: relative;
-  background: var(--warn);
-  opacity: 1;
-  border: 2px solid var(--bg);
+.day-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-muted);
+  background: color-mix(in srgb, var(--fg) 5%, transparent);
+  border-radius: var(--radius-s);
+  padding: 2px 8px;
+  margin: 4px 0;
 }
 
 .commit-meta {

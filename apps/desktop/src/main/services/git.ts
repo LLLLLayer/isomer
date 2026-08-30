@@ -56,14 +56,14 @@ export function parseStatusV2(raw: string): GitStatusSummary {
 }
 
 const LOG_FORMAT =
-  '%H%x1f%s%x1f%an%x1f%ae%x1f%ct%x1f%(trailers:key=Isomer-Change,valueonly,separator=%x2C,unfold)'
+  '%H%x1f%P%x1f%s%x1f%an%x1f%ae%x1f%ct%x1f%(trailers:key=Isomer-Change,valueonly,separator=%x2C,unfold)'
 
 /** Parse the %x1f-separated log format above. Exported pure for tests. */
 export function parseLog(raw: string): GitLogEntry[] {
   const entries: GitLogEntry[] = []
   for (const line of raw.split('\n')) {
     if (line.trim() === '') continue
-    const [sha, title, authorName, authorEmail, ts, changeId] = line.split('\x1f')
+    const [sha, parents, title, authorName, authorEmail, ts, changeId] = line.split('\x1f')
     if (!sha || !title) continue
     // Multiple trailers on one commit mean a squash of changes (ism's
     // "merged" anomaly) — there is no single identity to display.
@@ -73,6 +73,7 @@ export function parseLog(raw: string): GitLogEntry[] {
       .filter((v) => v !== '')
     entries.push({
       sha,
+      parents: (parents ?? '').split(' ').filter((v) => v !== ''),
       title,
       authorName: authorName ?? '',
       authorEmail: authorEmail ?? '',
@@ -111,7 +112,16 @@ export class GitService {
   }
 
   async log(cwd: string, limit: number): Promise<Result<GitLogEntry[]>> {
-    const r = await this.run(cwd, ['log', `--max-count=${limit}`, `--format=${LOG_FORMAT}`])
+    // All branch tips (never refs/isomer/*), children before parents so the
+    // graph rail can lay out lanes top-down.
+    const r = await this.run(cwd, [
+      'log',
+      '--branches',
+      '--remotes',
+      '--date-order',
+      `--max-count=${limit}`,
+      `--format=${LOG_FORMAT}`,
+    ])
     if (r.code !== 0) {
       return err({ code: 'GIT', message: r.stderr.trim() || 'git log failed' })
     }

@@ -110,7 +110,9 @@
       "changes": "Changes",
       "tree": "File Tree"
     },
-    "pickFile": "Select a file to view its diff."
+    "pickFile": "Select a file to view its diff.",
+    "today": "Today",
+    "yesterday": "Yesterday"
   },
   "files": {
     "viewOptions": "View options",

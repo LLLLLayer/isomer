@@ -28,6 +28,8 @@ export interface GitStatusSummary {
 
 export interface GitLogEntry {
   sha: string
+  /** Parent shas (2+ on merges) — drives the history graph rail. */
+  parents: string[]
   title: string
   authorName: string
   authorEmail: string

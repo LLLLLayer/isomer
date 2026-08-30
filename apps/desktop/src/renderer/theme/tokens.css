@@ -18,6 +18,12 @@
   --syn-cmt: #6e7781;
   --syn-fn: #8250df;
   --syn-type: #953800;
+  --graph-1: #57606a;
+  --graph-2: #0969da;
+  --graph-3: #1a7f37;
+  --graph-4: #9a6700;
+  --graph-5: #8250df;
+  --graph-6: #cf222e;
 }
 
 :root[data-theme='dark'] {
@@ -37,6 +43,12 @@
   --syn-cmt: #8b949e;
   --syn-fn: #d2a8ff;
   --syn-type: #ffa657;
+  --graph-1: #8b949e;
+  --graph-2: #4493f8;
+  --graph-3: #3fb950;
+  --graph-4: #d29922;
+  --graph-5: #d2a8ff;
+  --graph-6: #f85149;
 }
 
 :root {

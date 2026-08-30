@@ -110,7 +110,9 @@
       "changes": "变更",
       "tree": "文件树"
     },
-    "pickFile": "选择一个文件查看它的 diff。"
+    "pickFile": "选择一个文件查看它的 diff。",
+    "today": "今天",
+    "yesterday": "昨天"
   },
   "files": {
     "viewOptions": "视图选项",
