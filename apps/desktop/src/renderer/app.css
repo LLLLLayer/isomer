@@ -1524,3 +1524,226 @@ button.side-header {
   border-top: 1px solid var(--border);
   font-size: 11px;
 }
+
+/* Fixed-size pane wrappers: the min-size chain must never break, or a tall
+   child (e.g. xterm's canvas at first fit) pushes the whole shell into
+   document scrolling. */
+.pane-wrap {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.terminal-drawer {
+  overflow: hidden;
+}
+
+.terminal-host {
+  overflow: hidden;
+}
+
+/* ==== menus, trees, list modes ========================================== */
+
+.menu-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.menu,
+.context-menu {
+  position: absolute;
+  min-width: 190px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 30px color-mix(in srgb, var(--fg) 22%, transparent);
+  padding: 4px;
+  z-index: 60;
+}
+
+.menu {
+  top: calc(100% + 4px);
+  right: 0;
+}
+
+.context-menu {
+  position: fixed;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--fg);
+  font-size: 12.5px;
+  padding: 5px 10px 5px 4px;
+  border-radius: calc(var(--radius) - 4px);
+  cursor: pointer;
+  text-align: left;
+}
+
+.menu-item:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.menu-item:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.menu-check {
+  width: 18px;
+  display: inline-flex;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.menu-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 8px;
+}
+
+.side-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.side-repo {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-name.plain {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  direction: ltr;
+  overflow: hidden;
+}
+
+.file-dir {
+  color: var(--fg-muted);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-tree-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--fg);
+  font-size: 12.5px;
+  padding: 3px 8px;
+  border-radius: calc(var(--radius) - 4px);
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.tree-row:hover {
+  background: color-mix(in srgb, var(--fg) 5%, transparent);
+}
+
+.tree-row.file.active {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.tree-row.file.active .tree-glyph,
+.tree-row.file.active .status-code {
+  color: var(--on-accent);
+  background: color-mix(in srgb, var(--on-accent) 18%, transparent);
+}
+
+.tree-chevron {
+  transition: transform 100ms;
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+.tree-chevron.open {
+  transform: rotate(90deg);
+}
+
+.tree-chevron-spacer {
+  width: 13px;
+  flex-shrink: 0;
+}
+
+.tree-glyph {
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+.tree-glyph.dir {
+  color: var(--accent);
+}
+
+.tree-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tree-split {
+  display: flex;
+  gap: 0;
+  height: 100%;
+  min-height: 0;
+}
+
+.tree-split .file-tree-panel {
+  width: 280px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  padding-right: 6px;
+}
+
+.tree-diff {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding-left: 12px;
+}
+
+.modal.narrow {
+  width: 380px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.modal-command {
+  background: var(--bg-raised);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-size: 12px;
+  margin: 6px 0 0;
+}
+
+.primary-btn.danger {
+  background: var(--err);
+}

@@ -75,6 +75,13 @@ export interface InvokeContracts {
     res: Result<string>
   }
   'git:stash': { req: { projectId: string }; res: Result<string> }
+  'git:checkout': { req: { projectId: string; branch: string }; res: Result<void> }
+  'git:branch-create': {
+    req: { projectId: string; name: string; from: string }
+    res: Result<void>
+  }
+  'git:branch-rename': { req: { projectId: string; from: string; to: string }; res: Result<void> }
+  'git:branch-delete': { req: { projectId: string; name: string }; res: Result<void> }
   'git:commit-info': { req: { projectId: string; sha: string }; res: Result<CommitInfo> }
   'git:staged-diff': { req: { projectId: string; path: string }; res: Result<string> }
   'repo:watch': { req: { projectId: string }; res: void }
@@ -140,6 +147,10 @@ export const INVOKE_CHANNELS = [
   'git:unstage',
   'git:commit',
   'git:stash',
+  'git:checkout',
+  'git:branch-create',
+  'git:branch-rename',
+  'git:branch-delete',
   'git:commit-info',
   'git:staged-diff',
   'repo:watch',

@@ -104,6 +104,27 @@
       "commit": "Commit",
       "changes": "Changes",
       "tree": "File Tree"
-    }
+    },
+    "pickFile": "Select a file to view its diff."
+  },
+  "files": {
+    "viewOptions": "View options",
+    "viewAsTree": "View as Tree",
+    "viewAsList": "View as List",
+    "viewAsCombined": "View as Combined List"
+  },
+  "branch": {
+    "checkout": "Checkout",
+    "new": "New Branch…",
+    "rename": "Rename…",
+    "delete": "Delete…",
+    "copyName": "Copy Branch Name",
+    "newTitle": "New branch from {{from}}",
+    "renameTitle": "Rename {{from}}",
+    "deleteTitle": "Delete branch {{name}}?"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "ok": "OK"
   }
 }

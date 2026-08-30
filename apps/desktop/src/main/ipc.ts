@@ -113,6 +113,22 @@ export function registerIpc(exec: Exec): { dispose(): void } {
     const dir = cwd(projectId)
     return dir ? git.stash(dir) : NO_PROJECT
   })
+  handle('git:checkout', async ({ projectId, branch }) => {
+    const dir = cwd(projectId)
+    return dir ? git.checkout(dir, branch) : NO_PROJECT
+  })
+  handle('git:branch-create', async ({ projectId, name, from }) => {
+    const dir = cwd(projectId)
+    return dir ? git.branchCreate(dir, name, from) : NO_PROJECT
+  })
+  handle('git:branch-rename', async ({ projectId, from, to }) => {
+    const dir = cwd(projectId)
+    return dir ? git.branchRename(dir, from, to) : NO_PROJECT
+  })
+  handle('git:branch-delete', async ({ projectId, name }) => {
+    const dir = cwd(projectId)
+    return dir ? git.branchDelete(dir, name) : NO_PROJECT
+  })
   handle('git:commit-info', async ({ projectId, sha }) => {
     const dir = cwd(projectId)
     return dir ? git.commitInfo(dir, sha) : NO_PROJECT

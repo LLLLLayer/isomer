@@ -202,6 +202,30 @@ export class GitService {
     return ok(r.stdout.trim().split('\n').slice(-1)[0] ?? '')
   }
 
+  private async simple(cwd: string, args: string[]): Promise<Result<void>> {
+    const r = await this.run(cwd, args)
+    if (r.code !== 0) {
+      return err({ code: 'GIT', message: r.stderr.trim() || `git ${args[0]} failed` })
+    }
+    return ok(undefined)
+  }
+
+  checkout(cwd: string, branch: string): Promise<Result<void>> {
+    return this.simple(cwd, ['checkout', branch])
+  }
+
+  branchCreate(cwd: string, name: string, from: string): Promise<Result<void>> {
+    return this.simple(cwd, ['checkout', '-b', name, from])
+  }
+
+  branchRename(cwd: string, from: string, to: string): Promise<Result<void>> {
+    return this.simple(cwd, ['branch', '-m', from, to])
+  }
+
+  branchDelete(cwd: string, name: string): Promise<Result<void>> {
+    return this.simple(cwd, ['branch', '-D', name])
+  }
+
   async commitInfo(cwd: string, sha: string): Promise<Result<CommitInfo>> {
     const r = await this.run(cwd, ['show', '-s', '--format=%H%x1f%an%x1f%ae%x1f%at%x1f%s%x1f%b', sha])
     if (r.code !== 0) return err({ code: 'GIT', message: r.stderr.trim() || 'git show failed' })

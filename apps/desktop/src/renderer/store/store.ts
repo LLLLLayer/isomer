@@ -65,6 +65,13 @@ export interface AppState {
   setCommitAmend(amend: boolean): void
   doCommit(): Promise<void>
   doStash(): Promise<void>
+  branchOp(
+    op:
+      | { kind: 'checkout'; branch: string }
+      | { kind: 'create'; name: string; from: string }
+      | { kind: 'rename'; from: string; to: string }
+      | { kind: 'delete'; name: string },
+  ): Promise<void>
   runNet(verb: 'fetch' | 'pull' | 'push'): Promise<void>
   addComment(input: { change: string; body: string; path?: string; line?: number; replyTo?: string }): Promise<void>
   resolveComment(id: string): Promise<void>
@@ -317,6 +324,32 @@ export const useAppStore = create<AppState>((set, get) => ({
       return
     }
     set({ netNote: r.data })
+    await get().refreshProject()
+  },
+
+  async branchOp(op) {
+    const id = get().currentProjectId
+    if (!id) return
+    const r =
+      op.kind === 'checkout'
+        ? await window.isomer.invoke('git:checkout', { projectId: id, branch: op.branch })
+        : op.kind === 'create'
+          ? await window.isomer.invoke('git:branch-create', {
+              projectId: id,
+              name: op.name,
+              from: op.from,
+            })
+          : op.kind === 'rename'
+            ? await window.isomer.invoke('git:branch-rename', {
+                projectId: id,
+                from: op.from,
+                to: op.to,
+              })
+            : await window.isomer.invoke('git:branch-delete', { projectId: id, name: op.name })
+    if (!r.ok) {
+      set({ lastError: r.error })
+      return
+    }
     await get().refreshProject()
   },
 

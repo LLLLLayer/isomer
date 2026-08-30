@@ -104,6 +104,27 @@
       "commit": "提交",
       "changes": "变更",
       "tree": "文件树"
-    }
+    },
+    "pickFile": "选择一个文件查看它的 diff。"
+  },
+  "files": {
+    "viewOptions": "视图选项",
+    "viewAsTree": "以树形查看",
+    "viewAsList": "以列表查看",
+    "viewAsCombined": "以完整路径查看"
+  },
+  "branch": {
+    "checkout": "检出",
+    "new": "新建分支…",
+    "rename": "重命名…",
+    "delete": "删除…",
+    "copyName": "复制分支名",
+    "newTitle": "从 {{from}} 新建分支",
+    "renameTitle": "重命名 {{from}}",
+    "deleteTitle": "删除分支 {{name}}？"
+  },
+  "common": {
+    "cancel": "取消",
+    "ok": "确定"
   }
 }
