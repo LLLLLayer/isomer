@@ -1,0 +1,6 @@
+{
+  "id": "i-mkn3giwd",
+  "name": "comment-robustness",
+  "summary": "Harden the op walk and comment resolution",
+  "body": "The op walk's limit now counts op entries, not data-ref commits —\ncomment-only commits share the chain and must never crowd the newest\nop out of the window (undo would falsely report no operations).\nComment ids are format-checked before lookup, and resolving a change\nby name fails loudly when two applies used the same node name."
+}

@@ -1,0 +1,12 @@
+{
+  "id": "i-kjercgh3",
+  "name": "rust-regression-suite",
+  "summary": "Lock the review fixes in end-to-end tests",
+  "body": "Five new E2E scenarios: splitting a commit mints fresh distinct ids;\na gitlink-only stack reorganizes as whole-file units; a created-then-\ntruncated file survives the identity plan; plan-hygiene rejections\nare E001; and `-- comment` content lines round-trip bit-for-bit.",
+  "deps": [
+    "parser-hardening",
+    "replay-created-files",
+    "plan-hygiene",
+    "engine-identity"
+  ]
+}

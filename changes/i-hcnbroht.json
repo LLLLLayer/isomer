@@ -1,0 +1,6 @@
+{
+  "id": "i-hcnbroht",
+  "name": "parser-hardening",
+  "summary": "Make the diff parser count-driven and unambiguous",
+  "body": "Hunk bodies now consume exactly the line counts the header declares:\nprefix sniffing misread removed `-- comment` lines (SQL/Lua/Haskell)\nas file headers and silently truncated hunks. Paths come from the\n`---`/`+++` lines (the `diff --git` heuristic breaks on paths\ncontaining \" b/\"), submodule gitlinks degrade to whole-file units\ninstead of crashing analysis with E900, and Isomer-Change trailers\nparse only from the final message paragraph, per git semantics.\nFound by adversarial self-review."
+}

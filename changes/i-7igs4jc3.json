@@ -1,0 +1,6 @@
+{
+  "id": "i-7igs4jc3",
+  "name": "plan-hygiene",
+  "summary": "Enforce message hygiene in check; commit via stdin",
+  "body": "R4 rejects multi-line summaries, NUL bytes, and Isomer-Change lines\nsmuggled into summary/body — the latter passed check, then corrupted\nidentity parsing on the materialized commit. The commit message now\nreaches commit-tree via stdin: -m in argv died on ARG_MAX for large\nbodies after check had promised success. SKILL.md documents the new\nrules for plan-writing agents."
+}

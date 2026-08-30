@@ -1,0 +1,6 @@
+{
+  "id": "i-ozfwpu5r",
+  "name": "app-packaging",
+  "summary": "Ship only node-pty in runtime dependencies",
+  "body": "Everything the renderer imports is bundled by vite; keeping it in\ndependencies only bloats the packaged app under electron-builder's\nfile list. The lockfile keeps public-registry URLs throughout."
+}

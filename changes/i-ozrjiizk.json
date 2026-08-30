@@ -1,0 +1,6 @@
+{
+  "id": "i-ozrjiizk",
+  "name": "docs-sync",
+  "summary": "Sync README and CLAUDE.md with the current surface",
+  "body": "The CLI is no longer \"seven commands\": comments, the embedded skill\nand the desktop scaffold are real. CLAUDE.md gains the comment module\nand the app's build/test commands, plus the no-second-channel rule."
+}

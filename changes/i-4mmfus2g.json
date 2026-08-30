@@ -1,0 +1,6 @@
+{
+  "id": "i-4mmfus2g",
+  "name": "app-main-hardening",
+  "summary": "Desktop main: parser, exec, pty and bridge fixes",
+  "body": "porcelain=v2 rename records carry a score field and deliver the\noriginal path as the next NUL record — the parser consumed the score\nas the path and could misread the continuation as a new entry;\nunmerged records are now read too. git log trailers unfold with an\nexplicit separator (folded values split records; multiple trailers\nfused into a bogus id). Spawn failures in GitService resolve to\nResult errors instead of unhandled rejections crossing IPC; exec\ndecodes output once (per-chunk decoding tore multi-byte UTF-8);\npty:create failures surface as structured errors; the preload bridge\nenforces the channel allowlist at runtime; pty sessions are reaped\nwhen the last window closes; smoke mode fails fast on load errors.\nFound by adversarial self-review."
+}

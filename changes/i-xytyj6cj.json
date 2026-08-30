@@ -1,0 +1,6 @@
+{
+  "id": "i-xytyj6cj",
+  "name": "engine-identity",
+  "summary": "Inherit identity only with whole-commit ownership",
+  "body": "Splitting a trailer-bearing commit into two nodes stamped the SAME\nIsomer-Change id on both halves — the very next inspect flagged\nduplicate_id on ism's own output and the change metadata was\nclobbered last-writer-wins. A node now inherits identity only when\nit owns every hunk of its single source commit (and never an id\nanother node claims explicitly). Also: an explicit-base apply no\nlonger clobbers the recorded trunk with an empty string, and a\nfailed void append no longer masks the E101 the caller must see."
+}

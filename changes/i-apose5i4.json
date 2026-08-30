@@ -1,0 +1,6 @@
+{
+  "id": "i-apose5i4",
+  "name": "replay-created-files",
+  "summary": "Track created files so truncation is not deletion",
+  "body": "A stack that creates a file and later truncates it to empty was\nunreorganizable: the replay classified the empty end state as\n\"deleted\" and every plan — including the identity plan — failed E040\nagainst head. Replay now records that a line hunk touched the file,\nso created-then-emptied files materialize as empty files."
+}

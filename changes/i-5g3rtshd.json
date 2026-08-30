@@ -1,0 +1,9 @@
+{
+  "id": "i-5g3rtshd",
+  "name": "app-renderer-hardening",
+  "summary": "Desktop renderer: race and lifecycle fixes",
+  "body": "Project data loads are guarded against switches mid-flight (slow\nresponses no longer land on the wrong project); the terminal drawer\nsubscribes before creating its session and buffers early output (the\nshell's first prompt could be lost), kills sessions that resolve\nafter unmount, and surfaces pty errors; an untracked commit no longer\nshows every comment in the project; the UI language loads from\npersisted settings before first paint.",
+  "deps": [
+    "app-main-hardening"
+  ]
+}
