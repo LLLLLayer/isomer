@@ -17,6 +17,31 @@ export interface Project {
   lastOpenedAt: number
 }
 
+export interface StackPrAction {
+  /** Isomer change id (i-xxxxxxxx). */
+  id: string
+  branch: string
+  base: string
+  summary: string
+  kind: 'create' | 'update'
+  /** Existing PR number for updates. */
+  number: number | null
+  /** Set when the PR must move to a new base branch. */
+  retarget: string | null
+}
+
+export interface StackPreview {
+  gh: 'ok' | 'missing' | 'unauthenticated'
+  trunk: string
+  actions: StackPrAction[]
+  /** Open stack PRs whose change no longer exists. */
+  orphans: { number: number; branch: string }[]
+}
+
+export interface StackSubmitOutcome {
+  results: { id: string; branch: string; number: number | null; url: string | null }[]
+}
+
 export interface GitStatusSummary {
   branch: string
   upstream: string | null
@@ -209,6 +234,10 @@ export interface InvokeContracts {
   'ism:apply': { req: { projectId: string; plan: unknown }; res: Result<ApplyOutcome> }
   'ism:undo': { req: { projectId: string }; res: Result<unknown> }
   'ism:ops': { req: { projectId: string; limit?: number }; res: Result<IsmOp[]> }
+  /** Map the change stack onto a GitHub PR chain (dry plan / execute).
+   * Runs through the user's own `gh` CLI — the app holds no tokens. */
+  'stack:preview': { req: { projectId: string }; res: Result<StackPreview> }
+  'stack:submit': { req: { projectId: string }; res: Result<StackSubmitOutcome> }
   'ism:comment-list': {
     req: { projectId: string; unresolvedOnly?: boolean }
     res: Result<Comment[]>
@@ -314,6 +343,8 @@ export const INVOKE_CHANNELS = [
   'ism:apply',
   'ism:undo',
   'ism:ops',
+  'stack:preview',
+  'stack:submit',
   'ism:comment-list',
   'ism:comment-add',
   'ism:comment-resolve',
