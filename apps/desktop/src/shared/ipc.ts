@@ -15,6 +15,20 @@ export interface Project {
   path: string
   name: string
   lastOpenedAt: number
+  /** Manager organization — both optional, absent for legacy entries. */
+  group?: string
+  pinned?: boolean
+}
+
+/** One repository's health line in the manager (cheap status probe). */
+export interface ProjectHealth {
+  id: string
+  /** null when the directory is gone or no longer a repository. */
+  branch: string | null
+  dirty: number
+  ahead: number
+  behind: number
+  missing: boolean
 }
 
 export interface ConflictFile {
@@ -156,6 +170,13 @@ export interface InvokeContracts {
   'projects:list': { req: void; res: Project[] }
   'projects:add': { req: { path: string }; res: Result<Project> }
   'projects:remove': { req: { id: string }; res: void }
+  /** Pin/group/touch a repository; returns the full refreshed list. */
+  'projects:update': {
+    req: { id: string; group?: string | null; pinned?: boolean; touch?: boolean }
+    res: Project[]
+  }
+  'projects:overview': { req: void; res: ProjectHealth[] }
+  'projects:clone': { req: { url: string; parentDir: string }; res: Result<Project> }
   'git:status': { req: { projectId: string }; res: Result<GitStatusSummary> }
   'git:log': { req: { projectId: string; limit: number }; res: Result<GitLogEntry[]> }
   'git:refs': { req: { projectId: string }; res: Result<GitRefs> }
@@ -309,6 +330,9 @@ export const INVOKE_CHANNELS = [
   'projects:list',
   'projects:add',
   'projects:remove',
+  'projects:update',
+  'projects:overview',
+  'projects:clone',
   'git:status',
   'git:log',
   'git:refs',
