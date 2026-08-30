@@ -22,6 +22,8 @@ export function App(): React.JSX.Element {
   const netBusy = useAppStore((s) => s.netBusy)
   const netNote = useAppStore((s) => s.netNote)
   const runNet = useAppStore((s) => s.runNet)
+  const doStash = useAppStore((s) => s.doStash)
+  const status = useAppStore((s) => s.status)
   const bootstrap = useAppStore((s) => s.bootstrap)
   const updateSettings = useAppStore((s) => s.updateSettings)
   const toggleTerminal = useAppStore((s) => s.toggleTerminal)
@@ -34,25 +36,42 @@ export function App(): React.JSX.Element {
   }, [bootstrap])
 
   const project = projects.find((p) => p.id === currentProjectId)
+  const ICONS: Record<string, string> = {
+    fetch: '↧',
+    pull: '⇩',
+    push: '⇧',
+    stash: '☰',
+  }
   const netBtn = (verb: 'fetch' | 'pull' | 'push'): React.JSX.Element => (
     <button
       className="toolbar-btn"
       disabled={netBusy !== null || !project}
       onClick={() => void runNet(verb)}
     >
-      {netBusy === verb ? '…' : t(`toolbar.${verb}`)}
+      <span className="toolbar-icon">{netBusy === verb ? '…' : ICONS[verb]}</span>
+      <span>{t(`toolbar.${verb}`)}</span>
     </button>
   )
 
   return (
     <div className="app-shell">
       <header className="titlebar">
-        <span className="titlebar-project">{project?.name ?? t('app.title')}</span>
-        {snapshot && <span className="titlebar-branch mono">{snapshot.branch}</span>}
         <div className="toolbar">
           {netBtn('fetch')}
           {netBtn('pull')}
           {netBtn('push')}
+          <button
+            className="toolbar-btn"
+            disabled={!project || (status?.entries.length ?? 0) === 0}
+            onClick={() => void doStash()}
+          >
+            <span className="toolbar-icon">{ICONS.stash}</span>
+            <span>{t('toolbar.stash')}</span>
+          </button>
+        </div>
+        <div className="repo-card">
+          <span className="titlebar-project">{project?.name ?? t('app.title')}</span>
+          {snapshot && <span className="titlebar-branch mono">⎇ {snapshot.branch}</span>}
         </div>
         <span className="spacer" />
         {netNote && <span className="net-note mono">{netNote}</span>}

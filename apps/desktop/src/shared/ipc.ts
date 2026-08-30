@@ -37,10 +37,21 @@ export interface GitLogEntry {
 
 export interface GitRefs {
   current: string
-  locals: string[]
-  remotes: string[]
-  tags: string[]
+  /** name → tip sha, for decorating the commit list. */
+  locals: Record<string, string>
+  remotes: Record<string, string>
+  tags: Record<string, string>
   stashes: number
+  submodules: string[]
+}
+
+export interface CommitInfo {
+  sha: string
+  authorName: string
+  authorEmail: string
+  authorDate: number
+  subject: string
+  body: string
 }
 
 /** renderer → main, request/response (ipcRenderer.invoke / ipcMain.handle). */
@@ -57,6 +68,16 @@ export interface InvokeContracts {
   'git:refs': { req: { projectId: string }; res: Result<GitRefs> }
   'git:working-diff': { req: { projectId: string; path: string; untracked: boolean }; res: Result<string> }
   'git:commit-diff': { req: { projectId: string; sha: string }; res: Result<string> }
+  'git:stage': { req: { projectId: string; paths: string[] }; res: Result<void> }
+  'git:unstage': { req: { projectId: string; paths: string[] }; res: Result<void> }
+  'git:commit': {
+    req: { projectId: string; subject: string; description: string; amend: boolean }
+    res: Result<string>
+  }
+  'git:stash': { req: { projectId: string }; res: Result<string> }
+  'git:commit-info': { req: { projectId: string; sha: string }; res: Result<CommitInfo> }
+  'git:staged-diff': { req: { projectId: string; path: string }; res: Result<string> }
+  'repo:watch': { req: { projectId: string }; res: void }
   'git:fetch': { req: { projectId: string }; res: Result<string> }
   'git:pull': { req: { projectId: string }; res: Result<string> }
   'git:push': { req: { projectId: string }; res: Result<string> }
@@ -115,6 +136,13 @@ export const INVOKE_CHANNELS = [
   'git:refs',
   'git:working-diff',
   'git:commit-diff',
+  'git:stage',
+  'git:unstage',
+  'git:commit',
+  'git:stash',
+  'git:commit-info',
+  'git:staged-diff',
+  'repo:watch',
   'git:fetch',
   'git:pull',
   'git:push',

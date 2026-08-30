@@ -44,7 +44,8 @@ describe('app store', () => {
     fakeBridge({
       'git:status': () => ({ ok: true, data: { branch: 'feat', upstream: null, ahead: 0, behind: 0, entries: [] } }),
       'git:log': () => ({ ok: true, data: [] }),
-      'git:refs': () => ({ ok: true, data: { current: 'feat', locals: ['feat'], remotes: [], tags: [], stashes: 0 } }),
+      'repo:watch': () => undefined,
+      'git:refs': () => ({ ok: true, data: { current: 'feat', locals: { feat: 'aaaa' }, remotes: {}, tags: {}, stashes: 0, submodules: [] } }),
       'ism:snapshot': () => ({ ok: false, error: { code: 'E101', message: 'empty stack' } }),
       'ism:comment-list': () => ({ ok: true, data: [] }),
     })
@@ -86,7 +87,8 @@ describe('app store', () => {
         return { ok: true, data: slowStatus }
       },
       'git:log': () => ({ ok: true, data: [] }),
-      'git:refs': () => ({ ok: true, data: { current: '', locals: [], remotes: [], tags: [], stashes: 0 } }),
+      'repo:watch': () => undefined,
+      'git:refs': () => ({ ok: true, data: { current: '', locals: {}, remotes: {}, tags: {}, stashes: 0, submodules: [] } }),
       'ism:snapshot': () => ({ ok: false, error: { code: 'E101', message: 'x' } }),
       'ism:comment-list': () => ({ ok: true, data: [] }),
     })

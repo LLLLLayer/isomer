@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { GitLogEntry, GitRefs, GitStatusSummary, Project } from '../../shared/ipc'
+import type { CommitInfo, GitLogEntry, GitRefs, GitStatusSummary, Project } from '../../shared/ipc'
 import type { Comment, Snapshot } from '../../shared/ism-types'
 import type { AppError } from '../../shared/result'
 import type { Settings } from '../../shared/theme'
@@ -7,6 +7,8 @@ import { DEFAULT_SETTINGS } from '../../shared/theme'
 import { setLanguage } from '../i18n'
 
 export type ViewMode = 'changes' | 'history' | 'stack'
+export type ChangeArea = 'unstaged' | 'staged'
+export type DetailTab = 'commit' | 'changes' | 'tree'
 
 export interface AppState {
   settings: Settings
@@ -16,12 +18,20 @@ export interface AppState {
   log: GitLogEntry[]
   refs: GitRefs | null
   view: ViewMode
-  /** Changes view: selected working-tree file and its diff text. */
+  /** Changes view: selected file (in one of the two areas) and its diff. */
   selectedPath: string | null
+  selectedArea: ChangeArea
   workingDiffText: string | null
-  /** History view: selected commit and its diff text. */
+  /** Fork-style commit box (staged set only). */
+  commitSubject: string
+  commitDescription: string
+  commitAmend: boolean
+  committing: boolean
+  /** History view: selected commit, its diff and metadata, active tab. */
   selectedCommit: string | null
   commitDiffText: string | null
+  commitInfo: CommitInfo | null
+  detailTab: DetailTab
   /** In-flight network verb, and the last one-line result. */
   netBusy: 'fetch' | 'pull' | 'push' | null
   netNote: string | null
@@ -39,12 +49,19 @@ export interface AppState {
   updateSettings(patch: Partial<Settings>): Promise<void>
   addProject(): Promise<void>
   openProject(id: string): Promise<void>
-  refreshProject(): Promise<void>
+  refreshProject(initial?: boolean): Promise<void>
   selectChange(id: string | null): void
   setCommentAnchor(anchor: { path: string; line: number } | null): void
   setView(view: ViewMode): void
-  selectPath(path: string | null): Promise<void>
+  setDetailTab(tab: DetailTab): void
+  selectPath(path: string | null, area?: ChangeArea): Promise<void>
   selectCommit(sha: string | null): Promise<void>
+  stagePaths(paths: string[]): Promise<void>
+  unstagePaths(paths: string[]): Promise<void>
+  setCommitField(field: 'subject' | 'description', value: string): void
+  setCommitAmend(amend: boolean): void
+  doCommit(): Promise<void>
+  doStash(): Promise<void>
   runNet(verb: 'fetch' | 'pull' | 'push'): Promise<void>
   addComment(input: { change: string; body: string; path?: string; line?: number; replyTo?: string }): Promise<void>
   resolveComment(id: string): Promise<void>
@@ -62,9 +79,16 @@ export const useAppStore = create<AppState>((set, get) => ({
   refs: null,
   view: 'changes',
   selectedPath: null,
+  selectedArea: 'unstaged',
   workingDiffText: null,
+  commitSubject: '',
+  commitDescription: '',
+  commitAmend: false,
+  committing: false,
   selectedCommit: null,
   commitDiffText: null,
+  commitInfo: null,
+  detailTab: 'changes',
   netBusy: null,
   netNote: null,
   snapshot: null,
@@ -82,6 +106,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     ])
     setLanguage(settings.language)
     set({ settings, projects })
+    // External git activity (terminal commits, ism applies, rebases) lands
+    // as a coarse invalidation; refresh whatever project it belongs to.
+    window.isomer.on('repo:changed', ({ projectId }) => {
+      if (projectId === get().currentProjectId) void get().refreshProject()
+    })
     if (projects.length > 0) await get().openProject(projects[0].id)
   },
 
@@ -114,16 +143,21 @@ export const useAppStore = create<AppState>((set, get) => ({
       workingDiffText: null,
       selectedCommit: null,
       commitDiffText: null,
+      commitInfo: null,
+      commitSubject: '',
+      commitDescription: '',
+      commitAmend: false,
       snapshot: null,
       comments: [],
       selectedChangeId: null,
       patches: {},
       commentAnchor: null,
     })
-    await get().refreshProject()
+    void window.isomer.invoke('repo:watch', { projectId: id })
+    await get().refreshProject(true)
   },
 
-  async refreshProject() {
+  async refreshProject(initial = false) {
     const id = get().currentProjectId
     if (!id) return
     const [status, log, refs, snapshot, comments] = await Promise.all([
@@ -144,21 +178,33 @@ export const useAppStore = create<AppState>((set, get) => ({
       comments: comments.ok ? comments.data : [],
       lastError: firstError([status, log, comments]),
     })
-    // Land where the work is: dirty worktree → changes; else a pending
-    // stack → stack; else history.
     const entries = get().status?.entries ?? []
     const snap = get().snapshot
-    const view: ViewMode =
-      entries.length > 0 ? 'changes' : snap && snap.commits.length > 0 ? 'stack' : 'history'
-    set({ view })
+    if (initial) {
+      // Land where the work is: dirty worktree → changes; else a pending
+      // stack → stack; else history. Refreshes never yank the view away.
+      const view: ViewMode =
+        entries.length > 0 ? 'changes' : snap && snap.commits.length > 0 ? 'stack' : 'history'
+      set({ view })
+    }
+    // Reconcile selections with the new reality.
+    const sel = get().selectedPath
+    if (sel !== null && !entries.some((e) => e.path === sel)) {
+      set({ selectedPath: null, workingDiffText: null })
+    }
     if (entries.length > 0 && get().selectedPath === null) {
       void get().selectPath(entries[0].path)
+    } else if (get().selectedPath !== null) {
+      void get().selectPath(get().selectedPath, get().selectedArea)
     }
-    if (snap && snap.commits.length > 0 && get().selectedChangeId === null) {
+    const chosen = get().selectedChangeId
+    if (snap && snap.commits.length > 0 && !snap.commits.some((c) => c.sha === chosen)) {
       get().selectChange(snap.commits[snap.commits.length - 1].sha)
     }
-    if (get().log.length > 0 && get().selectedCommit === null) {
-      void get().selectCommit(get().log[0].sha)
+    const logEntries = get().log
+    const selCommit = get().selectedCommit
+    if (logEntries.length > 0 && !logEntries.some((e) => e.sha === selCommit)) {
+      void get().selectCommit(logEntries[0].sha)
     }
   },
 
@@ -166,16 +212,19 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ view })
   },
 
-  async selectPath(path) {
+  async selectPath(path, area = 'unstaged') {
     const id = get().currentProjectId
-    set({ selectedPath: path, workingDiffText: null })
+    set({ selectedPath: path, selectedArea: area, workingDiffText: null })
     if (!id || !path) return
     const entry = get().status?.entries.find((e) => e.path === path)
-    const r = await window.isomer.invoke('git:working-diff', {
-      projectId: id,
-      path,
-      untracked: entry?.code === '??',
-    })
+    const r =
+      area === 'staged'
+        ? await window.isomer.invoke('git:staged-diff', { projectId: id, path })
+        : await window.isomer.invoke('git:working-diff', {
+            projectId: id,
+            path,
+            untracked: entry?.code === '??',
+          })
     if (get().currentProjectId !== id || get().selectedPath !== path) return
     if (!r.ok) {
       set({ lastError: r.error })
@@ -186,15 +235,81 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   async selectCommit(sha) {
     const id = get().currentProjectId
-    set({ selectedCommit: sha, commitDiffText: null })
+    set({ selectedCommit: sha, commitDiffText: null, commitInfo: null })
     if (!id || !sha) return
-    const r = await window.isomer.invoke('git:commit-diff', { projectId: id, sha })
+    const [diff, info] = await Promise.all([
+      window.isomer.invoke('git:commit-diff', { projectId: id, sha }),
+      window.isomer.invoke('git:commit-info', { projectId: id, sha }),
+    ])
     if (get().currentProjectId !== id || get().selectedCommit !== sha) return
+    if (!diff.ok) {
+      set({ lastError: diff.error })
+      return
+    }
+    set({ commitDiffText: diff.data, commitInfo: info.ok ? info.data : null })
+  },
+
+  setDetailTab(tab) {
+    set({ detailTab: tab })
+  },
+
+  async stagePaths(paths) {
+    const id = get().currentProjectId
+    if (!id || paths.length === 0) return
+    const r = await window.isomer.invoke('git:stage', { projectId: id, paths })
+    if (!r.ok) set({ lastError: r.error })
+    await get().refreshProject()
+  },
+
+  async unstagePaths(paths) {
+    const id = get().currentProjectId
+    if (!id || paths.length === 0) return
+    const r = await window.isomer.invoke('git:unstage', { projectId: id, paths })
+    if (!r.ok) set({ lastError: r.error })
+    await get().refreshProject()
+  },
+
+  setCommitField(field, value) {
+    set(field === 'subject' ? { commitSubject: value } : { commitDescription: value })
+  },
+
+  setCommitAmend(amend) {
+    set({ commitAmend: amend })
+  },
+
+  async doCommit() {
+    const id = get().currentProjectId
+    const subject = get().commitSubject.trim()
+    if (!id || subject === '' || get().committing) return
+    set({ committing: true })
+    const r = await window.isomer.invoke('git:commit', {
+      projectId: id,
+      subject,
+      description: get().commitDescription,
+      amend: get().commitAmend,
+    })
+    if (get().currentProjectId !== id) {
+      set({ committing: false })
+      return
+    }
+    if (!r.ok) {
+      set({ lastError: r.error, committing: false })
+      return
+    }
+    set({ commitSubject: '', commitDescription: '', commitAmend: false, committing: false })
+    await get().refreshProject()
+  },
+
+  async doStash() {
+    const id = get().currentProjectId
+    if (!id) return
+    const r = await window.isomer.invoke('git:stash', { projectId: id })
     if (!r.ok) {
       set({ lastError: r.error })
       return
     }
-    set({ commitDiffText: r.data })
+    set({ netNote: r.data })
+    await get().refreshProject()
   },
 
   async runNet(verb) {

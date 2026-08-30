@@ -1,4 +1,4 @@
-import type { GitLogEntry, GitRefs, GitStatusSummary } from '../../shared/ipc'
+import type { CommitInfo, GitLogEntry, GitRefs, GitStatusSummary } from '../../shared/ipc'
 import type { Result } from '../../shared/result'
 import { err, ok } from '../../shared/result'
 import type { Exec } from './exec'
@@ -90,7 +90,9 @@ export class GitService {
    * Result error instead of an unhandled rejection crossing IPC. */
   private async run(cwd: string, args: string[]) {
     try {
-      return await this.exec('git', args, { cwd })
+      // --no-optional-locks: reads must never touch .git (index stat cache),
+      // or the repo watcher would loop on our own refreshes.
+      return await this.exec('git', ['--no-optional-locks', ...args], { cwd })
     } catch (e) {
       return {
         code: -1,
@@ -122,34 +124,102 @@ export class GitService {
   }
 
   async refs(cwd: string): Promise<Result<GitRefs>> {
-    const [head, refs, stashes] = await Promise.all([
+    const [head, refs, stashes, subs] = await Promise.all([
       this.run(cwd, ['rev-parse', '--abbrev-ref', 'HEAD']),
       this.run(cwd, [
         'for-each-ref',
-        '--format=%(refname)',
+        '--format=%(refname)%00%(objectname)',
         'refs/heads',
         'refs/remotes',
         'refs/tags',
       ]),
       this.run(cwd, ['stash', 'list']),
+      this.run(cwd, ['submodule', 'status']),
     ])
     if (refs.code !== 0) {
       return err({ code: 'GIT', message: refs.stderr.trim() || 'for-each-ref failed' })
     }
     const out: GitRefs = {
       current: head.code === 0 ? head.stdout.trim() : '',
-      locals: [],
-      remotes: [],
-      tags: [],
+      locals: {},
+      remotes: {},
+      tags: {},
       stashes:
         stashes.code === 0 ? stashes.stdout.split('\n').filter((l) => l !== '').length : 0,
+      submodules:
+        subs.code === 0
+          ? subs.stdout
+              .split('\n')
+              .filter((l) => l.trim() !== '')
+              .map((l) => l.trim().split(/\s+/)[1] ?? '')
+              .filter((s) => s !== '')
+          : [],
     }
     for (const line of refs.stdout.split('\n')) {
-      if (line.startsWith('refs/heads/')) out.locals.push(line.slice('refs/heads/'.length))
-      else if (line.startsWith('refs/remotes/')) out.remotes.push(line.slice('refs/remotes/'.length))
-      else if (line.startsWith('refs/tags/')) out.tags.push(line.slice('refs/tags/'.length))
+      const [ref, sha] = line.split('\0')
+      if (!ref || !sha) continue
+      if (ref.startsWith('refs/heads/')) out.locals[ref.slice('refs/heads/'.length)] = sha
+      else if (ref.startsWith('refs/remotes/')) out.remotes[ref.slice('refs/remotes/'.length)] = sha
+      else if (ref.startsWith('refs/tags/')) out.tags[ref.slice('refs/tags/'.length)] = sha
     }
     return ok(out)
+  }
+
+  async stage(cwd: string, paths: string[]): Promise<Result<void>> {
+    const r = await this.run(cwd, ['add', '--', ...paths])
+    if (r.code !== 0) return err({ code: 'GIT', message: r.stderr.trim() || 'git add failed' })
+    return ok(undefined)
+  }
+
+  async unstage(cwd: string, paths: string[]): Promise<Result<void>> {
+    const r = await this.run(cwd, ['restore', '--staged', '--', ...paths])
+    if (r.code !== 0) {
+      return err({ code: 'GIT', message: r.stderr.trim() || 'git restore --staged failed' })
+    }
+    return ok(undefined)
+  }
+
+  /** Commit the staged set, Fork-style: subject + optional description. */
+  async commit(
+    cwd: string,
+    subject: string,
+    description: string,
+    amend: boolean,
+  ): Promise<Result<string>> {
+    const message = description.trim() === '' ? subject : `${subject}\n\n${description}`
+    const args = ['commit', '-m', message, ...(amend ? ['--amend'] : [])]
+    const r = await this.run(cwd, args)
+    if (r.code !== 0) {
+      return err({ code: 'GIT', message: (r.stderr.trim() || r.stdout.trim()).split('\n').slice(-2).join('\n') })
+    }
+    const sha = await this.run(cwd, ['rev-parse', 'HEAD'])
+    return ok(sha.stdout.trim())
+  }
+
+  async stash(cwd: string): Promise<Result<string>> {
+    const r = await this.run(cwd, ['stash', 'push', '--include-untracked'])
+    if (r.code !== 0) return err({ code: 'GIT', message: r.stderr.trim() || 'git stash failed' })
+    return ok(r.stdout.trim().split('\n').slice(-1)[0] ?? '')
+  }
+
+  async commitInfo(cwd: string, sha: string): Promise<Result<CommitInfo>> {
+    const r = await this.run(cwd, ['show', '-s', '--format=%H%x1f%an%x1f%ae%x1f%at%x1f%s%x1f%b', sha])
+    if (r.code !== 0) return err({ code: 'GIT', message: r.stderr.trim() || 'git show failed' })
+    const [h, an, ae, at, subj, body] = r.stdout.split('\x1f')
+    return ok({
+      sha: (h ?? '').trim(),
+      authorName: an ?? '',
+      authorEmail: ae ?? '',
+      authorDate: Number(at ?? 0),
+      subject: subj ?? '',
+      body: (body ?? '').trim(),
+    })
+  }
+
+  async stagedDiff(cwd: string, path: string): Promise<Result<string>> {
+    const r = await this.run(cwd, ['diff', '--cached', '--no-color', '--', path])
+    if (r.code !== 0) return err({ code: 'GIT', message: r.stderr.trim() || 'git diff --cached failed' })
+    return ok(r.stdout)
   }
 
   /** Unified diff of a working-tree file against HEAD; untracked files are

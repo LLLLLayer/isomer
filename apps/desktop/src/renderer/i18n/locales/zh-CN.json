@@ -62,18 +62,38 @@
     "branches": "分支",
     "remotes": "远程",
     "tags": "标签",
-    "stashes": "贮藏"
+    "stashes": "贮藏",
+    "filter": "筛选",
+    "submodules": "子模块"
   },
   "toolbar": {
     "fetch": "拉取远端",
     "pull": "拉取合并",
-    "push": "推送"
+    "push": "推送",
+    "stash": "贮藏"
   },
   "changes": {
-    "clean": "工作区是干净的。"
+    "clean": "工作区是干净的。",
+    "unstaged": "未暂存",
+    "staged": "已暂存",
+    "stageAll": "全部暂存",
+    "unstageAll": "全部取消暂存",
+    "commitSubject": "提交标题",
+    "commitDescription": "描述",
+    "amend": "修补上一提交",
+    "commit": "提交"
   },
   "diff": {
     "empty": "没有文本变更。",
     "files": "{{count}} 个文件"
+  },
+  "history": {
+    "author": "作者",
+    "date": "日期",
+    "tab": {
+      "commit": "提交",
+      "changes": "变更",
+      "tree": "文件树"
+    }
   }
 }

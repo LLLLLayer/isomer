@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { parseHunkPatch, sideBySideRows } from '../diff'
+import { highlightLine, langFor } from '../highlight'
 import { useAppStore } from '../store/store'
 
 /** CR area: real diff text per hunk, side-by-side or unified. Clicking a
@@ -49,6 +50,8 @@ export function ReviewView(): React.JSX.Element {
       <p className="hunk-count">{t('review.hunks', { count: hunks.length })}</p>
       {hunks.map((h) => {
         const path = pathOf(h.id)
+        const lang = langFor(path)
+        const hl = (text: string): { __html: string } => ({ __html: highlightLine(text, lang) })
         const patch = patches[h.id]
         const parsed = patch ? parseHunkPatch(patch) : null
         return (
@@ -70,9 +73,10 @@ export function ReviewView(): React.JSX.Element {
                 {sideBySideRows(parsed).map((row, i) => (
                   <div key={i} className="diff-split-row">
                     <span className="lineno">{row.left?.lineNo ?? ''}</span>
-                    <span className={`code${row.left ? ' del' : ' void'}`}>
-                      {row.left?.text ?? ''}
-                    </span>
+                    <span
+                      className={`code${row.left ? ' del' : ' void'}`}
+                      dangerouslySetInnerHTML={row.left ? hl(row.left.text) : undefined}
+                    />
                     <button
                       className={`lineno clickable${
                         anchor && anchor.path === path && anchor.line === row.right?.lineNo
@@ -85,9 +89,10 @@ export function ReviewView(): React.JSX.Element {
                     >
                       {row.right?.lineNo ?? ''}
                     </button>
-                    <span className={`code${row.right ? ' add' : ' void'}`}>
-                      {row.right?.text ?? ''}
-                    </span>
+                    <span
+                      className={`code${row.right ? ' add' : ' void'}`}
+                      dangerouslySetInnerHTML={row.right ? hl(row.right.text) : undefined}
+                    />
                   </div>
                 ))}
               </div>
@@ -98,7 +103,10 @@ export function ReviewView(): React.JSX.Element {
                   <div key={`d${i}`} className="diff-uni-row">
                     <span className="lineno">{parsed.oldStart + i}</span>
                     <span className="lineno" />
-                    <span className="code del">-{text}</span>
+                    <span
+                      className="code del"
+                      dangerouslySetInnerHTML={{ __html: '-' + highlightLine(text, lang) }}
+                    />
                   </div>
                 ))}
                 {parsed.added.map((text, i) => (
@@ -115,7 +123,10 @@ export function ReviewView(): React.JSX.Element {
                     >
                       {parsed.newStart + i}
                     </button>
-                    <span className="code add">+{text}</span>
+                    <span
+                      className="code add"
+                      dangerouslySetInnerHTML={{ __html: '+' + highlightLine(text, lang) }}
+                    />
                   </div>
                 ))}
               </div>

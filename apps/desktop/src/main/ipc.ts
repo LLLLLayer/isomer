@@ -7,6 +7,7 @@ import { IsmService } from './services/ism'
 import { ProjectRegistry, projectsFile } from './services/projects'
 import { PtyService } from './services/pty'
 import { SettingsStore, settingsFile } from './services/settings'
+import { RepoWatcher } from './services/watcher'
 
 /** Typed ipcMain.handle: the contract table is the only channel authority. */
 function handle<C extends InvokeChannel>(
@@ -38,6 +39,7 @@ export function registerIpc(exec: Exec): { dispose(): void } {
     onData: (payload) => push('pty:data', payload),
     onExit: (id, exitCode) => push('pty:exit', { id, exitCode }),
   })
+  const watcher = new RepoWatcher()
 
   const cwd = (projectId: string): string | undefined => projects.get(projectId)?.path
 
@@ -81,6 +83,35 @@ export function registerIpc(exec: Exec): { dispose(): void } {
   handle('git:commit-diff', async ({ projectId, sha }) => {
     const dir = cwd(projectId)
     return dir ? git.commitDiff(dir, sha) : NO_PROJECT
+  })
+  handle('repo:watch', async ({ projectId }) => {
+    const dir = cwd(projectId)
+    if (!dir) return
+    watcher.watch(dir, () => push('repo:changed', { projectId }))
+  })
+  handle('git:stage', async ({ projectId, paths }) => {
+    const dir = cwd(projectId)
+    return dir ? git.stage(dir, paths) : NO_PROJECT
+  })
+  handle('git:unstage', async ({ projectId, paths }) => {
+    const dir = cwd(projectId)
+    return dir ? git.unstage(dir, paths) : NO_PROJECT
+  })
+  handle('git:commit', async ({ projectId, subject, description, amend }) => {
+    const dir = cwd(projectId)
+    return dir ? git.commit(dir, subject, description, amend) : NO_PROJECT
+  })
+  handle('git:stash', async ({ projectId }) => {
+    const dir = cwd(projectId)
+    return dir ? git.stash(dir) : NO_PROJECT
+  })
+  handle('git:commit-info', async ({ projectId, sha }) => {
+    const dir = cwd(projectId)
+    return dir ? git.commitInfo(dir, sha) : NO_PROJECT
+  })
+  handle('git:staged-diff', async ({ projectId, path }) => {
+    const dir = cwd(projectId)
+    return dir ? git.stagedDiff(dir, path) : NO_PROJECT
   })
   handle('git:fetch', async ({ projectId }) => {
     const dir = cwd(projectId)
@@ -160,6 +191,7 @@ export function registerIpc(exec: Exec): { dispose(): void } {
   return {
     dispose(): void {
       pty.disposeAll()
+      watcher.dispose()
     },
   }
 }

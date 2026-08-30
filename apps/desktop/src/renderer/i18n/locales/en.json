@@ -62,18 +62,38 @@
     "branches": "Branches",
     "remotes": "Remotes",
     "tags": "Tags",
-    "stashes": "Stashes"
+    "stashes": "Stashes",
+    "filter": "Filter",
+    "submodules": "Submodules"
   },
   "toolbar": {
     "fetch": "Fetch",
     "pull": "Pull",
-    "push": "Push"
+    "push": "Push",
+    "stash": "Stash"
   },
   "changes": {
-    "clean": "Working tree clean."
+    "clean": "Working tree clean.",
+    "unstaged": "Unstaged",
+    "staged": "Staged",
+    "stageAll": "Stage all",
+    "unstageAll": "Unstage all",
+    "commitSubject": "Commit subject",
+    "commitDescription": "Description",
+    "amend": "Amend",
+    "commit": "Commit"
   },
   "diff": {
     "empty": "No textual changes.",
     "files": "{{count}} files"
+  },
+  "history": {
+    "author": "Author",
+    "date": "Date",
+    "tab": {
+      "commit": "Commit",
+      "changes": "Changes",
+      "tree": "File Tree"
+    }
   }
 }
