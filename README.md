@@ -59,13 +59,23 @@ git rev-parse <new-head>^{tree}     # equal ⇒ code untouched
 talks to ism exclusively by spawning the CLI and parsing its JSON:
 
 - A Fork-class git client: staging down to the hunk, stash management,
-  merge/rebase with a conflict flow, cherry-pick/revert, tags, branch
+  merge/rebase with a dedicated three-pane conflict editor (ours | result |
+  theirs, per-block or hand-edited), cherry-pick/revert, tags, branch
   compare, file history and blame, repo-wide search, reflog, a real commit
-  graph, and a Cmd+P quick launcher.
+  graph, a repository manager (pin, group, clone, per-repo health badges),
+  and a Cmd+P quick launcher.
 - The **stack editor**: draft changes seeded from your pending commits, hunks
   dragged between them, validated by the CLI's full R1–R8 check ("check
   passed ⇒ apply succeeds"), applied with the tree-equality proof shown
   in the UI — provably safe interactive rebase.
+- The stack shows its **evidence**: change-level dependency edges derived
+  from line identities (an `independent` chip is a proof the change can
+  land alone), a proof strip with copyable bare-git verification commands,
+  and per-change review state.
+- **Stacked PRs**: one click maps the stack onto a GitHub PR chain through
+  your own `gh` (one branch per change, each PR based on the one below);
+  re-running syncs the same PRs by change identity even after a reorganize
+  rewrites every sha.
 - Review built in: select code to comment in place; comments anchor to
   change identities (not shas) and feed agent fix loops via
   `ism comment list --unresolved`.
@@ -81,8 +91,9 @@ The core engine and CLI are implemented with end-to-end tests: the
 reorganization loop, review comments anchored to change identities
 (`ism comment add/list/resolve`), the op-log reader (`ism ops`), and the
 embedded agent skill (`ism skill install`). The desktop app above ships from
-this repo's release pipeline. Publishing (`submit`) and trunk sync (`sync`)
-are on the roadmap.
+this repo's release pipeline, including stacked-PR submit/sync (the app-side
+take on `submit`). Out of scope by choice: LFS, bisect, worktree management,
+multi-window.
 
 ## License
 
