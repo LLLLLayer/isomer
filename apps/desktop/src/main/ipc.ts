@@ -1,5 +1,5 @@
 import { BrowserWindow, app, dialog, ipcMain, nativeTheme, net, shell } from 'electron'
-import { mkdtemp, realpath, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path'
 import type { InvokeChannel, InvokeContracts, PushChannel, PushContracts } from '../shared/ipc'
@@ -296,6 +296,56 @@ export function registerIpc(exec: Exec): { dispose(): void } {
   handle('git:conflict-take', async ({ projectId, path, side }) => {
     const dir = cwd(projectId)
     return dir ? git.conflictTake(dir, path, side) : NO_PROJECT
+  })
+  /** No status entry is ever under .git/, so a request that reaches for
+   * it is hostile (this is the app's only decoded-write channel). */
+  const gitInternal = (rel: string): boolean =>
+    rel.split(/[\\/]/).some((seg) => seg.toLowerCase() === '.git')
+  /** Fatal decode: lossy utf8 would turn every non-ASCII byte into U+FFFD
+   * and a later save would write the replacement chars back — silent
+   * corruption of untouched context lines. Refuse instead. */
+  const strictUtf8 = new TextDecoder('utf-8', { fatal: true })
+  handle('git:conflict-file', async ({ projectId, path }) => {
+    const dir = cwd(projectId)
+    if (!dir) return NO_PROJECT
+    const abs = await insideProject(projectId, path)
+    if (!abs || gitInternal(path)) return OUTSIDE
+    try {
+      const merged = strictUtf8.decode(await readFile(abs))
+      const stages = await git.conflictStages(dir, path)
+      return { ok: true, data: { merged, ...stages } }
+    } catch (e) {
+      const encoding = e instanceof TypeError
+      return err({
+        code: encoding ? 'CONFLICT_ENCODING' : 'CONFLICT_READ',
+        message: encoding
+          ? 'file is not valid UTF-8 — the editor would corrupt it'
+          : e instanceof Error
+            ? e.message
+            : String(e),
+        ...(encoding ? { hint: 'resolve with Take ours/theirs from the file menu' } : {}),
+      })
+    }
+  })
+  handle('git:conflict-save', async ({ projectId, path, content, expected }) => {
+    const dir = cwd(projectId)
+    if (!dir) return NO_PROJECT
+    const abs = await insideProject(projectId, path)
+    if (!abs || gitInternal(path)) return OUTSIDE
+    try {
+      const current = strictUtf8.decode(await readFile(abs))
+      if (current !== expected) {
+        return err({
+          code: 'CONFLICT_CHANGED',
+          message: 'the file changed on disk since the editor opened',
+          hint: 'reopen the conflict editor and resolve again',
+        })
+      }
+      await writeFile(abs, content, 'utf8')
+    } catch (e) {
+      return err({ code: 'CONFLICT_WRITE', message: e instanceof Error ? e.message : String(e) })
+    }
+    return git.stage(dir, [path])
   })
   handle('git:branch-compare', async ({ projectId, branch }) => {
     const dir = cwd(projectId)
