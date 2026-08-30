@@ -17,7 +17,16 @@
     "count": "{{count}} changes",
     "history": "Recent history",
     "expand": "Show description",
-    "noBody": "No description."
+    "noBody": "No description.",
+    "independent": "independent",
+    "independentTip": "No hard dependencies either way — provably safe to reorder or land alone.",
+    "needs": "needs {{count}}",
+    "needsTip": "needs “{{target}}” — {{count}} pinned hunk dependencies",
+    "unresolvedTotal": "{{count}} unresolved",
+    "proven": "Proven reorganize — tree unchanged",
+    "approve": "Approve change",
+    "unapprove": "Revoke approval",
+    "approved": "approved"
   },
   "review": {
     "title": "Review",
@@ -273,6 +282,9 @@
     "hunksOf": "Hunks of {{name}}",
     "pickChange": "Select a change",
     "noHunks": "No hunks — move some here or remove this change.",
-    "opsTitle": "Operations"
+    "opsTitle": "Operations",
+    "depConflicts": "{{count}} dependency conflicts",
+    "depConflictTip": "{{hunk}} needs {{dep}}, which sits in the later draft “{{name}}”",
+    "depNeedsLater": "Hard dependency sits in a later draft — apply would fail."
   }
 }

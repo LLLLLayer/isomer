@@ -239,6 +239,87 @@
   padding: 1px 5px;
 }
 
+/* ---- stack evidence: dep edges, proof strip, review state ------------- */
+
+.stack-item {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.stack-item .change-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.dep-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 99px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dep-chip.free {
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 10%, transparent);
+  cursor: default;
+}
+
+.dep-chip.approved {
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 10%, transparent);
+  cursor: default;
+}
+
+.approve-btn {
+  align-self: center;
+  color: var(--fg-muted);
+}
+
+.approve-btn.on {
+  color: var(--ok);
+}
+
+.proof-strip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ok) 22%, transparent);
+  border-radius: var(--radius-l);
+  padding: 6px 10px;
+  margin: 0 0 10px;
+}
+
+.proof-strip .mono {
+  font-family: var(--font-mono);
+}
+
+.proof-tick {
+  display: inline-flex;
+  color: var(--ok);
+}
+
+.organize-hunk.violated {
+  border-color: color-mix(in srgb, var(--warn) 45%, transparent);
+  background: color-mix(in srgb, var(--warn) 6%, transparent);
+}
+
+.dep-warn {
+  display: inline-flex;
+  color: var(--warn);
+  flex: none;
+}
+
 .anomalies {
   margin-top: 14px;
   display: flex;

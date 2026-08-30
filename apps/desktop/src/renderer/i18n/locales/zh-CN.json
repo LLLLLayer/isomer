@@ -17,7 +17,16 @@
     "count": "{{count}} 个变更",
     "history": "最近历史",
     "expand": "展开描述",
-    "noBody": "没有描述。"
+    "noBody": "没有描述。",
+    "independent": "独立",
+    "independentTip": "无任何硬依赖——可证明安全地重排或单独合入。",
+    "needs": "依赖 {{count}}",
+    "needsTip": "依赖“{{target}}”——{{count}} 处改动块依赖",
+    "unresolvedTotal": "{{count}} 条未解决",
+    "proven": "重组已证明——树未变",
+    "approve": "通过评审",
+    "unapprove": "撤销通过",
+    "approved": "已通过"
   },
   "review": {
     "title": "评审",
@@ -273,6 +282,9 @@
     "hunksOf": "{{name}} 的改动块",
     "pickChange": "选择一个变更",
     "noHunks": "没有改动块——移一些进来，或删除这个变更。",
-    "opsTitle": "操作记录"
+    "opsTitle": "操作记录",
+    "depConflicts": "{{count}} 处依赖冲突",
+    "depConflictTip": "{{hunk}} 依赖 {{dep}}，但后者在更靠后的草稿“{{name}}”中",
+    "depNeedsLater": "硬依赖位于更靠后的草稿——应用将失败。"
   }
 }
