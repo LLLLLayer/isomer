@@ -1,17 +1,54 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import {
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  Link2,
+  ShieldCheck,
+  Unlink,
+} from 'lucide-react'
+import type { IsmOp } from '../../shared/ipc'
 import { dayKey } from '../graph'
+import { appliedProof, verifyCommands } from '../proof'
+import { changeDeps } from '../stackdeps'
 import { useAppStore } from '../store/store'
 import { relTime } from '../time'
 
-/** The change stack: base→head as cards, identity badges, anomaly flags. */
+/** The change stack: base→head as cards with the evidence only ism has —
+ * change-level dependency edges (with the pinning line identities), the
+ * tree-equality proof of the last reorganize, and review state. */
 export function StackView(): React.JSX.Element {
   const { t } = useTranslation()
   const snapshot = useAppStore((s) => s.snapshot)
   const comments = useAppStore((s) => s.comments)
   const selected = useAppStore((s) => s.selectedChangeId)
   const selectChange = useAppStore((s) => s.selectChange)
+  const approvals = useAppStore((s) => s.approvals)
+  const toggleApproval = useAppStore((s) => s.toggleApproval)
+  const projectId = useAppStore((s) => s.currentProjectId)
+  const [latestOp, setLatestOp] = useState<IsmOp | null>(null)
+
+  const stacked = snapshot !== null && snapshot.commits.length > 0
+  useEffect(() => {
+    if (!projectId || !stacked) return
+    // Responses may resolve out of order across quick head changes (undo
+    // then re-apply); a stale response must not overwrite the fresh one.
+    let stale = false
+    void window.isomer.invoke('ism:ops', { projectId, limit: 1 }).then((r) => {
+      if (stale || useAppStore.getState().currentProjectId !== projectId) return
+      setLatestOp(r.ok && r.data.length > 0 ? r.data[0] : null)
+    })
+    return () => {
+      stale = true
+    }
+  }, [projectId, stacked, snapshot?.head])
+
+  const deps = useMemo(() => (stacked && snapshot ? changeDeps(snapshot) : null), [
+    stacked,
+    snapshot,
+  ])
 
   if (!snapshot || snapshot.commits.length === 0) {
     // On the trunk there is no pending stack; tell recent history as a
@@ -25,32 +62,98 @@ export function StackView(): React.JSX.Element {
       unresolvedByChange.set(c.change, (unresolvedByChange.get(c.change) ?? 0) + 1)
     }
   }
+  const totalUnresolved = [...unresolvedByChange.values()].reduce((a, b) => a + b, 0)
+  const titleOf = new Map(snapshot.commits.map((c) => [c.sha, c.title]))
 
   // Newest last in git order; render top-down as head-first (review order).
   const commits = [...snapshot.commits].reverse()
+  const proven =
+    latestOp !== null && appliedProof(latestOp) && latestOp.new_head === snapshot.head
 
   return (
     <section className="pane stack">
       <header className="pane-title">
         {t('stack.title')}
         <span className="spacer" />
+        {totalUnresolved > 0 && (
+          <span className="count-pill">
+            {t('stack.unresolvedTotal', { count: totalUnresolved })}
+          </span>
+        )}
         <span>{t('stack.count', { count: commits.length })}</span>
       </header>
+      {proven && latestOp && (
+        <div className="proof-strip">
+          <ShieldCheck size={13} strokeWidth={1.8} />
+          <span>{t('stack.proven')}</span>
+          <span className="mono muted">{latestOp.new_tree.slice(0, 12)}</span>
+          <span className="spacer" />
+          <button
+            className="icon-btn"
+            title={t('verify.copyCommands')}
+            onClick={() => void navigator.clipboard.writeText(verifyCommands(latestOp))}
+          >
+            <Copy size={12} strokeWidth={1.8} />
+          </button>
+        </div>
+      )}
       <ol className="stack-list">
         {commits.map((c) => {
           const unresolved = c.change_id ? (unresolvedByChange.get(c.change_id) ?? 0) : 0
+          const edges = deps?.bySha.get(c.sha)
+          const free = deps?.independent.has(c.sha) ?? false
+          const approved = c.change_id !== null && approvals[c.change_id] === true
           return (
-            <li key={c.sha}>
+            <li key={c.sha} className="stack-item">
               <button
                 className={`change-card${selected === c.sha ? ' active' : ''}`}
                 onClick={() => selectChange(c.sha)}
               >
                 <span className="summary">{c.title}</span>
                 <span className="badges">
+                  {free && (
+                    <span className="dep-chip free" title={t('stack.independentTip')}>
+                      <Unlink size={10} strokeWidth={2} /> {t('stack.independent')}
+                    </span>
+                  )}
+                  {edges && edges.needs.length > 0 && (
+                    <span
+                      className="dep-chip"
+                      title={edges.needs
+                        .map((n) =>
+                          t('stack.needsTip', {
+                            target: titleOf.get(n.target) ?? n.target.slice(0, 7),
+                            count: n.via.length,
+                          }),
+                        )
+                        .join('\n')}
+                      onClick={(ev) => {
+                        ev.stopPropagation()
+                        selectChange(edges.needs[0].target)
+                      }}
+                    >
+                      <Link2 size={10} strokeWidth={2} />{' '}
+                      {t('stack.needs', { count: edges.needs.length })}
+                    </span>
+                  )}
+                  {approved && (
+                    <span className="dep-chip approved">
+                      <CheckCircle2 size={10} strokeWidth={2} /> {t('stack.approved')}
+                    </span>
+                  )}
                   <span className="muted">{t('review.hunks', { count: c.hunks.length })}</span>
                   {unresolved > 0 && <span className="count-pill">{unresolved}</span>}
                 </span>
               </button>
+              {c.change_id !== null && (
+                <button
+                  className={`approve-btn icon-btn${approved ? ' on' : ''}`}
+                  title={approved ? t('stack.unapprove') : t('stack.approve')}
+                  onClick={() => c.change_id !== null && toggleApproval(c.change_id)}
+                >
+                  <CheckCircle2 size={13} strokeWidth={1.8} />
+                </button>
+              )}
             </li>
           )
         })}

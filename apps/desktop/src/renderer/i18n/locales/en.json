@@ -17,7 +17,16 @@
     "count": "{{count}} changes",
     "history": "Recent history",
     "expand": "Show description",
-    "noBody": "No description."
+    "noBody": "No description.",
+    "independent": "independent",
+    "independentTip": "No hard dependencies either way — provably safe to reorder or land alone.",
+    "needs": "needs {{count}}",
+    "needsTip": "needs “{{target}}” — {{count}} pinned hunk dependencies",
+    "unresolvedTotal": "{{count}} unresolved",
+    "proven": "Proven reorganize — tree unchanged",
+    "approve": "Approve change",
+    "unapprove": "Revoke approval",
+    "approved": "approved"
   },
   "review": {
     "title": "Review",

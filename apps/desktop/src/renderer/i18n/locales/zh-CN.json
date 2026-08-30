@@ -17,7 +17,16 @@
     "count": "{{count}} 个变更",
     "history": "最近历史",
     "expand": "展开描述",
-    "noBody": "没有描述。"
+    "noBody": "没有描述。",
+    "independent": "独立",
+    "independentTip": "无任何硬依赖——可证明安全地重排或单独合入。",
+    "needs": "依赖 {{count}}",
+    "needsTip": "依赖“{{target}}”——{{count}} 处改动块依赖",
+    "unresolvedTotal": "{{count}} 条未解决",
+    "proven": "重组已证明——树未变",
+    "approve": "通过评审",
+    "unapprove": "撤销通过",
+    "approved": "已通过"
   },
   "review": {
     "title": "评审",

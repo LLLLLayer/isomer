@@ -49,6 +49,8 @@ export interface AppState {
   netNote: string | null
   snapshot: Snapshot | null
   comments: Comment[]
+  /** Locally-approved change ids (review workflow state, per project). */
+  approvals: Record<string, true>
   selectedChangeId: string | null
   /** Patch text per hunk id, fetched on change selection. */
   patches: Record<string, string>
@@ -97,6 +99,7 @@ export interface AppState {
   runNet(verb: 'fetch' | 'pull' | 'push', opts?: { forceWithLease?: boolean }): Promise<void>
   addComment(input: { change: string; body: string; path?: string; line?: number; replyTo?: string }): Promise<void>
   resolveComment(id: string): Promise<void>
+  toggleApproval(changeId: string): void
   toggleSidebar(): void
   toggleTerminal(): void
   setTerminalDock(dock: 'bottom' | 'right'): void
@@ -110,6 +113,22 @@ export interface AppState {
   openExternal(url: string): Promise<void>
   setError(error: AppError): void
   clearError(): void
+}
+
+/** Approvals are a local review marker (like Fork's local state), keyed per
+ * project; comments/resolution stay on the data ref where agents read them. */
+const approvalsKey = (projectId: string): string => `isomer.approvals.${projectId}`
+
+function readApprovals(projectId: string): Record<string, true> {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(approvalsKey(projectId)) ?? '[]')
+    if (!Array.isArray(parsed)) return {}
+    return Object.fromEntries(
+      parsed.filter((x): x is string => typeof x === 'string').map((x) => [x, true]),
+    )
+  } catch {
+    return {}
+  }
 }
 
 let bootstrapped = false
@@ -148,6 +167,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   netNote: null,
   snapshot: null,
   comments: [],
+  approvals: {},
   selectedChangeId: null,
   patches: {},
   commentAnchor: null,
@@ -223,6 +243,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       commitAmend: false,
       snapshot: null,
       comments: [],
+      approvals: readApprovals(id),
       selectedChangeId: null,
       patches: {},
       commentAnchor: null,
@@ -504,6 +525,19 @@ export const useAppStore = create<AppState>((set, get) => ({
       return
     }
     set({ comments: get().comments.map((c) => (c.id === r.data.id ? r.data : c)) })
+  },
+  toggleApproval(changeId) {
+    const id = get().currentProjectId
+    if (id === null) return
+    const next = { ...get().approvals }
+    if (next[changeId]) delete next[changeId]
+    else next[changeId] = true
+    set({ approvals: next })
+    try {
+      localStorage.setItem(approvalsKey(id), JSON.stringify(Object.keys(next)))
+    } catch {
+      // Best effort — quota or private mode; the in-memory state still holds.
+    }
   },
 
   toggleSidebar() {
