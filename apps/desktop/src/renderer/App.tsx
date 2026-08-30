@@ -14,7 +14,7 @@ import { HistoryView } from './components/HistoryView'
 import { Inspector } from './components/Inspector'
 import { ProjectRail } from './components/ProjectRail'
 import { ReviewView } from './components/ReviewView'
-import { SettingsModal } from './components/SettingsModal'
+import { SettingsPage } from './components/SettingsPage'
 import { Sidebar } from './components/Sidebar'
 import { StackView } from './components/StackView'
 import { TerminalDrawer } from './components/TerminalDrawer'
@@ -149,7 +149,7 @@ export function App(): React.JSX.Element {
           </div>
         </>
       )}
-      <SettingsModal />
+      <SettingsPage />
       <footer className="statusbar">
         <button className="icon-btn labeled" onClick={toggleTerminal}>
           <SquareTerminal size={14} strokeWidth={1.8} />

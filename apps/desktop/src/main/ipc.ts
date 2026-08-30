@@ -44,6 +44,48 @@ export function registerIpc(exec: Exec): { dispose(): void } {
   const cwd = (projectId: string): string | undefined => projects.get(projectId)?.path
 
   handle('app:version', async () => app.getVersion())
+  handle('ism:detect', async () => ism.detect())
+  handle('update:check', async () => {
+    try {
+      return { ok: true, data: await checkForUpdate(app.getVersion()) }
+    } catch (e) {
+      return err({
+        code: 'UPDATE_CHECK',
+        message: e instanceof Error ? e.message : String(e),
+        hint: 'check the network and try again',
+      })
+    }
+  })
+
+  /** A repo-relative path resolved inside the project root, or null when it
+   * escapes (symlink-free lexical containment — good enough for UI verbs). */
+  const insideProject = (projectId: string, rel: string): string | null => {
+    const root = cwd(projectId)
+    if (!root || isAbsolute(rel)) return null
+    const abs = resolve(root, rel)
+    return abs === root || abs.startsWith(root + sep) ? abs : null
+  }
+  handle('shell:reveal', async ({ projectId, path }) => {
+    const abs = insideProject(projectId, path)
+    if (!abs) return NO_PROJECT
+    shell.showItemInFolder(abs)
+    return { ok: true, data: undefined }
+  })
+  handle('shell:open-path', async ({ projectId, path }) => {
+    const abs = insideProject(projectId, path)
+    if (!abs) return NO_PROJECT
+    const problem = await shell.openPath(abs)
+    return problem === ''
+      ? { ok: true, data: undefined }
+      : err({ code: 'OPEN_PATH', message: problem })
+  })
+  handle('shell:open-external', async ({ url }) => {
+    if (!url.startsWith('https://')) {
+      return err({ code: 'BAD_URL', message: 'only https links may leave the app' })
+    }
+    await shell.openExternal(url)
+    return { ok: true, data: undefined }
+  })
   handle('dialog:pick-directory', async () => {
     const r = await dialog.showOpenDialog({ properties: ['openDirectory'] })
     return r.canceled || r.filePaths.length === 0 ? null : r.filePaths[0]

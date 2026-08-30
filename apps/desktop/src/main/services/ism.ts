@@ -1,3 +1,6 @@
+import { homedir } from 'node:os'
+import { join } from 'node:path'
+import type { IsmDetection } from '../../shared/ipc'
 import type { Result } from '../../shared/result'
 import { err, ok } from '../../shared/result'
 import type { Exec } from './exec'
@@ -13,6 +16,30 @@ export class IsmService {
     private exec: Exec,
     private binary: () => string,
   ) {}
+
+  /** Where ism actually is: the settings override first, then PATH, then
+   * the usual install spots — so a default install needs zero config. */
+  async detect(): Promise<IsmDetection | null> {
+    const configured = this.binary()
+    const candidates: { path: string; source: IsmDetection['source'] }[] = [
+      ...(configured ? [{ path: configured, source: 'settings' as const }] : []),
+      { path: 'ism', source: 'path' as const },
+      { path: join(homedir(), '.cargo', 'bin', 'ism'), source: 'common' as const },
+      { path: '/opt/homebrew/bin/ism', source: 'common' as const },
+      { path: '/usr/local/bin/ism', source: 'common' as const },
+    ]
+    for (const c of candidates) {
+      try {
+        const r = await this.exec(c.path, ['--version'], { cwd: homedir(), timeoutMs: 5_000 })
+        if (r.code === 0) {
+          return { path: c.path, version: r.stdout.trim().replace(/^ism\s*/, ''), source: c.source }
+        }
+      } catch {
+        /* try the next candidate */
+      }
+    }
+    return null
+  }
 
   async run<T>(cwd: string, args: string[]): Promise<Result<T>> {
     const bin = this.binary() || 'ism'

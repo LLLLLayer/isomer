@@ -206,10 +206,14 @@ export const useAppStore = create<AppState>((set, get) => ({
       // Land where the work is: dirty worktree → changes; else a pending
       // stack → stack; else history. Refreshes never yank the view away.
       // Shot tooling may force the landing view via ?view=.
-      const forced = new URLSearchParams(window.location.search).get('view') as ViewMode | null
+      const forced = new URLSearchParams(window.location.search).get('view') as
+        | ViewMode
+        | 'settings'
+        | null
+      if (forced === 'settings') get().openSettings()
       const view: ViewMode =
         forced && ['changes', 'history', 'stack'].includes(forced)
-          ? forced
+          ? (forced as ViewMode)
           : entries.length > 0
             ? 'changes'
             : snap && snap.commits.length > 0
@@ -454,6 +458,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   openSettings() {
     set({ settingsOpen: true })
+    if (get().ismDetection === undefined) void get().detectIsm()
   },
 
   closeSettings() {

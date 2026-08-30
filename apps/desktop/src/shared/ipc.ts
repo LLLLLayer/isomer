@@ -47,6 +47,18 @@ export interface GitRefs {
   submodules: string[]
 }
 
+export interface IsmDetection {
+  path: string
+  version: string
+  source: 'settings' | 'path' | 'common'
+}
+
+export interface UpdateInfo {
+  version: string
+  url: string
+  notes: string
+}
+
 export interface CommitInfo {
   sha: string
   authorName: string
@@ -111,6 +123,14 @@ export interface InvokeContracts {
     res: Result<Comment>
   }
   'ism:comment-resolve': { req: { projectId: string; id: string }; res: Result<Comment> }
+  'ism:detect': { req: void; res: IsmDetection | null }
+  'update:check': { req: void; res: Result<UpdateInfo | null> }
+  /** Reveal a repo-relative path in the OS file manager. */
+  'shell:reveal': { req: { projectId: string; path: string }; res: Result<void> }
+  /** Open a repo-relative path with the default application. */
+  'shell:open-path': { req: { projectId: string; path: string }; res: Result<void> }
+  /** Open an https URL in the default browser. */
+  'shell:open-external': { req: { url: string }; res: Result<void> }
   'pty:create': {
     req: { projectId: string; cols: number; rows: number }
     res: Result<{ id: string }>
@@ -167,6 +187,11 @@ export const INVOKE_CHANNELS = [
   'ism:comment-list',
   'ism:comment-add',
   'ism:comment-resolve',
+  'ism:detect',
+  'update:check',
+  'shell:reveal',
+  'shell:open-path',
+  'shell:open-external',
   'pty:create',
   'pty:input',
   'pty:resize',
