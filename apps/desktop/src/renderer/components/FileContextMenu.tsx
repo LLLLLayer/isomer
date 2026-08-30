@@ -17,8 +17,15 @@ export function useFileContextMenu(): {
   useEffect(() => {
     if (!state) return
     const close = (): void => setState(null)
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') setState(null)
+    }
     window.addEventListener('mousedown', close)
-    return () => window.removeEventListener('mousedown', close)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('mousedown', close)
+      window.removeEventListener('keydown', onKey)
+    }
   }, [state])
 
   const run = (channel: 'shell:reveal' | 'shell:open-path', path: string): void => {
@@ -49,7 +56,12 @@ export function useFileContextMenu(): {
   return {
     onContextMenu: (e, path) => {
       e.preventDefault()
-      setState({ x: e.clientX, y: e.clientY, path })
+      // Clamp so the menu never renders off the bottom/right window edge.
+      setState({
+        x: Math.min(e.clientX, window.innerWidth - 210),
+        y: Math.min(e.clientY, window.innerHeight - 120),
+        path,
+      })
     },
     menu: state && (
       <div className="context-menu" style={{ left: state.x, top: state.y }}>

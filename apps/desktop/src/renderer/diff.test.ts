@@ -144,3 +144,49 @@ describe('emphasisRanges', () => {
     expect(r2.get(2)).toEqual([10, 11])
   })
 })
+
+describe('parseUnifiedDiff header guard', () => {
+  it('keeps in-hunk SQL-comment lines and never rebinds the path', () => {
+    const raw =
+      'diff --git a/q.sql b/q.sql\n' +
+      '--- a/q.sql\n' +
+      '+++ b/q.sql\n' +
+      '@@ -1,2 +1,1 @@\n' +
+      '--- a/tmp cleanup\n' + // deleted line whose CONTENT is "-- a/tmp cleanup"
+      '-select 1\n' +
+      '+select 2\n'
+    const files = parseUnifiedDiff(raw)
+    expect(files[0].path).toBe('q.sql')
+    const rows = files[0].rows.filter((r) => r.kind !== 'gap')
+    expect(rows.map((r) => [r.kind, r.text])).toEqual([
+      ['del', '-- a/tmp cleanup'],
+      ['del', 'select 1'],
+      ['add', 'select 2'],
+    ])
+    // Old-side numbering stays contiguous.
+    expect(rows[0].oldNo).toBe(1)
+    expect(rows[1].oldNo).toBe(2)
+  })
+})
+
+describe('intraline surrogate safety', () => {
+  it('never slices between a surrogate pair', () => {
+    const a = 'x = "\u{1F642}"'
+    const b = 'x = "\u{1F643}"'
+    const e = intraline(a, b)
+    expect(e).not.toBeNull()
+    for (const [str, [lo, hi]] of [
+      [a, e!.a],
+      [b, e!.b],
+    ] as const) {
+      for (const i of [lo, hi]) {
+        if (i > 0 && i < str.length) {
+          // Boundary must not sit between a high and a low surrogate.
+          const high = (str.charCodeAt(i - 1) & 0xfc00) === 0xd800
+          const low = (str.charCodeAt(i) & 0xfc00) === 0xdc00
+          expect(high && low).toBe(false)
+        }
+      }
+    }
+  })
+})

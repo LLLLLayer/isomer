@@ -88,12 +88,15 @@ export function parseUnifiedDiff(raw: string): FileDiff[] {
       continue
     }
     if (!cur) continue
-    if (line.startsWith('+++ ')) {
+    // Real ---/+++ headers only appear between `diff --git` and the first
+    // hunk. Inside a hunk, a deleted `-- foo` line arrives as `--- foo` —
+    // an SQL/Lua comment, not a header — and must fall through to content.
+    if (cur.rows.length === 0 && line.startsWith('+++ ')) {
       const p = line.slice(4)
       if (p.startsWith('b/')) cur.path = p.slice(2)
       continue
     }
-    if (line.startsWith('--- ')) {
+    if (cur.rows.length === 0 && line.startsWith('--- ')) {
       const p = line.slice(4)
       // Deletions have +++ /dev/null; the old-side path wins then.
       if (p.startsWith('a/')) cur.path = p.slice(2)
@@ -195,11 +198,17 @@ export function intraline(a: string, b: string): { a: EmphRange; b: EmphRange } 
     sa--
     sb--
   }
+  // Never split a surrogate pair: snap boundaries outward to code points.
+  const isHigh = (str: string, i: number): boolean =>
+    (str.charCodeAt(i) & 0xfc00) === 0xd800
+  if (p > 0 && isHigh(a, p - 1)) p--
+  if (sa < a.length && sa > 0 && isHigh(a, sa - 1)) sa++
+  if (sb < b.length && sb > 0 && isHigh(b, sb - 1)) sb++
   // Whitespace-only common ground (indentation) → the pair is a rewrite,
   // not an edit; emphasizing everything after the indent is just noise.
-  const common = a.slice(0, p) + a.slice(sa)
+  const common = a.slice(0, p) + a.slice(Math.max(sa, p))
   if (common.trim() === '') return null
-  return { a: [p, sa], b: [p, sb] }
+  return { a: [p, Math.max(sa, p)], b: [p, Math.max(sb, p)] }
 }
 
 /**

@@ -107,6 +107,18 @@ export interface AppState {
   clearError(): void
 }
 
+let bootstrapped = false
+let detectSeq = 0
+let forcedViewUsed = false
+
+/** The ?view= override (shot tooling) applies to the FIRST landing only —
+ * location.search never changes, so later project switches must ignore it. */
+function consumeForcedView(): ViewMode | 'settings' | null {
+  if (forcedViewUsed) return null
+  forcedViewUsed = true
+  return new URLSearchParams(window.location.search).get('view') as ViewMode | 'settings' | null
+}
+
 export const useAppStore = create<AppState>((set, get) => ({
   settings: DEFAULT_SETTINGS,
   projects: [],
@@ -144,6 +156,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   lastError: null,
 
   async bootstrap() {
+    // StrictMode double-invokes mount effects; a second bootstrap would
+    // duplicate the repo:changed subscription and race two openProject chains.
+    if (bootstrapped) return
+    bootstrapped = true
     const [settings, projects] = await Promise.all([
       window.isomer.invoke('settings:get', undefined),
       window.isomer.invoke('projects:list', undefined),
@@ -204,6 +220,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       commentAnchor: null,
     })
     void window.isomer.invoke('repo:watch', { projectId: id })
+    if (get().pendingTerminalInput) set({ pendingTerminalInput: null })
     await get().refreshProject(true)
   },
 
@@ -234,10 +251,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       // Land where the work is: dirty worktree → changes; else a pending
       // stack → stack; else history. Refreshes never yank the view away.
       // Shot tooling may force the landing view via ?view=.
-      const forced = new URLSearchParams(window.location.search).get('view') as
-        | ViewMode
-        | 'settings'
-        | null
+      const forced = consumeForcedView()
       if (forced === 'settings') get().openSettings()
       const view: ViewMode =
         forced && ['changes', 'history', 'stack'].includes(forced)
@@ -319,6 +333,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const id = get().currentProjectId
     if (!id || paths.length === 0) return
     const r = await window.isomer.invoke('git:stage', { projectId: id, paths })
+    if (get().currentProjectId !== id) return
     if (!r.ok) set({ lastError: r.error })
     await get().refreshProject()
   },
@@ -327,6 +342,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const id = get().currentProjectId
     if (!id || paths.length === 0) return
     const r = await window.isomer.invoke('git:unstage', { projectId: id, paths })
+    if (get().currentProjectId !== id) return
     if (!r.ok) set({ lastError: r.error })
     await get().refreshProject()
   },
@@ -366,6 +382,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const id = get().currentProjectId
     if (!id) return
     const r = await window.isomer.invoke('git:stash', { projectId: id })
+    if (get().currentProjectId !== id) return
     if (!r.ok) {
       set({ lastError: r.error })
       return
@@ -471,7 +488,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   toggleTerminal() {
-    set({ terminalOpen: !get().terminalOpen })
+    const opening = !get().terminalOpen
+    // Closing drops any queued (never-delivered) agent command with it.
+    set(opening ? { terminalOpen: true } : { terminalOpen: false, pendingTerminalInput: null })
   },
 
   summonAgent() {
@@ -502,7 +521,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   async detectIsm() {
+    // Probing bad candidates can take seconds; never let a slow stale
+    // probe overwrite a fresher result.
+    const seq = ++detectSeq
     const d = await window.isomer.invoke('ism:detect', undefined)
+    if (seq !== detectSeq) return
     set({ ismDetection: d })
   },
 

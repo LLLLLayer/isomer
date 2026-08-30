@@ -38,19 +38,22 @@ export function Inspector(): React.JSX.Element {
   const changeId = fallback
     ? (log.find((e) => e.sha === selectedCommit)?.changeId ?? null)
     : (commit?.change_id ?? null)
-  // No selection ⇒ all comments; a selected but untracked commit has no
-  // identity, so nothing can be anchored to it.
-  const filtered = (commit && !changeId ? [] : comments)
-    .filter((c) => (changeId ? c.change === changeId : true))
+  // No selection ⇒ all comments; a selected but untracked commit (stack or
+  // fallback mode) has no identity, so nothing can be anchored to it.
+  const noIdentity = (commit !== undefined || (fallback && selectedCommit !== null)) && !changeId
+  const scoped = (noIdentity ? [] : comments).filter((c) =>
+    changeId ? c.change === changeId : true,
+  )
+  // Resolution is a thread property: filters and counts look at top-level
+  // comments only, and replies always travel with their parent.
+  const topLevel = scoped
+    .filter((c) => !c.parent)
     .filter((c) => !unresolvedOnly || !c.resolved)
-  // Thread order: top-level comments in arrival order, each followed by its
-  // replies (same-second timestamps would otherwise interleave threads).
-  const topLevel = filtered.filter((c) => !c.parent)
   const visible = topLevel.flatMap((parent) => [
     parent,
-    ...filtered.filter((c) => c.parent === parent.id),
+    ...scoped.filter((c) => c.parent === parent.id),
   ])
-  const unresolvedCount = filtered.filter((c) => !c.resolved).length
+  const unresolvedCount = scoped.filter((c) => !c.parent && !c.resolved).length
 
   const asMarkdown = (list: Comment[]): string =>
     list
@@ -59,7 +62,8 @@ export function Inspector(): React.JSX.Element {
         const head = [c.resolved ? '[x]' : '[ ]', where, `@${c.author_name}`]
           .filter(Boolean)
           .join(' ')
-        return `${c.parent ? '  - ' : '- '}${head}: ${c.body}`
+        const body = c.body.replace(/\n/g, c.parent ? '\n    ' : '\n  ')
+        return `${c.parent ? '  - ' : '- '}${head}: ${body}`
       })
       .join('\n')
 

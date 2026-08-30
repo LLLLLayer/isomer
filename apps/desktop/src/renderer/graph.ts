@@ -29,12 +29,14 @@ export function graphLayout(entries: { sha: string; parents: string[] }[]): RowG
   const rows: RowGraph[] = []
   for (const e of entries) {
     const top = [...lanes]
+    // Lanes truly entering from above — a brand-new tip's lane starts AT
+    // this row, so headers above it must not draw a stub for it.
+    const topCount = top.length
     let dot = top.indexOf(e.sha)
     if (dot === -1) {
       dot = top.length
       top.push(e.sha)
     }
-    const topCount = top.length
 
     const next: string[] = []
     const through: [number, number][] = []
