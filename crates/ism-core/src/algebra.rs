@@ -233,6 +233,10 @@ pub struct Replay<'a> {
     vfiles: Vec<Vec<LineId>>,
     /// Whole-file override per file: Some(None) = deleted, Some(Some(blob)).
     wholefile: Vec<Option<(Option<String>, String)>>,
+    /// True once any line hunk was applied to the file — distinguishes a
+    /// file the subset created then emptied (exists, empty) from one it
+    /// never created (absent).
+    line_touched: Vec<bool>,
     applied: Vec<bool>,
 }
 
@@ -258,6 +262,7 @@ impl<'a> Replay<'a> {
             alg,
             vfiles: alg.base_vfiles.clone(),
             wholefile: vec![None; alg.files.len()],
+            line_touched: vec![false; alg.files.len()],
             applied: vec![false; alg.seq.len()],
         }
     }
@@ -283,6 +288,7 @@ impl<'a> Replay<'a> {
                     self.wholefile[fi] = Some((new_blob.clone(), mode.clone()));
                 }
                 SeqPayload::Lines { .. } => {
+                    self.line_touched[fi] = true;
                     let rec = &self.alg.records[idx];
                     let vf = &mut self.vfiles[fi];
                     let pos = if !rec.removed.is_empty() {
@@ -340,7 +346,7 @@ impl<'a> Replay<'a> {
         }
         let bf = &self.alg.base_files[fi];
         let vf = &self.vfiles[fi];
-        if vf.is_empty() && bf.lines.is_none() {
+        if vf.is_empty() && bf.lines.is_none() && !self.line_touched[fi] {
             // Never created in the applied subset.
             return FileState::Deleted;
         }
