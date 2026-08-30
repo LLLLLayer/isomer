@@ -574,6 +574,19 @@ export class GitService {
     }
   }
 
+  /** Index stages of an unmerged path: 1=base, 2=ours, 3=theirs. */
+  async conflictStages(
+    cwd: string,
+    path: string,
+  ): Promise<{ base: string | null; ours: string | null; theirs: string | null }> {
+    const show = async (n: 1 | 2 | 3): Promise<string | null> => {
+      const r = await this.run(cwd, ['show', `:${n}:${path}`])
+      return r.code === 0 ? r.stdout : null
+    }
+    const [base, ours, theirs] = await Promise.all([show(1), show(2), show(3)])
+    return { base, ours, theirs }
+  }
+
   async conflictTake(cwd: string, path: string, side: 'ours' | 'theirs'): Promise<Result<void>> {
     const r = await this.simple(cwd, ['checkout', `--${side}`, '--', path])
     if (!r.ok) return r

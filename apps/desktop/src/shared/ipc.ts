@@ -17,6 +17,14 @@ export interface Project {
   lastOpenedAt: number
 }
 
+export interface ConflictFile {
+  /** Working-copy text, conflict markers included. */
+  merged: string
+  base: string | null
+  ours: string | null
+  theirs: string | null
+}
+
 export interface GitStatusSummary {
   branch: string
   upstream: string | null
@@ -191,6 +199,16 @@ export interface InvokeContracts {
     req: { projectId: string; path: string; side: 'ours' | 'theirs' }
     res: Result<void>
   }
+  /** The three index stages of an unmerged path plus the marker-bearing
+   * working copy. A missing stage (add/add, deleted side) comes back null. */
+  'git:conflict-file': { req: { projectId: string; path: string }; res: Result<ConflictFile> }
+  /** Write the resolved content and stage the path. `expected` is the
+   * marker-bearing text the resolution was derived from — main refuses
+   * (CONFLICT_CHANGED) when the file on disk no longer matches it. */
+  'git:conflict-save': {
+    req: { projectId: string; path: string; content: string; expected: string }
+    res: Result<void>
+  }
   'git:branch-compare': { req: { projectId: string; branch: string }; res: Result<BranchCompare> }
   'git:remote-add': { req: { projectId: string; name: string; url: string }; res: Result<void> }
   'git:remote-remove': { req: { projectId: string; name: string }; res: Result<void> }
@@ -301,6 +319,8 @@ export const INVOKE_CHANNELS = [
   'git:op-abort',
   'git:op-continue',
   'git:conflict-take',
+  'git:conflict-file',
+  'git:conflict-save',
   'git:branch-compare',
   'git:remote-add',
   'git:remote-remove',

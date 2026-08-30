@@ -13,6 +13,7 @@ import { type FileMenuItem, useFileContextMenu } from './FileContextMenu'
 import { FileListMenu, type FileListMode } from './FileListMenu'
 import { FileTreePanel } from './FileTreePanel'
 import { BlameModal, FileHistoryModal } from './Insights'
+import { ConflictEditor } from './ConflictEditor'
 import { ConfirmModal } from './Modals'
 
 /** Porcelain XY with either side unmerged. */
@@ -48,6 +49,7 @@ export function ChangesView(): React.JSX.Element {
     | null
   >(null)
   const [insight, setInsight] = useState<{ kind: 'history' | 'blame'; path: string } | null>(null)
+  const [conflictPath, setConflictPath] = useState<string | null>(null)
 
   /** Fire a mutating git verb, surface errors, re-read reality. */
   const run = (p: Promise<Result<unknown>>): void => {
@@ -64,6 +66,10 @@ export function ChangesView(): React.JSX.Element {
     if (!entry) return []
     if (isConflict(entry.code)) {
       return [
+        {
+          label: t('conflict.openEditor'),
+          action: () => setConflictPath(path),
+        },
         {
           label: t('conflict.takeOurs'),
           action: () =>
@@ -202,6 +208,19 @@ export function ChangesView(): React.JSX.Element {
           <AlertTriangle size={14} strokeWidth={1.8} />
           <span>{t(`conflict.inProgress.${op}`)}</span>
           <span className="spacer" />
+          {entries.some((e) => isConflict(e.code)) && (
+            <button
+              className="ghost-btn"
+              onClick={() => {
+                const first = entries.find((e) => isConflict(e.code))
+                if (first) setConflictPath(first.path)
+              }}
+            >
+              {t('conflict.resolveCount', {
+                count: entries.filter((e) => isConflict(e.code)).length,
+              })}
+            </button>
+          )}
           <button
             className="ghost-btn"
             onClick={() => run(window.isomer.invoke('git:op-continue', { projectId, op }))}
@@ -331,6 +350,9 @@ export function ChangesView(): React.JSX.Element {
             setConfirm(null)
           }}
         />
+      )}
+      {conflictPath !== null && (
+        <ConflictEditor path={conflictPath} onClose={() => setConflictPath(null)} />
       )}
       {insight?.kind === 'history' && (
         <FileHistoryModal path={insight.path} onClose={() => setInsight(null)} />

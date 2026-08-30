@@ -213,7 +213,25 @@
       "rebase": "Rebase in progress — resolve conflicts, then continue.",
       "cherry-pick": "Cherry-pick in progress — resolve conflicts, then continue.",
       "revert": "Revert in progress — resolve conflicts, then continue."
-    }
+    },
+    "openEditor": "Open conflict editor…",
+    "resolveCount": "Resolve {{count}} conflicted files…",
+    "editorTitle": "Resolve conflicts",
+    "result": "Result",
+    "ours": "Ours",
+    "theirs": "Theirs",
+    "noMarkers": "No complete conflict markers found — the file may be binary, use longer custom markers, or be resolved already. Use Take ours / Take theirs from the file menu; do not mark it resolved unless you have checked the content.",
+    "useOurs": "Ours",
+    "useBoth": "Both",
+    "useTheirs": "Theirs",
+    "edit": "Edit by hand",
+    "keepEdit": "Keep edit",
+    "undecided": "Pick a side — or edit by hand.",
+    "baseLabel": "Common ancestor",
+    "progress": "{{decided}} / {{total}} resolved",
+    "allOurs": "All ours",
+    "allTheirs": "All theirs",
+    "saveStage": "Save & stage"
   },
   "insight": {
     "none": "Nothing here."
