@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  AlertTriangle,
   ArrowDown,
   ArrowUp,
   BadgeCheck,
+  Copy,
   Play,
   Plus,
   RotateCcw,
@@ -14,6 +16,8 @@ import {
 import type { IsmOp } from '../../shared/ipc'
 import type { Snapshot } from '../../shared/ism-types'
 import type { AppError } from '../../shared/result'
+import { opProven, verifyCommands } from '../proof'
+import { orderViolations } from '../stackdeps'
 import { useAppStore } from '../store/store'
 import { relTime } from '../time'
 
@@ -69,8 +73,12 @@ export function OrganizeView(): React.JSX.Element {
   const [seededFor, setSeededFor] = useState<string | null>(null)
   const [busy, setBusy] = useState<'check' | 'apply' | null>(null)
   const [checkResult, setCheckResult] = useState<{ ok: boolean; errors?: AppError[] } | null>(null)
-  const [proof, setProof] = useState<{ oldTree: string; newTree: string; op: string } | null>(null)
+  const [proof, setProof] = useState<IsmOp | null>(null)
   const [ops, setOps] = useState<IsmOp[] | null>(null)
+  // Bumped by apply/undo so the op-log refetches even when `proof` is
+  // unchanged (undo with proof already null used to leave a stale list
+  // whose visible Undo button would actually redo).
+  const [opsTick, setOpsTick] = useState(0)
 
   const seed = (): DraftNode[] => {
     if (!snapshot) return []
@@ -107,7 +115,7 @@ export function OrganizeView(): React.JSX.Element {
     void window.isomer
       .invoke('ism:ops', { projectId, limit: 20 })
       .then((r) => setOps(r.ok ? r.data : []))
-  }, [projectId, proof])
+  }, [projectId, opsTick])
 
   const hunkById = useMemo(() => {
     const map = new Map<string, { kind: string; add: number; del: number }>()
@@ -116,6 +124,20 @@ export function OrganizeView(): React.JSX.Element {
     }
     return map
   }, [snapshot])
+
+  // Live advisory: which assigned hunks depend on a LATER draft. The CLI
+  // check stays authoritative; this explains the failure before it happens.
+  const violations = useMemo(
+    () => (snapshot ? orderViolations(nodes, snapshot.deps) : []),
+    [nodes, snapshot],
+  )
+  const violationsByNode = useMemo(() => {
+    const map = new Map<string, typeof violations>()
+    for (const v of violations) map.set(v.nodeKey, [...(map.get(v.nodeKey) ?? []), v])
+    return map
+  }, [violations])
+  const violatingHunks = useMemo(() => new Set(violations.map((v) => v.hunk)), [violations])
+  const nodeName = (key: string): string => nodes.find((n) => n.key === key)?.name ?? key
 
   const selected = nodes.find((n) => n.key === selectedKey) ?? null
 
@@ -197,12 +219,8 @@ export function OrganizeView(): React.JSX.Element {
     }
     // The proof, from the op record itself: old tree hash == new tree hash.
     const opsR = await window.isomer.invoke('ism:ops', { projectId, limit: 1 })
-    const op = opsR.ok ? opsR.data[0] : undefined
-    setProof(
-      op
-        ? { oldTree: op.old_tree, newTree: op.new_tree, op: op.sha }
-        : { oldTree: '', newTree: '', op: r.data.op },
-    )
+    setProof(opsR.ok && opsR.data.length > 0 ? opsR.data[0] : null)
+    setOpsTick((n) => n + 1)
     setCheckResult(null)
     setBusy(null)
     await refreshProject()
@@ -213,6 +231,7 @@ export function OrganizeView(): React.JSX.Element {
     const r = await window.isomer.invoke('ism:undo', { projectId })
     if (!r.ok) setCheckResult({ ok: false, errors: [r.error] })
     setProof(null)
+    setOpsTick((n) => n + 1)
     await refreshProject()
   }
 
@@ -276,10 +295,17 @@ export function OrganizeView(): React.JSX.Element {
           <span>
             {t('organize.proof')}{' '}
             <span className="mono">
-              {proof.oldTree.slice(0, 12)} == {proof.newTree.slice(0, 12)}
+              {proof.old_tree.slice(0, 12)} == {proof.new_tree.slice(0, 12)}
             </span>
           </span>
           <span className="spacer" />
+          <button
+            className="icon-btn"
+            title={t('verify.copyCommands')}
+            onClick={() => void navigator.clipboard.writeText(verifyCommands(proof))}
+          >
+            <Copy size={12} strokeWidth={1.8} />
+          </button>
           <button className="ghost-btn" onClick={() => void undo()}>
             <Undo2 size={12} strokeWidth={1.8} /> {t('organize.undo')}
           </button>
@@ -306,6 +332,25 @@ export function OrganizeView(): React.JSX.Element {
                   onBlur={(e) => patch(n.key, { name: slugify(e.target.value) })}
                 />
                 <span className="spacer" />
+                {violationsByNode.has(n.key) && (
+                  <span
+                    className="badge warn"
+                    title={(violationsByNode.get(n.key) ?? [])
+                      .map((v) =>
+                        t('organize.depConflictTip', {
+                          hunk: v.hunk,
+                          dep: v.dep,
+                          name: nodeName(v.depNodeKey),
+                        }),
+                      )
+                      .join('\n')}
+                  >
+                    <AlertTriangle size={10} strokeWidth={2} />{' '}
+                    {t('organize.depConflicts', {
+                      count: (violationsByNode.get(n.key) ?? []).length,
+                    })}
+                  </span>
+                )}
                 <span className="muted">{t('review.hunks', { count: n.from.length })}</span>
                 <button className="icon-btn" disabled={i === 0} onClick={() => move(n.key, -1)}>
                   <ArrowUp size={12} strokeWidth={1.8} />
@@ -354,8 +399,14 @@ export function OrganizeView(): React.JSX.Element {
           {selected?.from.map((id) => {
             const meta = hunkById.get(id)
             const path = id.split(':')[0]
+            const violated = violatingHunks.has(id)
             return (
-              <div key={id} className="organize-hunk">
+              <div key={id} className={`organize-hunk${violated ? ' violated' : ''}`}>
+                {violated && (
+                  <span className="dep-warn" title={t('organize.depNeedsLater')}>
+                    <AlertTriangle size={11} strokeWidth={2} />
+                  </span>
+                )}
                 <span className="hunk-id" title={id}>
                   {path}
                 </span>
@@ -409,8 +460,20 @@ function OpsTimeline({
           <span className="mono muted">
             {op.old_head.slice(0, 7)} → {op.new_head.slice(0, 7)}
           </span>
+          {opProven(op) && (
+            <span className="proof-tick" title={t('organize.proof')}>
+              <ShieldCheck size={11} strokeWidth={2} />
+            </span>
+          )}
           <span className="muted">{relTime(Number(op.timestamp), t)}</span>
           <span className="spacer" />
+          <button
+            className="icon-btn"
+            title={t('verify.copyCommands')}
+            onClick={() => void navigator.clipboard.writeText(verifyCommands(op))}
+          >
+            <Copy size={11} strokeWidth={1.8} />
+          </button>
           {i === 0 && (
             <button className="ghost-btn" onClick={onUndo}>
               <Undo2 size={11} strokeWidth={1.8} /> {t('organize.undo')}
