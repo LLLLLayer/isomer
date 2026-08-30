@@ -55,9 +55,12 @@ git rev-parse <new-head>^{tree}     # equal ⇒ code untouched
 
 ## Status
 
-Phase 1 (core engine + CLI, seven commands) is implemented with end-to-end
-tests. Publishing (`submit`), trunk sync (`sync`), the agent skill package,
-and the desktop app are on the roadmap.
+The core engine and CLI are implemented with end-to-end tests: the
+reorganization loop, review comments anchored to change identities
+(`ism comment add/list/resolve`), and the embedded agent skill
+(`ism skill install`). An Electron desktop app scaffold lives in
+`apps/desktop`. Publishing (`submit`) and trunk sync (`sync`) are on the
+roadmap.
 
 ## License
 

@@ -18,6 +18,18 @@ cargo clippy --all-targets -- -D warnings     # CI-gated
 cargo run -p ism-cli -- inspect               # run the CLI
 ```
 
+Desktop app (`apps/desktop`, Electron + React + TS — see its own README):
+
+```sh
+cd apps/desktop && npm install
+npm run typecheck && npm test                 # vitest (node + happy-dom projects)
+npm run build                                 # bundle main/preload/renderer
+ISOMER_SMOKE=1 npx electron .                 # headless boot proof
+```
+
+The app talks to ism ONLY by spawning the CLI and parsing its JSON (design
+D23) — never add a second semantic channel (no napi/FFI).
+
 CI (`.github/workflows/ci.yml`) runs exactly these five checks on ubuntu + macos. Run all of them before committing.
 
 ## Architecture
@@ -36,7 +48,8 @@ Data flows through ism-core as a pipeline:
 5. **`plancheck.rs`** — validation rules R1–R8. R8 is a *full read-only replay* with hash comparison, which is why "check passed ⇒ apply succeeds" holds constructively. Don't weaken R8 to heuristics.
 6. **`engine.rs`** — apply/undo. Forges all commits in the object database, asserts final tree == old head tree, then flips the branch with a single CAS ref update. Mints/preserves `Isomer-Change: i-<8×base32>` trailers (change identity that survives bare rebase/cherry-pick).
 7. **`oplog.rs`** — `refs/isomer/data` metadata commit chain. **Append-only**: undo appends a new op record (redo = undo of undo); never rewind or rewrite the chain. Ops are branch-scoped.
-8. **`verify.rs`** — deliberately independent code path that re-derives the tree-equality proof; keep it decoupled from engine.rs so it stays a real check.
+8. **`comment.rs`** — review comments anchored to change ids (never commit shas), stored under `comments/` on the data ref; `add`/`resolve`/`list` feed both the desktop app and agent fix loops.
+9. **`verify.rs`** — deliberately independent code path that re-derives the tree-equality proof; keep it decoupled from engine.rs so it stays a real check.
 
 **`error.rs`** defines stable error codes (E001–E900) and exit codes (1 business / 2 usage / 3 precondition / 9 internal). These codes are public API consumed by agents — never renumber or reuse a code; add new ones.
 
