@@ -22,6 +22,8 @@ export interface GitStatusSummary {
   upstream: string | null
   ahead: number
   behind: number
+  /** A merge/rebase/cherry-pick/revert is mid-flight (conflict flow). */
+  opInProgress: 'merge' | 'rebase' | 'cherry-pick' | 'revert' | null
   /** Entries from porcelain v2; origPath present for renames/copies. */
   entries: { code: string; path: string; origPath?: string }[]
 }
@@ -41,7 +43,11 @@ export interface GitRefs {
   current: string
   /** name → tip sha, for decorating the commit list. */
   locals: Record<string, string>
+  /** local branch → ahead/behind vs its upstream (badge data). */
+  tracking: Record<string, { ahead: number; behind: number }>
   remotes: Record<string, string>
+  /** remote name → fetch URL. */
+  remoteUrls: Record<string, string>
   tags: Record<string, string>
   stashes: number
   submodules: string[]
@@ -101,7 +107,59 @@ export interface InvokeContracts {
   'repo:watch': { req: { projectId: string }; res: void }
   'git:fetch': { req: { projectId: string }; res: Result<string> }
   'git:pull': { req: { projectId: string }; res: Result<string> }
-  'git:push': { req: { projectId: string }; res: Result<string> }
+  'git:push': { req: { projectId: string; forceWithLease?: boolean }; res: Result<string> }
+  'git:stash-list': { req: { projectId: string }; res: Result<StashEntry[]> }
+  'git:stash-diff': { req: { projectId: string; index: number }; res: Result<string> }
+  'git:stash-apply': { req: { projectId: string; index: number; pop: boolean }; res: Result<string> }
+  'git:stash-drop': { req: { projectId: string; index: number }; res: Result<void> }
+  'git:cherry-pick': { req: { projectId: string; sha: string }; res: Result<string> }
+  'git:revert': { req: { projectId: string; sha: string }; res: Result<string> }
+  'git:tag-create': {
+    req: { projectId: string; name: string; sha: string; push: boolean }
+    res: Result<string>
+  }
+  'git:tag-delete': { req: { projectId: string; name: string; remote: boolean }; res: Result<string> }
+  /** Discard working-tree changes: checkout for tracked, clean for untracked. */
+  'git:discard': {
+    req: { projectId: string; tracked: string[]; untracked: string[] }
+    res: Result<void>
+  }
+  /** Hunk-level index surgery; `patch` is a verbatim single-hunk diff. */
+  'git:stage-hunk': { req: { projectId: string; patch: string }; res: Result<void> }
+  'git:unstage-hunk': { req: { projectId: string; patch: string }; res: Result<void> }
+  'git:discard-hunk': { req: { projectId: string; patch: string }; res: Result<void> }
+  'git:log-search': {
+    req: { projectId: string; query: string; limit: number }
+    res: Result<GitLogEntry[]>
+  }
+  'git:file-history': {
+    req: { projectId: string; path: string; limit: number }
+    res: Result<GitLogEntry[]>
+  }
+  'git:blame': { req: { projectId: string; path: string }; res: Result<BlameLine[]> }
+  'git:merge': { req: { projectId: string; branch: string }; res: Result<string> }
+  'git:rebase': { req: { projectId: string; onto: string }; res: Result<string> }
+  'git:op-abort': {
+    req: { projectId: string; op: 'merge' | 'rebase' | 'cherry-pick' | 'revert' }
+    res: Result<string>
+  }
+  'git:op-continue': {
+    req: { projectId: string; op: 'merge' | 'rebase' | 'cherry-pick' | 'revert' }
+    res: Result<string>
+  }
+  'git:conflict-take': {
+    req: { projectId: string; path: string; side: 'ours' | 'theirs' }
+    res: Result<void>
+  }
+  'git:branch-compare': { req: { projectId: string; branch: string }; res: Result<BranchCompare> }
+  'git:remote-add': { req: { projectId: string; name: string; url: string }; res: Result<void> }
+  'git:remote-remove': { req: { projectId: string; name: string }; res: Result<void> }
+  'git:remote-set-url': {
+    req: { projectId: string; name: string; url: string }
+    res: Result<void>
+  }
+  'git:submodule-update': { req: { projectId: string }; res: Result<string> }
+  'git:reflog': { req: { projectId: string; limit: number }; res: Result<ReflogEntry[]> }
   'ism:snapshot': { req: { projectId: string; base?: string }; res: Result<Snapshot> }
   'ism:hunks': { req: { projectId: string; ids: string[] }; res: Result<HunkPatch[]> }
   'ism:verify': { req: { projectId: string }; res: Result<VerifyOutcome> }
@@ -179,6 +237,32 @@ export const INVOKE_CHANNELS = [
   'git:fetch',
   'git:pull',
   'git:push',
+  'git:stash-list',
+  'git:stash-diff',
+  'git:stash-apply',
+  'git:stash-drop',
+  'git:cherry-pick',
+  'git:revert',
+  'git:tag-create',
+  'git:tag-delete',
+  'git:discard',
+  'git:stage-hunk',
+  'git:unstage-hunk',
+  'git:discard-hunk',
+  'git:log-search',
+  'git:file-history',
+  'git:blame',
+  'git:merge',
+  'git:rebase',
+  'git:op-abort',
+  'git:op-continue',
+  'git:conflict-take',
+  'git:branch-compare',
+  'git:remote-add',
+  'git:remote-remove',
+  'git:remote-set-url',
+  'git:submodule-update',
+  'git:reflog',
   'ism:snapshot',
   'ism:hunks',
   'ism:verify',

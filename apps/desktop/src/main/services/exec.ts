@@ -9,7 +9,7 @@ export interface ExecResult {
 export type Exec = (
   command: string,
   args: string[],
-  opts: { cwd: string; timeoutMs?: number },
+  opts: { cwd: string; timeoutMs?: number; stdin?: string; env?: Record<string, string> },
 ) => Promise<ExecResult>
 
 /** Real spawn-based executor. Services take `Exec` injected so unit tests
@@ -18,9 +18,13 @@ export const realExec: Exec = (command, args, opts) =>
   new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: opts.cwd,
-      env: process.env,
-      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env, ...opts.env },
+      stdio: [opts.stdin === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'],
     })
+    if (opts.stdin !== undefined) {
+      child.stdin?.write(opts.stdin)
+      child.stdin?.end()
+    }
     // Accumulate raw buffers and decode once: per-chunk decoding corrupts
     // multi-byte UTF-8 characters that straddle pipe-chunk boundaries.
     const stdout: Buffer[] = []
@@ -28,8 +32,8 @@ export const realExec: Exec = (command, args, opts) =>
     const timer = opts.timeoutMs
       ? setTimeout(() => child.kill('SIGKILL'), opts.timeoutMs)
       : undefined
-    child.stdout.on('data', (d: Buffer) => stdout.push(d))
-    child.stderr.on('data', (d: Buffer) => stderr.push(d))
+    child.stdout?.on('data', (d: Buffer) => stdout.push(d))
+    child.stderr?.on('data', (d: Buffer) => stderr.push(d))
     child.on('error', (e) => {
       if (timer) clearTimeout(timer)
       reject(e)

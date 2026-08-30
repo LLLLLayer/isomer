@@ -1,4 +1,13 @@
-import type { CommitInfo, GitLogEntry, GitRefs, GitStatusSummary } from '../../shared/ipc'
+import type {
+  BlameLine,
+  BranchCompare,
+  CommitInfo,
+  GitLogEntry,
+  GitRefs,
+  GitStatusSummary,
+  ReflogEntry,
+  StashEntry,
+} from '../../shared/ipc'
 import type { Result } from '../../shared/result'
 import { err, ok } from '../../shared/result'
 import type { Exec } from './exec'
@@ -16,6 +25,7 @@ export function parseStatusV2(raw: string): GitStatusSummary {
     upstream: null,
     ahead: 0,
     behind: 0,
+    opInProgress: null,
     entries: [],
   }
   const records = raw.split('\0')
@@ -108,7 +118,31 @@ export class GitService {
     if (r.code !== 0) {
       return err({ code: 'GIT', message: r.stderr.trim() || 'git status failed' })
     }
-    return ok(parseStatusV2(r.stdout))
+    const summary = parseStatusV2(r.stdout)
+    summary.opInProgress = await this.opInProgress(cwd)
+    return ok(summary)
+  }
+
+  /** Which multi-step operation is mid-flight, if any (drives the conflict
+   * banner). Paths resolved via --git-path so worktrees/submodules work. */
+  private async opInProgress(cwd: string): Promise<GitStatusSummary['opInProgress']> {
+    const probes: [string, GitStatusSummary['opInProgress']][] = [
+      ['rebase-merge', 'rebase'],
+      ['rebase-apply', 'rebase'],
+      ['MERGE_HEAD', 'merge'],
+      ['CHERRY_PICK_HEAD', 'cherry-pick'],
+      ['REVERT_HEAD', 'revert'],
+    ]
+    const r = await this.run(cwd, ['rev-parse', ...probes.map(([name]) => `--git-path=${name}`)])
+    if (r.code !== 0) return null
+    const paths = r.stdout.trim().split('\n')
+    const { existsSync } = await import('node:fs')
+    const { isAbsolute, join } = await import('node:path')
+    for (let i = 0; i < probes.length; i++) {
+      const abs = isAbsolute(paths[i] ?? '') ? (paths[i] as string) : join(cwd, paths[i] ?? '')
+      if (paths[i] && existsSync(abs)) return probes[i][1]
+    }
+    return null
   }
 
   async log(cwd: string, limit: number): Promise<Result<GitLogEntry[]>> {
@@ -136,17 +170,18 @@ export class GitService {
   }
 
   async refs(cwd: string): Promise<Result<GitRefs>> {
-    const [head, refs, stashes, subs] = await Promise.all([
+    const [head, refs, stashes, subs, remotes] = await Promise.all([
       this.run(cwd, ['rev-parse', '--abbrev-ref', 'HEAD']),
       this.run(cwd, [
         'for-each-ref',
-        '--format=%(refname)%00%(objectname)',
+        '--format=%(refname)%00%(objectname)%00%(upstream:track)',
         'refs/heads',
         'refs/remotes',
         'refs/tags',
       ]),
       this.run(cwd, ['stash', 'list']),
       this.run(cwd, ['submodule', 'status']),
+      this.run(cwd, ['remote', '-v']),
     ])
     if (refs.code !== 0) {
       return err({ code: 'GIT', message: refs.stderr.trim() || 'for-each-ref failed' })
@@ -154,7 +189,9 @@ export class GitService {
     const out: GitRefs = {
       current: head.code === 0 ? head.stdout.trim() : '',
       locals: {},
+      tracking: {},
       remotes: {},
+      remoteUrls: {},
       tags: {},
       stashes:
         stashes.code === 0 ? stashes.stdout.split('\n').filter((l) => l !== '').length : 0,
@@ -168,11 +205,23 @@ export class GitService {
           : [],
     }
     for (const line of refs.stdout.split('\n')) {
-      const [ref, sha] = line.split('\0')
+      const [ref, sha, track] = line.split('\0')
       if (!ref || !sha) continue
-      if (ref.startsWith('refs/heads/')) out.locals[ref.slice('refs/heads/'.length)] = sha
-      else if (ref.startsWith('refs/remotes/')) out.remotes[ref.slice('refs/remotes/'.length)] = sha
+      if (ref.startsWith('refs/heads/')) {
+        const name = ref.slice('refs/heads/'.length)
+        out.locals[name] = sha
+        const m = (track ?? '').match(/\[(?:ahead (\d+))?(?:, )?(?:behind (\d+))?\]/)
+        if (m && (m[1] || m[2])) {
+          out.tracking[name] = { ahead: Number(m[1] ?? 0), behind: Number(m[2] ?? 0) }
+        }
+      } else if (ref.startsWith('refs/remotes/')) out.remotes[ref.slice('refs/remotes/'.length)] = sha
       else if (ref.startsWith('refs/tags/')) out.tags[ref.slice('refs/tags/'.length)] = sha
+    }
+    if (remotes.code === 0) {
+      for (const line of remotes.stdout.split('\n')) {
+        const m = line.match(/^(\S+)\t(\S+) \(fetch\)$/)
+        if (m) out.remoteUrls[m[1]] = m[2]
+      }
     }
     return ok(out)
   }
@@ -307,7 +356,252 @@ export class GitService {
     return this.network(cwd, ['pull', '--ff-only'])
   }
 
-  push(cwd: string): Promise<Result<string>> {
-    return this.network(cwd, ['push'])
+  async push(cwd: string, forceWithLease = false): Promise<Result<string>> {
+    const args = forceWithLease ? ['push', '--force-with-lease'] : ['push']
+    const first = await this.network(cwd, args)
+    if (!first.ok && /no upstream|--set-upstream/i.test(first.error.message)) {
+      // First push of a new branch: publish it instead of failing.
+      return this.network(cwd, [...args, '--set-upstream', 'origin', 'HEAD'])
+    }
+    return first
+  }
+
+  /* ==== stash ============================================================ */
+
+  async stashList(cwd: string): Promise<Result<StashEntry[]>> {
+    const r = await this.run(cwd, ['stash', 'list', '--format=%gd%x1f%ct%x1f%gs'])
+    if (r.code !== 0) return err({ code: 'GIT', message: r.stderr.trim() || 'stash list failed' })
+    const out: StashEntry[] = []
+    for (const line of r.stdout.split('\n')) {
+      const [sel, ts, msg] = line.split('\x1f')
+      const m = sel?.match(/stash@\{(\d+)\}/)
+      if (!m) continue
+      out.push({ index: Number(m[1]), timestamp: Number(ts ?? 0), message: msg ?? '' })
+    }
+    return ok(out)
+  }
+
+  async stashDiff(cwd: string, index: number): Promise<Result<string>> {
+    const r = await this.run(cwd, ['stash', 'show', '-p', '--no-color', `stash@{${index}}`])
+    if (r.code !== 0) return err({ code: 'GIT', message: r.stderr.trim() || 'stash show failed' })
+    return ok(r.stdout)
+  }
+
+  async stashApply(cwd: string, index: number, pop: boolean): Promise<Result<string>> {
+    return this.network(cwd, ['stash', pop ? 'pop' : 'apply', `stash@{${index}}`])
+  }
+
+  async stashDrop(cwd: string, index: number): Promise<Result<void>> {
+    return this.simple(cwd, ['stash', 'drop', `stash@{${index}}`])
+  }
+
+  /* ==== history verbs ==================================================== */
+
+  cherryPick(cwd: string, sha: string): Promise<Result<string>> {
+    return this.network(cwd, ['cherry-pick', sha])
+  }
+
+  revert(cwd: string, sha: string): Promise<Result<string>> {
+    return this.network(cwd, ['revert', '--no-edit', sha])
+  }
+
+  async tagCreate(cwd: string, name: string, sha: string, push: boolean): Promise<Result<string>> {
+    const r = await this.simple(cwd, ['tag', name, sha])
+    if (!r.ok) return r
+    if (push) return this.network(cwd, ['push', 'origin', `refs/tags/${name}`])
+    return ok(`tag ${name} created`)
+  }
+
+  async tagDelete(cwd: string, name: string, remote: boolean): Promise<Result<string>> {
+    const r = await this.simple(cwd, ['tag', '-d', name])
+    if (!r.ok) return r
+    if (remote) return this.network(cwd, ['push', 'origin', `:refs/tags/${name}`])
+    return ok(`tag ${name} deleted`)
+  }
+
+  /* ==== working tree surgery ============================================= */
+
+  async discard(cwd: string, tracked: string[], untracked: string[]): Promise<Result<void>> {
+    if (tracked.length > 0) {
+      const r = await this.simple(cwd, ['checkout', 'HEAD', '--', ...tracked])
+      if (!r.ok) return r
+    }
+    if (untracked.length > 0) {
+      const r = await this.simple(cwd, ['clean', '-f', '--', ...untracked])
+      if (!r.ok) return r
+    }
+    return ok(undefined)
+  }
+
+  /** Apply a verbatim single-hunk patch to the index (or reverse it). */
+  private async applyPatch(cwd: string, patch: string, args: string[]): Promise<Result<void>> {
+    try {
+      const r = await this.exec('git', ['--no-optional-locks', 'apply', ...args, '-'], {
+        cwd,
+        stdin: patch,
+      })
+      if (r.code !== 0) return err({ code: 'GIT', message: r.stderr.trim() || 'git apply failed' })
+      return ok(undefined)
+    } catch (e) {
+      return err({ code: 'GIT', message: e instanceof Error ? e.message : String(e) })
+    }
+  }
+
+  stageHunk(cwd: string, patch: string): Promise<Result<void>> {
+    return this.applyPatch(cwd, patch, ['--cached'])
+  }
+
+  unstageHunk(cwd: string, patch: string): Promise<Result<void>> {
+    return this.applyPatch(cwd, patch, ['--cached', '-R'])
+  }
+
+  discardHunk(cwd: string, patch: string): Promise<Result<void>> {
+    return this.applyPatch(cwd, patch, ['-R'])
+  }
+
+  /* ==== search / archaeology ============================================= */
+
+  async logSearch(cwd: string, query: string, limit: number): Promise<Result<GitLogEntry[]>> {
+    // Three probes — message, author, sha prefix — merged, first-seen wins.
+    const base = ['log', '--all', '--date-order', `--max-count=${limit}`, `--format=${LOG_FORMAT}`]
+    const probes = [
+      this.run(cwd, [...base, '-i', `--grep=${query}`]),
+      this.run(cwd, [...base, '-i', `--author=${query}`]),
+    ]
+    if (/^[0-9a-f]{4,40}$/i.test(query)) {
+      probes.push(this.run(cwd, [...base.slice(0, 1), `--max-count=1`, `--format=${LOG_FORMAT}`, query]))
+    }
+    const results = await Promise.all(probes)
+    const seen = new Set<string>()
+    const out: GitLogEntry[] = []
+    for (const r of results) {
+      if (r.code !== 0) continue
+      for (const e of parseLog(r.stdout)) {
+        if (seen.has(e.sha)) continue
+        seen.add(e.sha)
+        out.push(e)
+      }
+    }
+    return ok(out)
+  }
+
+  async fileHistory(cwd: string, path: string, limit: number): Promise<Result<GitLogEntry[]>> {
+    const r = await this.run(cwd, [
+      'log',
+      '--follow',
+      `--max-count=${limit}`,
+      `--format=${LOG_FORMAT}`,
+      '--',
+      path,
+    ])
+    if (r.code !== 0) return err({ code: 'GIT', message: r.stderr.trim() || 'file history failed' })
+    return ok(parseLog(r.stdout))
+  }
+
+  async blame(cwd: string, path: string): Promise<Result<BlameLine[]>> {
+    const r = await this.run(cwd, ['blame', '--line-porcelain', '--', path])
+    if (r.code !== 0) return err({ code: 'GIT', message: r.stderr.trim() || 'git blame failed' })
+    const out: BlameLine[] = []
+    let cur: Partial<BlameLine> = {}
+    for (const line of r.stdout.split('\n')) {
+      const head = line.match(/^([0-9a-f]{40}) \d+ (\d+)/)
+      if (head) {
+        cur = { sha: head[1], line: Number(head[2]) }
+      } else if (line.startsWith('author ')) cur.author = line.slice(7)
+      else if (line.startsWith('author-time ')) cur.timestamp = Number(line.slice(12))
+      else if (line.startsWith('summary ')) cur.summary = line.slice(8)
+      else if (line.startsWith('\t')) {
+        out.push({
+          line: cur.line ?? 0,
+          sha: cur.sha ?? '',
+          author: cur.author ?? '',
+          timestamp: cur.timestamp ?? 0,
+          summary: cur.summary ?? '',
+          text: line.slice(1),
+        })
+      }
+    }
+    return ok(out)
+  }
+
+  async reflog(cwd: string, limit: number): Promise<Result<ReflogEntry[]>> {
+    const r = await this.run(cwd, ['reflog', `--format=%gd%x1f%H%x1f%gs%x1f%ct`, '-n', String(limit)])
+    if (r.code !== 0) return err({ code: 'GIT', message: r.stderr.trim() || 'git reflog failed' })
+    const out: ReflogEntry[] = []
+    for (const line of r.stdout.split('\n')) {
+      const [sel, sha, action, ts] = line.split('\x1f')
+      if (!sel || !sha) continue
+      out.push({ selector: sel, sha, action: action ?? '', timestamp: Number(ts ?? 0) })
+    }
+    return ok(out)
+  }
+
+  /* ==== merge / rebase / conflicts ======================================= */
+
+  merge(cwd: string, branch: string): Promise<Result<string>> {
+    return this.network(cwd, ['merge', '--no-edit', branch])
+  }
+
+  rebase(cwd: string, onto: string): Promise<Result<string>> {
+    return this.network(cwd, ['rebase', onto])
+  }
+
+  opAbort(cwd: string, op: 'merge' | 'rebase' | 'cherry-pick' | 'revert'): Promise<Result<string>> {
+    return this.network(cwd, [op, '--abort'])
+  }
+
+  async opContinue(
+    cwd: string,
+    op: 'merge' | 'rebase' | 'cherry-pick' | 'revert',
+  ): Promise<Result<string>> {
+    if (op === 'merge') return this.network(cwd, ['commit', '--no-edit'])
+    // GIT_EDITOR=true: --continue must never open an interactive editor.
+    try {
+      const r = await this.exec('git', ['--no-optional-locks', op, '--continue'], {
+        cwd,
+        env: { GIT_EDITOR: 'true' },
+      })
+      const tail = (r.stderr.trim() || r.stdout.trim()).split('\n').slice(-3).join('\n')
+      if (r.code !== 0) return err({ code: 'GIT', message: tail || `${op} --continue failed` })
+      return ok(tail)
+    } catch (e) {
+      return err({ code: 'GIT', message: e instanceof Error ? e.message : String(e) })
+    }
+  }
+
+  async conflictTake(cwd: string, path: string, side: 'ours' | 'theirs'): Promise<Result<void>> {
+    const r = await this.simple(cwd, ['checkout', `--${side}`, '--', path])
+    if (!r.ok) return r
+    return this.simple(cwd, ['add', '--', path])
+  }
+
+  async branchCompare(cwd: string, branch: string): Promise<Result<BranchCompare>> {
+    const fmt = `--format=${LOG_FORMAT}`
+    const [ahead, behind] = await Promise.all([
+      this.run(cwd, ['log', '--max-count=100', fmt, `${branch}..HEAD`]),
+      this.run(cwd, ['log', '--max-count=100', fmt, `HEAD..${branch}`]),
+    ])
+    if (ahead.code !== 0 || behind.code !== 0) {
+      return err({ code: 'GIT', message: (ahead.stderr || behind.stderr).trim() || 'compare failed' })
+    }
+    return ok({ ahead: parseLog(ahead.stdout), behind: parseLog(behind.stdout) })
+  }
+
+  /* ==== remotes / submodules ============================================ */
+
+  remoteAdd(cwd: string, name: string, url: string): Promise<Result<void>> {
+    return this.simple(cwd, ['remote', 'add', name, url])
+  }
+
+  remoteRemove(cwd: string, name: string): Promise<Result<void>> {
+    return this.simple(cwd, ['remote', 'remove', name])
+  }
+
+  remoteSetUrl(cwd: string, name: string, url: string): Promise<Result<void>> {
+    return this.simple(cwd, ['remote', 'set-url', name, url])
+  }
+
+  submoduleUpdate(cwd: string): Promise<Result<string>> {
+    return this.network(cwd, ['submodule', 'update', '--init', '--recursive'])
   }
 }

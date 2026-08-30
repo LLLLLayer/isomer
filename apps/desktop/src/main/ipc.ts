@@ -212,9 +212,113 @@ export function registerIpc(exec: Exec): { dispose(): void } {
     const dir = cwd(projectId)
     return dir ? git.pull(dir) : NO_PROJECT
   })
-  handle('git:push', async ({ projectId }) => {
+  handle('git:push', async ({ projectId, forceWithLease }) => {
     const dir = cwd(projectId)
-    return dir ? git.push(dir) : NO_PROJECT
+    return dir ? git.push(dir, forceWithLease ?? false) : NO_PROJECT
+  })
+  handle('git:stash-list', async ({ projectId }) => {
+    const dir = cwd(projectId)
+    return dir ? git.stashList(dir) : NO_PROJECT
+  })
+  handle('git:stash-diff', async ({ projectId, index }) => {
+    const dir = cwd(projectId)
+    return dir ? git.stashDiff(dir, index) : NO_PROJECT
+  })
+  handle('git:stash-apply', async ({ projectId, index, pop }) => {
+    const dir = cwd(projectId)
+    return dir ? git.stashApply(dir, index, pop) : NO_PROJECT
+  })
+  handle('git:stash-drop', async ({ projectId, index }) => {
+    const dir = cwd(projectId)
+    return dir ? git.stashDrop(dir, index) : NO_PROJECT
+  })
+  handle('git:cherry-pick', async ({ projectId, sha }) => {
+    const dir = cwd(projectId)
+    return dir ? git.cherryPick(dir, sha) : NO_PROJECT
+  })
+  handle('git:revert', async ({ projectId, sha }) => {
+    const dir = cwd(projectId)
+    return dir ? git.revert(dir, sha) : NO_PROJECT
+  })
+  handle('git:tag-create', async ({ projectId, name, sha, push }) => {
+    const dir = cwd(projectId)
+    return dir ? git.tagCreate(dir, name, sha, push) : NO_PROJECT
+  })
+  handle('git:tag-delete', async ({ projectId, name, remote }) => {
+    const dir = cwd(projectId)
+    return dir ? git.tagDelete(dir, name, remote) : NO_PROJECT
+  })
+  handle('git:discard', async ({ projectId, tracked, untracked }) => {
+    const dir = cwd(projectId)
+    return dir ? git.discard(dir, tracked, untracked) : NO_PROJECT
+  })
+  handle('git:stage-hunk', async ({ projectId, patch }) => {
+    const dir = cwd(projectId)
+    return dir ? git.stageHunk(dir, patch) : NO_PROJECT
+  })
+  handle('git:unstage-hunk', async ({ projectId, patch }) => {
+    const dir = cwd(projectId)
+    return dir ? git.unstageHunk(dir, patch) : NO_PROJECT
+  })
+  handle('git:discard-hunk', async ({ projectId, patch }) => {
+    const dir = cwd(projectId)
+    return dir ? git.discardHunk(dir, patch) : NO_PROJECT
+  })
+  handle('git:log-search', async ({ projectId, query, limit }) => {
+    const dir = cwd(projectId)
+    return dir ? git.logSearch(dir, query, limit) : NO_PROJECT
+  })
+  handle('git:file-history', async ({ projectId, path, limit }) => {
+    const dir = cwd(projectId)
+    return dir ? git.fileHistory(dir, path, limit) : NO_PROJECT
+  })
+  handle('git:blame', async ({ projectId, path }) => {
+    const dir = cwd(projectId)
+    return dir ? git.blame(dir, path) : NO_PROJECT
+  })
+  handle('git:merge', async ({ projectId, branch }) => {
+    const dir = cwd(projectId)
+    return dir ? git.merge(dir, branch) : NO_PROJECT
+  })
+  handle('git:rebase', async ({ projectId, onto }) => {
+    const dir = cwd(projectId)
+    return dir ? git.rebase(dir, onto) : NO_PROJECT
+  })
+  handle('git:op-abort', async ({ projectId, op }) => {
+    const dir = cwd(projectId)
+    return dir ? git.opAbort(dir, op) : NO_PROJECT
+  })
+  handle('git:op-continue', async ({ projectId, op }) => {
+    const dir = cwd(projectId)
+    return dir ? git.opContinue(dir, op) : NO_PROJECT
+  })
+  handle('git:conflict-take', async ({ projectId, path, side }) => {
+    const dir = cwd(projectId)
+    return dir ? git.conflictTake(dir, path, side) : NO_PROJECT
+  })
+  handle('git:branch-compare', async ({ projectId, branch }) => {
+    const dir = cwd(projectId)
+    return dir ? git.branchCompare(dir, branch) : NO_PROJECT
+  })
+  handle('git:remote-add', async ({ projectId, name, url }) => {
+    const dir = cwd(projectId)
+    return dir ? git.remoteAdd(dir, name, url) : NO_PROJECT
+  })
+  handle('git:remote-remove', async ({ projectId, name }) => {
+    const dir = cwd(projectId)
+    return dir ? git.remoteRemove(dir, name) : NO_PROJECT
+  })
+  handle('git:remote-set-url', async ({ projectId, name, url }) => {
+    const dir = cwd(projectId)
+    return dir ? git.remoteSetUrl(dir, name, url) : NO_PROJECT
+  })
+  handle('git:submodule-update', async ({ projectId }) => {
+    const dir = cwd(projectId)
+    return dir ? git.submoduleUpdate(dir) : NO_PROJECT
+  })
+  handle('git:reflog', async ({ projectId, limit }) => {
+    const dir = cwd(projectId)
+    return dir ? git.reflog(dir, limit) : NO_PROJECT
   })
   handle('ism:snapshot', async ({ projectId, base }) => {
     const dir = cwd(projectId)
@@ -234,7 +338,7 @@ export function registerIpc(exec: Exec): { dispose(): void } {
   })
   handle('ism:apply', async ({ projectId, planPath }) => {
     const dir = cwd(projectId)
-    return dir ? ism.run(dir, ['apply', planPath]) : NO_PROJECT
+    return dir ? ism.run(dir, ['ops', '--limit', String(limit ?? 50)]) : NO_PROJECT
   })
   handle('ism:undo', async ({ projectId }) => {
     const dir = cwd(projectId)
