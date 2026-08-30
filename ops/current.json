@@ -1,58 +1,35 @@
 {
   "kind": "apply",
   "branch": "main",
-  "old_head": "97f6bde6a91caf2522f3c6b459e5e9d1a339d177",
-  "new_head": "eb330f960eea34839b1e60321a99460f9299c1f2",
-  "base": "3da79542bfe91058d8f688631762eb71d22b5953",
-  "old_tree": "70ff59115f5e96dc11e53785d1dceb8ba3ae9f66",
-  "new_tree": "70ff59115f5e96dc11e53785d1dceb8ba3ae9f66",
-  "plan_digest": "sha256:dc331d6f149ba71d8d7f63b4074f9bfb964ef4abeea0c55403a3847df8fa6bf3",
-  "snapshot_digest": "sha256:7697a655ef80f10ebdc96e79a7a83a05841c0e110c577b5bf21019a7a833df82",
+  "old_head": "624ea6bafecfaf4e798434b250c533e08d0ccb68",
+  "new_head": "d1ed2e95d877bb69c1d4a7c9fda73bdfd8c54fc5",
+  "base": "eb330f960eea34839b1e60321a99460f9299c1f2",
+  "old_tree": "65b4d06e7c2e523f77452d428f8b5d1d6975ff40",
+  "new_tree": "65b4d06e7c2e523f77452d428f8b5d1d6975ff40",
+  "plan_digest": "sha256:030778729ee377f47e24080ead146302aa81fc1b3f5e1388079c63f1628c60a5",
+  "snapshot_digest": "sha256:7a7f9c9104449e0ab518510c9a8e8bffa66f90defc08364fb9f561879fcf18e1",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:7697a655ef80f10ebdc96e79a7a83a05841c0e110c577b5bf21019a7a833df82",
-    "base": "3da79542bfe91058d8f688631762eb71d22b5953",
+    "snapshot_digest": "sha256:7a7f9c9104449e0ab518510c9a8e8bffa66f90defc08364fb9f561879fcf18e1",
+    "base": "eb330f960eea34839b1e60321a99460f9299c1f2",
+    "head": "624ea6bafecfaf4e798434b250c533e08d0ccb68",
     "nodes": [
       {
-        "name": "columns-flex-root-cause",
-        "summary": "Kill the ghost grid: .columns was never actually flex",
-        "body": "Two earlier grid-to-flex edits had silently missed their anchor (the\nrule's widths had drifted), so .columns stayed a 3-column grid the\nwhole time — five flex children crammed into three cells put the\nreview pane in the wrong column and dropped the inspector to a second\nrow. Diagnosed with a new layout probe in ISOMER_SHOT mode (dumps\nbounding boxes and computed display), which also gains\nISOMER_SHOT_VIEW to force a landing view for captures. Every CSS\nsurgery in this round asserts its anchor now.",
+        "name": "claude-md-desktop",
+        "summary": "docs: describe the desktop subsystem in CLAUDE.md",
         "from": [
-          "apps/desktop/src/main/index.ts:54#1175",
-          "apps/desktop/src/main/index.ts:87#b879",
-          "apps/desktop/src/main/index.ts:92#e9ab",
-          "apps/desktop/src/main/index.ts:96#c590",
-          "apps/desktop/src/renderer/app.css:52#09a5",
-          "apps/desktop/src/renderer/app.css:54#af6f",
-          "apps/desktop/src/renderer/app.css:56#18d8",
-          "apps/desktop/src/renderer/store/store.ts:201#8ba8",
-          "apps/desktop/src/renderer/store/store.ts:204#b8cc"
-        ]
-      },
-      {
-        "name": "stack-history-review",
-        "summary": "Make the trunk stack view reviewable, not decorative",
-        "body": "With no pending stack, the history cards used to be inert while the\nreview pane asked you to select a change — a dead end. Cards now\nselect: the review pane shows the picked commit's full highlighted\ndiff, the inspector filters comments by that commit's change identity\n(and lets you add one), and the newest commit is selected on entry.",
-        "from": [
-          "apps/desktop/src/renderer/components/Inspector.tsx:17#7952",
-          "apps/desktop/src/renderer/components/Inspector.tsx:21#0aca",
-          "apps/desktop/src/renderer/components/ReviewView.tsx:3#9449",
-          "apps/desktop/src/renderer/components/ReviewView.tsx:6#0ae7",
-          "apps/desktop/src/renderer/components/ReviewView.tsx:19#d34b",
-          "apps/desktop/src/renderer/components/StackView.tsx:12#a454",
-          "apps/desktop/src/renderer/components/StackView.tsx:25#ba2a",
-          "apps/desktop/src/renderer/components/StackView.tsx:34#258d"
-        ],
-        "deps": [
-          "columns-flex-root-cause"
+          "CLAUDE.md:21#2426",
+          "CLAUDE.md:28#a2c9",
+          "CLAUDE.md:31#834c",
+          "CLAUDE.md:43#949e",
+          "CLAUDE.md:59#fd2b"
         ]
       }
     ],
     "order": [
-      "columns-flex-root-cause",
-      "stack-history-review"
+      "claude-md-desktop"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788081263"
+  "timestamp": "1788082035"
 }
