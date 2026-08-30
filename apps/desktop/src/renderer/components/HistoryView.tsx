@@ -71,7 +71,6 @@ export function HistoryView(): React.JSX.Element {
                 <span key={d} className="ref-badge">{d}</span>
               ))}
               {e.title}
-              {e.changeId && <span className="chip">{e.changeId}</span>}
             </span>
             <span className="commit-author">{e.authorName}</span>
             <span className="commit-sha mono">{e.sha.slice(0, 8)}</span>

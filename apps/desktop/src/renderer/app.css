@@ -219,14 +219,6 @@
   font-size: 11px;
 }
 
-.chip {
-  font-family: var(--font-mono);
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  border-radius: var(--radius-s);
-  padding: 1px 6px;
-}
-
 .sha {
   font-family: var(--font-mono);
   color: var(--fg-muted);

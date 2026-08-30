@@ -28,7 +28,6 @@ export function StackView(): React.JSX.Element {
               >
                 <span className="summary">{e.title}</span>
                 <span className="badges">
-                  <span className="chip">{e.changeId ?? t('stack.untracked')}</span>
                   <span className="sha">{e.sha.slice(0, 8)}</span>
                 </span>
               </button>
@@ -67,8 +66,7 @@ export function StackView(): React.JSX.Element {
               >
                 <span className="summary">{c.title}</span>
                 <span className="badges">
-                  <span className="chip">{c.change_id ?? t('stack.untracked')}</span>
-                  <span className="sha">{c.sha.slice(0, 8)}</span>
+                  <span className="muted">{t('review.hunks', { count: c.hunks.length })}</span>
                   {unresolved > 0 && <span className="count-pill">{unresolved}</span>}
                 </span>
               </button>
