@@ -50,6 +50,11 @@ function createWindow(): void {
       app.quit()
     }
     if (SHOT) {
+      // Watchdog: a wedged capture must never leave a zombie instance.
+      setTimeout(() => {
+        console.error('ISOMER_SHOT_TIMEOUT')
+        app.exit(2)
+      }, 20_000)
       setTimeout(() => {
         const probe = `JSON.stringify((() => {
           const info = (el) => {

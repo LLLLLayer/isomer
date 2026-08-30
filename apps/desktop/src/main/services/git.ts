@@ -112,12 +112,14 @@ export class GitService {
   }
 
   async log(cwd: string, limit: number): Promise<Result<GitLogEntry[]>> {
-    // All branch tips (never refs/isomer/*), children before parents so the
-    // graph rail can lay out lanes top-down.
+    // Every ref plus HEAD (detached checkouts included) except isomer
+    // metadata and stashes; children before parents so the graph rail can
+    // lay out lanes top-down.
     const r = await this.run(cwd, [
       'log',
-      '--branches',
-      '--remotes',
+      '--exclude=refs/isomer/*',
+      '--exclude=refs/stash',
+      '--all',
       '--date-order',
       `--max-count=${limit}`,
       `--format=${LOG_FORMAT}`,
@@ -270,11 +272,14 @@ export class GitService {
   }
 
   async commitDiff(cwd: string, sha: string): Promise<Result<string>> {
+    // --diff-merges=first-parent: merges otherwise emit the combined
+    // (diff --cc) format, which the renderer's unified parser cannot read.
     const r = await this.run(cwd, [
       'show',
       sha,
       '--format=',
       '--patch',
+      '--diff-merges=first-parent',
       '--no-color',
       '--no-renames',
     ])

@@ -1,5 +1,6 @@
-import { BrowserWindow, app, dialog, ipcMain, nativeTheme, shell } from 'electron'
-import { isAbsolute, resolve, sep } from 'node:path'
+import { BrowserWindow, app, dialog, ipcMain, nativeTheme, net, shell } from 'electron'
+import { realpath } from 'node:fs/promises'
+import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path'
 import type { InvokeChannel, InvokeContracts, PushChannel, PushContracts } from '../shared/ipc'
 import { err } from '../shared/result'
 import type { Exec } from './services/exec'
@@ -47,9 +48,14 @@ export function registerIpc(exec: Exec): { dispose(): void } {
 
   handle('app:version', async () => app.getVersion())
   handle('ism:detect', async () => ism.detect())
+  void ism.detect() // warm the cache: run() falls back to the found binary
   handle('update:check', async () => {
     try {
-      return { ok: true, data: await checkForUpdate(app.getVersion()) }
+      // Electron's net.fetch rides Chromium's stack (system proxy aware);
+      // the timeout keeps a hung connection from wedging the check.
+      const fetchImpl: typeof fetch = (input, init) =>
+        net.fetch(input as string, { ...init, signal: AbortSignal.timeout(10_000) })
+      return { ok: true, data: await checkForUpdate(app.getVersion(), fetchImpl) }
     } catch (e) {
       return err({
         code: 'UPDATE_CHECK',
@@ -60,22 +66,39 @@ export function registerIpc(exec: Exec): { dispose(): void } {
   })
 
   /** A repo-relative path resolved inside the project root, or null when it
-   * escapes (symlink-free lexical containment — good enough for UI verbs). */
-  const insideProject = (projectId: string, rel: string): string | null => {
+   * escapes. Containment is checked lexically AND on real paths, so a
+   * committed symlink pointing outside the repo cannot smuggle a target. */
+  const insideProject = async (projectId: string, rel: string): Promise<string | null> => {
     const root = cwd(projectId)
     if (!root || isAbsolute(rel)) return null
     const abs = resolve(root, rel)
-    return abs === root || abs.startsWith(root + sep) ? abs : null
+    if (abs !== root && !abs.startsWith(root + sep)) return null
+    try {
+      const realRoot = await realpath(root)
+      // The leaf may not exist (deleted files); resolve its parent instead.
+      const real = await realpath(abs).catch(async () =>
+        join(await realpath(dirname(abs)), basename(abs)),
+      )
+      if (real !== realRoot && !real.startsWith(realRoot + sep)) return null
+    } catch {
+      return null
+    }
+    return abs
   }
+  const OUTSIDE = err<never>({
+    code: 'PATH_OUTSIDE_PROJECT',
+    message: 'path resolves outside the project',
+    hint: 'symlinks leaving the repository are not followed',
+  })
   handle('shell:reveal', async ({ projectId, path }) => {
-    const abs = insideProject(projectId, path)
-    if (!abs) return NO_PROJECT
+    const abs = await insideProject(projectId, path)
+    if (!abs) return OUTSIDE
     shell.showItemInFolder(abs)
     return { ok: true, data: undefined }
   })
   handle('shell:open-path', async ({ projectId, path }) => {
-    const abs = insideProject(projectId, path)
-    if (!abs) return NO_PROJECT
+    const abs = await insideProject(projectId, path)
+    if (!abs) return OUTSIDE
     const problem = await shell.openPath(abs)
     return problem === ''
       ? { ok: true, data: undefined }

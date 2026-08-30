@@ -17,6 +17,10 @@ export class IsmService {
     private binary: () => string,
   ) {}
 
+  /** Last successful detection — GUI-launched apps inherit a minimal PATH,
+   * so a bare `ism` spawn can fail while the binary sits in ~/.cargo/bin. */
+  private detected: IsmDetection | null = null
+
   /** Where ism actually is: the settings override first, then PATH, then
    * the usual install spots — so a default install needs zero config. */
   async detect(): Promise<IsmDetection | null> {
@@ -32,17 +36,23 @@ export class IsmService {
       try {
         const r = await this.exec(c.path, ['--version'], { cwd: homedir(), timeoutMs: 5_000 })
         if (r.code === 0) {
-          return { path: c.path, version: r.stdout.trim().replace(/^ism\s*/, ''), source: c.source }
+          this.detected = {
+            path: c.path,
+            version: r.stdout.trim().replace(/^ism\s*/, ''),
+            source: c.source,
+          }
+          return this.detected
         }
       } catch {
         /* try the next candidate */
       }
     }
+    this.detected = null
     return null
   }
 
   async run<T>(cwd: string, args: string[]): Promise<Result<T>> {
-    const bin = this.binary() || 'ism'
+    const bin = this.binary() || this.detected?.path || 'ism'
     let r
     try {
       r = await this.exec(bin, args, { cwd, timeoutMs: 60_000 })
