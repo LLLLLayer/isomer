@@ -1,0 +1,6 @@
+{
+  "id": "i-lqjtqeeg",
+  "name": "review-real-diffs",
+  "summary": "Render real diff text in review, with line-anchored comments",
+  "body": "The review pane listed hunk metadata without a single line of code.\nPatches now load on change selection via a new ism:hunks channel\n(`ism show hunk`), rendered side-by-side or unified from a parsed-and-\ntested diff module. Clicking a new-side line number anchors the next\ncomment to path:line — the same anchor `ism comment add --path --line`\nrecords — and the newest stack change auto-selects so review starts\nat the top."
+}

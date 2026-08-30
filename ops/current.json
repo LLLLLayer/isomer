@@ -1,36 +1,109 @@
 {
   "kind": "apply",
   "branch": "main",
-  "old_head": "4a9c0d29a76c48fe05a96d553c11258cf0bad589",
-  "new_head": "625338e1c12debee2c5a1f06c6b4be67de93fafa",
-  "base": "872f71917748ca99ba4fb4f90f89e47adc075b7a",
-  "old_tree": "db2c43929f643ad859f10101a85b09cfcbac2455",
-  "new_tree": "db2c43929f643ad859f10101a85b09cfcbac2455",
-  "plan_digest": "sha256:88b055475ed9ea6a766e437e1bed7d8f363d7107088122fffbe3d2974af246cb",
-  "snapshot_digest": "sha256:7a90fbcf1e4122c8275c3abbb9bb2439b3fb9f9322a9632f9856ec13117b54a6",
+  "old_head": "7b6c5207bb7db7a91cf128e8abd2ab3a504791ee",
+  "new_head": "d59ba0098adb0c86e67cff8302661d47df740997",
+  "base": "625338e1c12debee2c5a1f06c6b4be67de93fafa",
+  "old_tree": "add1db163eee6b148ffa672444f84eb1db60ec43",
+  "new_tree": "add1db163eee6b148ffa672444f84eb1db60ec43",
+  "plan_digest": "sha256:f3fe4a0073a2f9bcb5571d7b8d6790e1ebd2bc253c6a62de1e8c864d8af113ef",
+  "snapshot_digest": "sha256:25b5a0a26f8c703cba323d59a85b48f337bb9a10fbe67c74f8cc00ccfb07a6c8",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:7a90fbcf1e4122c8275c3abbb9bb2439b3fb9f9322a9632f9856ec13117b54a6",
-    "base": "872f71917748ca99ba4fb4f90f89e47adc075b7a",
+    "snapshot_digest": "sha256:25b5a0a26f8c703cba323d59a85b48f337bb9a10fbe67c74f8cc00ccfb07a6c8",
+    "base": "625338e1c12debee2c5a1f06c6b4be67de93fafa",
     "nodes": [
       {
-        "name": "stack-history-fallback",
-        "summary": "Show recent history when the branch has no pending stack",
-        "body": "On the trunk the merge-base collapses and the stack pane was a bare\nempty-state — useless for exactly the repos ism has already organized.\nIt now falls back to the recent log, where every commit shows its\nIsomer-Change identity chip straight from the trailer; history cards\nare static (no hunk data to review).",
+        "name": "review-real-diffs",
+        "summary": "Render real diff text in review, with line-anchored comments",
+        "body": "The review pane listed hunk metadata without a single line of code.\nPatches now load on change selection via a new ism:hunks channel\n(`ism show hunk`), rendered side-by-side or unified from a parsed-and-\ntested diff module. Clicking a new-side line number anchors the next\ncomment to path:line — the same anchor `ism comment add --path --line`\nrecords — and the newest stack change auto-selects so review starts\nat the top.",
         "from": [
-          "apps/desktop/src/renderer/app.css:193#1965",
-          "apps/desktop/src/renderer/components/StackView.tsx:8#f6d6",
-          "apps/desktop/src/renderer/components/StackView.tsx:14#86ab",
-          "apps/desktop/src/renderer/components/StackView.tsx:18#901c",
-          "apps/desktop/src/renderer/i18n/locales/en.json:16#6c22",
-          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:16#68bc"
+          "apps/desktop/src/main/ipc.ts:103#e610",
+          "apps/desktop/src/renderer/app.css:337#99f7",
+          "apps/desktop/src/renderer/components/Inspector.tsx:12#c49c",
+          "apps/desktop/src/renderer/components/Inspector.tsx:73#02b5",
+          "apps/desktop/src/renderer/components/Inspector.tsx:80#e3bc",
+          "apps/desktop/src/renderer/components/Inspector.tsx:83#3850",
+          "apps/desktop/src/renderer/components/ReviewView.tsx:3#6cba",
+          "apps/desktop/src/renderer/components/ReviewView.tsx:6#a909",
+          "apps/desktop/src/renderer/components/ReviewView.tsx:12#5235",
+          "apps/desktop/src/renderer/components/ReviewView.tsx:28#b3d4",
+          "apps/desktop/src/renderer/components/ReviewView.tsx:50#2b2f",
+          "apps/desktop/src/renderer/diff.test.ts:1#3920",
+          "apps/desktop/src/renderer/diff.ts:1#47f8",
+          "apps/desktop/src/renderer/i18n/locales/en.json:24#27f5",
+          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:24#6b7e",
+          "apps/desktop/src/renderer/store/store.ts:31#6894",
+          "apps/desktop/src/renderer/store/store.ts:73#7522",
+          "apps/desktop/src/renderer/store/store.ts:120#b973",
+          "apps/desktop/src/renderer/store/store.ts:214#9be6",
+          "apps/desktop/src/shared/ipc.ts:9#c2b8",
+          "apps/desktop/src/shared/ipc.ts:64#4909",
+          "apps/desktop/src/shared/ipc.ts:122#caaa",
+          "apps/desktop/src/shared/ism-types.ts:103#c363"
+        ]
+      },
+      {
+        "name": "self-screenshot",
+        "summary": "Add ISOMER_SHOT: capture the rendered window to a file",
+        "body": "capturePage after load, shown inactive (no focus steal), then exit.\nGives docs and visual checks a deterministic screenshot path;\nISOMER_SMOKE also fails fast on did-fail-load now instead of hanging.",
+        "from": [
+          "apps/desktop/src/main/index.ts:1#300d",
+          "apps/desktop/src/main/index.ts:13#94d4",
+          "apps/desktop/src/main/index.ts:33#7a8a",
+          "apps/desktop/src/main/index.ts:42#7ed9"
+        ]
+      },
+      {
+        "name": "git-client-baseline",
+        "summary": "Build the git-client baseline: sidebar, toolbar, diffs everywhere",
+        "body": "The app previously had only the ism-specific three-pane view — none\nof the furniture a git client owes its users. Now: a sidebar with\nLocal Changes (status counts), All Commits, the ism Change Stack, and\nread-only branches/remotes/tags/stashes; fetch/pull/push toolbar verbs\nwith their stderr tails surfaced; a working-tree view (file list with\nstatus chips, diff against HEAD, untracked via --no-index); a commit\nlist with author/sha/date columns whose selection shows the full\ncommit diff; and a shared DiffView with context rows, hunk-gap\ndividers and horizontal scroll for long lines. Views auto-land where\nthe work is: dirty worktree → changes, pending stack → stack, else\nhistory.",
+        "from": [
+          "apps/desktop/src/main/ipc.ts:73#624e",
+          "apps/desktop/src/main/services/git.ts:1#a9f3",
+          "apps/desktop/src/main/services/git.ts:123#e01c",
+          "apps/desktop/src/renderer/App.tsx:3#6240",
+          "apps/desktop/src/renderer/App.tsx:8#88ce",
+          "apps/desktop/src/renderer/App.tsx:21#c28c",
+          "apps/desktop/src/renderer/App.tsx:37#a5fc",
+          "apps/desktop/src/renderer/App.tsx:52#dbaa",
+          "apps/desktop/src/renderer/App.tsx:58#d746",
+          "apps/desktop/src/renderer/App.tsx:67#35a1",
+          "apps/desktop/src/renderer/app.css:674#7e46",
+          "apps/desktop/src/renderer/components/ChangesView.tsx:1#779e",
+          "apps/desktop/src/renderer/components/DiffView.tsx:1#a617",
+          "apps/desktop/src/renderer/components/HistoryView.tsx:1#61c3",
+          "apps/desktop/src/renderer/components/Sidebar.tsx:1#4f1e",
+          "apps/desktop/src/renderer/i18n/locales/en.json:57#3ca4",
+          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:57#2b01",
+          "apps/desktop/src/renderer/store/store.test.ts:43#773c",
+          "apps/desktop/src/renderer/store/store.test.ts:47#5f14",
+          "apps/desktop/src/renderer/store/store.test.ts:89#9fd4",
+          "apps/desktop/src/renderer/store/store.ts:2#00c8",
+          "apps/desktop/src/renderer/store/store.ts:9#9867",
+          "apps/desktop/src/renderer/store/store.ts:17#e901",
+          "apps/desktop/src/renderer/store/store.ts:44#077d",
+          "apps/desktop/src/renderer/store/store.ts:62#a0c7",
+          "apps/desktop/src/renderer/store/store.ts:112#999d",
+          "apps/desktop/src/renderer/store/store.ts:129#3331",
+          "apps/desktop/src/renderer/store/store.ts:131#92a7",
+          "apps/desktop/src/renderer/store/store.ts:142#e477",
+          "apps/desktop/src/renderer/store/store.ts:147#066a",
+          "apps/desktop/src/shared/ipc.ts:38#3880",
+          "apps/desktop/src/shared/ipc.ts:57#eab5",
+          "apps/desktop/src/shared/ipc.ts:115#c341"
+        ],
+        "deps": [
+          "review-real-diffs"
         ]
       }
     ],
     "order": [
-      "stack-history-fallback"
+      "review-real-diffs",
+      "self-screenshot",
+      "git-client-baseline"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788071252"
+  "timestamp": "1788072849"
 }

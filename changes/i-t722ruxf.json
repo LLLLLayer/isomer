@@ -1,0 +1,6 @@
+{
+  "id": "i-t722ruxf",
+  "name": "self-screenshot",
+  "summary": "Add ISOMER_SHOT: capture the rendered window to a file",
+  "body": "capturePage after load, shown inactive (no focus steal), then exit.\nGives docs and visual checks a deterministic screenshot path;\nISOMER_SMOKE also fails fast on did-fail-load now instead of hanging."
+}

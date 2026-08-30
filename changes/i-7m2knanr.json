@@ -1,0 +1,9 @@
+{
+  "id": "i-7m2knanr",
+  "name": "git-client-baseline",
+  "summary": "Build the git-client baseline: sidebar, toolbar, diffs everywhere",
+  "body": "The app previously had only the ism-specific three-pane view — none\nof the furniture a git client owes its users. Now: a sidebar with\nLocal Changes (status counts), All Commits, the ism Change Stack, and\nread-only branches/remotes/tags/stashes; fetch/pull/push toolbar verbs\nwith their stderr tails surfaced; a working-tree view (file list with\nstatus chips, diff against HEAD, untracked via --no-index); a commit\nlist with author/sha/date columns whose selection shows the full\ncommit diff; and a shared DiffView with context rows, hunk-gap\ndividers and horizontal scroll for long lines. Views auto-land where\nthe work is: dirty worktree → changes, pending stack → stack, else\nhistory.",
+  "deps": [
+    "review-real-diffs"
+  ]
+}
