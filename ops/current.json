@@ -1,31 +1,62 @@
 {
   "kind": "apply",
   "branch": "main",
-  "old_head": "629f55586057976026ff4609426bcfdc51296499",
-  "new_head": "4fed982dcc0005cc69a1b01d5795769f09a33228",
-  "base": "0ff1ea9763a865d974b935710374e355669942d6",
-  "old_tree": "78aca10e64b7777ecb0dd0a751acab8f3d90450b",
-  "new_tree": "78aca10e64b7777ecb0dd0a751acab8f3d90450b",
-  "plan_digest": "sha256:309b8af49abbc4806f5d68f88af36302bc2f71ef85a924c4c07fa55897b4fa89",
-  "snapshot_digest": "sha256:62e27d8f4f193dea3b5e0bd6bc98146a6d6d6bc4ff4c4a272b7d9be49212d05e",
+  "old_head": "dd17228a1e65d02b17986c647dd8ee14c97c8579",
+  "new_head": "d618d071b68e9b090647070e1a2ae88e3d768cd4",
+  "base": "4fed982dcc0005cc69a1b01d5795769f09a33228",
+  "old_tree": "fcb386daf0611e36ebb63ebc48072c8deb07acb9",
+  "new_tree": "fcb386daf0611e36ebb63ebc48072c8deb07acb9",
+  "plan_digest": "sha256:bd2e55a29ede15b93d89686994e8fe6ac5b3b7335c77300ca82ebef19e4dc43c",
+  "snapshot_digest": "sha256:85ac83731d4e9a4438cc099fc406d7a9636f9a818e00e8f713efd61fb5f68fa9",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:62e27d8f4f193dea3b5e0bd6bc98146a6d6d6bc4ff4c4a272b7d9be49212d05e",
-    "base": "0ff1ea9763a865d974b935710374e355669942d6",
-    "head": "629f55586057976026ff4609426bcfdc51296499",
+    "snapshot_digest": "sha256:85ac83731d4e9a4438cc099fc406d7a9636f9a818e00e8f713efd61fb5f68fa9",
+    "base": "4fed982dcc0005cc69a1b01d5795769f09a33228",
+    "head": "dd17228a1e65d02b17986c647dd8ee14c97c8579",
     "nodes": [
       {
-        "name": "release-no-rebuild",
-        "summary": "Ship node-pty prebuilds instead of rebuilding on CI",
+        "name": "diff-view-menu",
+        "summary": "Diff layout becomes Fork's View-as menu, narrow panes go unified",
         "from": [
-          "apps/desktop/package.json:74#b94e"
+          "apps/desktop/src/renderer/components/DiffView.tsx:3#be5d",
+          "apps/desktop/src/renderer/components/DiffView.tsx:30#b2fe",
+          "apps/desktop/src/renderer/components/DiffView.tsx:33#b96d",
+          "apps/desktop/src/renderer/components/DiffView.tsx:75#ada3",
+          "apps/desktop/src/renderer/components/DiffView.tsx:81#34fc",
+          "apps/desktop/src/renderer/components/DiffView.tsx:87#6bd7",
+          "apps/desktop/src/renderer/i18n/locales/en.json:28#58e3",
+          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:28#f89c"
+        ]
+      },
+      {
+        "name": "story-history",
+        "summary": "Recent history reads like a story, not a pile",
+        "from": [
+          "apps/desktop/src/renderer/app.css:2097#a4ae",
+          "apps/desktop/src/renderer/components/Inspector.tsx:6#0378",
+          "apps/desktop/src/renderer/components/StackView.tsx:1#64fa",
+          "apps/desktop/src/renderer/components/StackView.tsx:3#19e9",
+          "apps/desktop/src/renderer/components/StackView.tsx:6#0b0a",
+          "apps/desktop/src/renderer/components/StackView.tsx:11#553b",
+          "apps/desktop/src/renderer/components/StackView.tsx:14#6917",
+          "apps/desktop/src/renderer/components/StackView.tsx:17#8070",
+          "apps/desktop/src/renderer/components/StackView.tsx:71#4987",
+          "apps/desktop/src/renderer/i18n/locales/en.json:18#8857",
+          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:18#7b6c",
+          "apps/desktop/src/renderer/store/store.ts:55#42f6",
+          "apps/desktop/src/renderer/store/store.ts:81#e22a",
+          "apps/desktop/src/renderer/store/store.ts:151#f14f",
+          "apps/desktop/src/renderer/store/store.ts:225#1624",
+          "apps/desktop/src/renderer/store/store.ts:337#44b4",
+          "apps/desktop/src/renderer/time.ts:1#f31c"
         ]
       }
     ],
     "order": [
-      "release-no-rebuild"
+      "diff-view-menu",
+      "story-history"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788089310"
+  "timestamp": "1788092015"
 }
