@@ -1,3 +1,4 @@
+import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { BrowserWindow, app, shell } from 'electron'
 import { registerIpc } from './ipc'
@@ -8,6 +9,10 @@ let disposeIpc: (() => void) | undefined
 /** Headless boot proof: load everything, print a marker, quit. Used by CI
  * and scripted smoke checks; the window is never shown. */
 const SMOKE = process.env.ISOMER_SMOKE === '1'
+
+/** Self-screenshot mode: render, capture the page to this path, quit.
+ * Shown inactive (no focus steal); used for docs and visual checks. */
+const SHOT = process.env.ISOMER_SHOT
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -25,12 +30,23 @@ function createWindow(): void {
     },
   })
   win.on('ready-to-show', () => {
-    if (!SMOKE) win.show()
+    if (SMOKE) return
+    if (SHOT) win.showInactive()
+    else win.show()
   })
   win.webContents.on('did-finish-load', () => {
     if (SMOKE) {
       console.log('ISOMER_SMOKE_OK')
       app.quit()
+    }
+    if (SHOT) {
+      setTimeout(() => {
+        void win.webContents.capturePage().then((img) => {
+          writeFileSync(SHOT, img.toPNG())
+          console.log('ISOMER_SHOT_OK')
+          app.exit(0)
+        })
+      }, 2500)
     }
   })
   win.webContents.on('did-fail-load', (_e, code, desc) => {
