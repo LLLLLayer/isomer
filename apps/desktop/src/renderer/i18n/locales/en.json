@@ -26,7 +26,21 @@
     "proven": "Proven reorganize — tree unchanged",
     "approve": "Approve change",
     "unapprove": "Revoke approval",
-    "approved": "approved"
+    "approved": "approved",
+    "submit": "Submit PRs",
+    "submitTitle": "Submit the stack as a PR chain",
+    "ghMissing": "The gh CLI is not installed (brew install gh) — preview only.",
+    "ghUnauth": "gh is not authenticated (gh auth login) — preview only.",
+    "willCreate": "create",
+    "willUpdate": "update #{{number}}",
+    "retargetTo": "base → {{base}}",
+    "orphanNote": "PR #{{number}} ({{branch}}) no longer maps to a change — close it manually.",
+    "unresolvedWarn": "{{count}} unresolved comments on this stack.",
+    "trunkNote": "Bottom PR lands on {{trunk}}. Branches are force-pushed mirrors of the changes.",
+    "submitRun": "Create / update {{count}} PRs",
+    "submitting": "Submitting…",
+    "doneNote": "Done — the chain matches the stack.",
+    "viewPr": "Open"
   },
   "review": {
     "title": "Review",
