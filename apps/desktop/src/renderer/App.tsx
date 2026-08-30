@@ -28,13 +28,13 @@ function StackColumns(): React.JSX.Element {
   const [inspW, resizeInsp] = usePaneSize('inspector-col', 320, 240, 520)
   return (
     <main className="columns">
-      <div style={{ width: stackW, display: 'flex', minWidth: 0 }}>
+      <div className="pane-wrap" style={{ width: stackW }}>
         <StackView />
       </div>
       <Splitter axis="x" onDelta={resizeStack} />
       <ReviewView />
       <Splitter axis="x" onDelta={(d) => resizeInsp(-d)} />
-      <div style={{ width: inspW, display: 'flex', minWidth: 0 }}>
+      <div className="pane-wrap" style={{ width: inspW }}>
         <Inspector />
       </div>
     </main>
@@ -125,7 +125,7 @@ export function App(): React.JSX.Element {
       </header>
       <div className="main-row">
         <ProjectRail />
-        <div style={{ width: sidebarW, display: 'flex' }}>
+        <div className="pane-wrap" style={{ width: sidebarW }}>
           <Sidebar />
         </div>
         <Splitter axis="x" onDelta={resizeSidebar} />
@@ -135,7 +135,7 @@ export function App(): React.JSX.Element {
         {terminalOpen && terminalDock === 'right' && (
           <>
             <Splitter axis="x" onDelta={(d) => resizeTermW(-d)} />
-            <div style={{ width: termW, display: 'flex', minWidth: 0 }}>
+            <div className="pane-wrap" style={{ width: termW }}>
               <TerminalDrawer />
             </div>
           </>
@@ -144,7 +144,7 @@ export function App(): React.JSX.Element {
       {terminalOpen && terminalDock === 'bottom' && (
         <>
           <Splitter axis="y" onDelta={(d) => resizeTermH(-d)} />
-          <div style={{ height: termH, display: 'flex', minHeight: 0 }}>
+          <div className="pane-wrap" style={{ height: termH }}>
             <TerminalDrawer />
           </div>
         </>

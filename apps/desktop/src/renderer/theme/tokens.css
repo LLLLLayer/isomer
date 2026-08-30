@@ -53,6 +53,14 @@
   box-sizing: border-box;
 }
 
+/* The app shell owns the whole window; the document never scrolls. */
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   margin: 0;
   font-family: var(--font-ui);
