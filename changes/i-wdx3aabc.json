@@ -1,0 +1,5 @@
+{
+  "id": "i-wdx3aabc",
+  "name": "release-same-version",
+  "summary": "Version stamping tolerates an already-matching package.json"
+}

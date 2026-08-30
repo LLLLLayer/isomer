@@ -1,109 +1,31 @@
 {
   "kind": "apply",
   "branch": "main",
-  "old_head": "23a43b01a34492038ff2cc5972f8aca059eb6f94",
-  "new_head": "bb713de2b5dafacb8a9c7a92a5b283327aae1eb1",
-  "base": "8ef6ba8820843f347c468d5b356aea2084d0a5eb",
-  "old_tree": "e07786ebe2ef3303514fd57c1a620ea04e0909e5",
-  "new_tree": "e07786ebe2ef3303514fd57c1a620ea04e0909e5",
-  "plan_digest": "sha256:8d0f60da9f4ffdbfa710093d0022c706c0e473ee1c3be013e670567e4f0ee8bc",
-  "snapshot_digest": "sha256:188ed36e552ab9b6400c22a91fd296f2d662b737eb95dfd62b58d45361ee1b36",
+  "old_head": "5eb72860020accbf41082d939e4c92c1c47795b1",
+  "new_head": "0ff1ea9763a865d974b935710374e355669942d6",
+  "base": "bb713de2b5dafacb8a9c7a92a5b283327aae1eb1",
+  "old_tree": "87a83d0a15423ede601599f0379fc638ec4ec308",
+  "new_tree": "87a83d0a15423ede601599f0379fc638ec4ec308",
+  "plan_digest": "sha256:73e34b9c96a8c7bb27d7611ab6c8dae7066e6992e55a004973a30de0716cb7aa",
+  "snapshot_digest": "sha256:28c517a87f9db585ebf8f1826425608c5614dbbdf20d4ec37d4bd493d18e47fd",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:188ed36e552ab9b6400c22a91fd296f2d662b737eb95dfd62b58d45361ee1b36",
-    "base": "8ef6ba8820843f347c468d5b356aea2084d0a5eb",
-    "head": "23a43b01a34492038ff2cc5972f8aca059eb6f94",
+    "snapshot_digest": "sha256:28c517a87f9db585ebf8f1826425608c5614dbbdf20d4ec37d4bd493d18e47fd",
+    "base": "bb713de2b5dafacb8a9c7a92a5b283327aae1eb1",
+    "head": "5eb72860020accbf41082d939e4c92c1c47795b1",
     "nodes": [
       {
-        "name": "review-fixes-renderer",
-        "summary": "Adversarial review, renderer round: parser, threads, terminal",
+        "name": "release-same-version",
+        "summary": "Version stamping tolerates an already-matching package.json",
         "from": [
-          "apps/desktop/src/renderer/components/FileContextMenu.tsx:20#db77",
-          "apps/desktop/src/renderer/components/FileContextMenu.tsx:24#205b",
-          "apps/desktop/src/renderer/components/FileContextMenu.tsx:59#eb25",
-          "apps/desktop/src/renderer/components/Inspector.tsx:41#29fc",
-          "apps/desktop/src/renderer/components/Inspector.tsx:51#6281",
-          "apps/desktop/src/renderer/components/Inspector.tsx:54#be1b",
-          "apps/desktop/src/renderer/components/Inspector.tsx:56#45cd",
-          "apps/desktop/src/renderer/components/Inspector.tsx:65#59f8",
-          "apps/desktop/src/renderer/components/TerminalDrawer.tsx:12#8f29",
-          "apps/desktop/src/renderer/components/TerminalDrawer.tsx:126#5f8e",
-          "apps/desktop/src/renderer/components/TerminalDrawer.tsx:129#97d0",
-          "apps/desktop/src/renderer/components/TerminalDrawer.tsx:135#d075",
-          "apps/desktop/src/renderer/components/TerminalDrawer.tsx:141#d5e1",
-          "apps/desktop/src/renderer/components/TerminalDrawer.tsx:146#4320",
-          "apps/desktop/src/renderer/components/TerminalDrawer.tsx:148#8269",
-          "apps/desktop/src/renderer/components/TerminalDrawer.tsx:157#b8c4",
-          "apps/desktop/src/renderer/components/TerminalDrawer.tsx:160#aa6d",
-          "apps/desktop/src/renderer/components/TerminalDrawer.tsx:162#ebed",
-          "apps/desktop/src/renderer/components/TerminalDrawer.tsx:170#7567",
-          "apps/desktop/src/renderer/components/TerminalDrawer.tsx:181#90d5",
-          "apps/desktop/src/renderer/components/TerminalDrawer.tsx:205#245d",
-          "apps/desktop/src/renderer/components/TerminalDrawer.tsx:213#beb7",
-          "apps/desktop/src/renderer/components/TerminalDrawer.tsx:222#d468",
-          "apps/desktop/src/renderer/diff.test.ts:147#fd66",
-          "apps/desktop/src/renderer/diff.ts:91#c486",
-          "apps/desktop/src/renderer/diff.ts:99#ac7a",
-          "apps/desktop/src/renderer/diff.ts:201#315e",
-          "apps/desktop/src/renderer/diff.ts:209#5351",
-          "apps/desktop/src/renderer/diff.ts:211#9eac",
-          "apps/desktop/src/renderer/graph.ts:32#24ca",
-          "apps/desktop/src/renderer/graph.ts:39#760e",
-          "apps/desktop/src/renderer/store/store.ts:110#bb63",
-          "apps/desktop/src/renderer/store/store.ts:159#3184",
-          "apps/desktop/src/renderer/store/store.ts:223#b3d0",
-          "apps/desktop/src/renderer/store/store.ts:254#44de",
-          "apps/desktop/src/renderer/store/store.ts:336#c475",
-          "apps/desktop/src/renderer/store/store.ts:345#273c",
-          "apps/desktop/src/renderer/store/store.ts:385#9a43",
-          "apps/desktop/src/renderer/store/store.ts:491#5b58",
-          "apps/desktop/src/renderer/store/store.ts:524#a3ea",
-          "apps/desktop/src/renderer/store/store.ts:528#8680"
-        ]
-      },
-      {
-        "name": "review-fixes-main",
-        "summary": "Adversarial review, main round: symlinks, PATH, merges",
-        "from": [
-          "apps/desktop/src/main/index.ts:53#6c11",
-          "apps/desktop/src/main/ipc.ts:1#9da2",
-          "apps/desktop/src/main/ipc.ts:51#59a5",
-          "apps/desktop/src/main/ipc.ts:54#c880",
-          "apps/desktop/src/main/ipc.ts:69#6ab8",
-          "apps/desktop/src/main/ipc.ts:75#dbf2",
-          "apps/desktop/src/main/ipc.ts:88#2684",
-          "apps/desktop/src/main/ipc.ts:94#dfc1",
-          "apps/desktop/src/main/ipc.ts:100#a9b5",
-          "apps/desktop/src/main/services/git.ts:115#634b",
-          "apps/desktop/src/main/services/git.ts:120#e1fd",
-          "apps/desktop/src/main/services/git.ts:275#323d",
-          "apps/desktop/src/main/services/git.ts:282#14bd",
-          "apps/desktop/src/main/services/ism.ts:20#966d",
-          "apps/desktop/src/main/services/ism.ts:39#098a",
-          "apps/desktop/src/main/services/ism.ts:50#f5b7",
-          "apps/desktop/src/main/services/ism.ts:55#b31d"
-        ]
-      },
-      {
-        "name": "review-fixes-release",
-        "summary": "Adversarial review, release round: one config, launchable artifacts",
-        "from": [
-          ".github/workflows/release.yml:34#0299",
-          ".github/workflows/release.yml:46#6652",
-          ".github/workflows/release.yml:51#797e",
-          "apps/desktop/electron-builder.yml:0#7a0c",
-          "apps/desktop/package.json:48#6fc7",
-          "apps/desktop/package.json:73#b841",
-          "apps/desktop/scripts/adhoc-sign.cjs:1#9bf9"
+          ".github/workflows/release.yml:36#d77c"
         ]
       }
     ],
     "order": [
-      "review-fixes-renderer",
-      "review-fixes-main",
-      "review-fixes-release"
+      "release-same-version"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788086095"
+  "timestamp": "1788089081"
 }
