@@ -7,6 +7,7 @@ import { IsmService } from './services/ism'
 import { ProjectRegistry, projectsFile } from './services/projects'
 import { PtyService } from './services/pty'
 import { SettingsStore, settingsFile } from './services/settings'
+import { checkForUpdate } from './services/updates'
 import { RepoWatcher } from './services/watcher'
 
 /** Typed ipcMain.handle: the contract table is the only channel authority. */

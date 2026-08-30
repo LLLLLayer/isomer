@@ -5,6 +5,7 @@ import {
   ArrowDown,
   ArrowDownToLine,
   ArrowUp,
+  Download,
   GitBranch,
   Settings,
   SquareTerminal,
@@ -116,6 +117,16 @@ export function App(): React.JSX.Element {
           )}
         </div>
         <span className="spacer" />
+        {updateInfo && (
+          <button
+            className="update-chip"
+            title={t('settings.updateAvailable', { version: updateInfo.version })}
+            onClick={() => void openExternal(updateInfo.url)}
+          >
+            <Download size={13} strokeWidth={1.8} />
+            {t('app.updateReady', { version: updateInfo.version })}
+          </button>
+        )}
         {netNote && <span className="net-note mono">{netNote}</span>}
         {lastError && (
           <button className="error-chip" onClick={clearError} title={lastError.hint ?? ''}>

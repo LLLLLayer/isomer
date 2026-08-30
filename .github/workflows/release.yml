@@ -1,0 +1,48 @@
+# Release: push a v* tag → build the CLI and the desktop app, publish a
+# GitHub release. The app's in-app update check reads releases/latest, so
+# publishing here is what lights up the "new version" chip for users.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build ism (arm64)
+        run: |
+          cargo build --release -p ism-cli
+          tar -C target/release -czf ism-${{ github.ref_name }}-darwin-arm64.tar.gz ism
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Build desktop app
+        working-directory: apps/desktop
+        run: |
+          npm ci
+          npm run typecheck
+          npm test
+          npm run build
+          npx electron-builder --mac --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "Isomer ${{ github.ref_name }}" \
+            --generate-notes \
+            ism-${{ github.ref_name }}-darwin-arm64.tar.gz \
+            apps/desktop/release/*.dmg \
+            apps/desktop/release/*-mac.zip

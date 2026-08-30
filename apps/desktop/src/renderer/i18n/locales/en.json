@@ -1,6 +1,7 @@
 {
   "app": {
-    "title": "Isomer"
+    "title": "Isomer",
+    "updateReady": "v{{version}} available"
   },
   "projects": {
     "add": "Add project",

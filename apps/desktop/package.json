@@ -43,5 +43,33 @@
     "electron@34.5.8": true,
     "node-pty@1.1.0": true,
     "esbuild@0.25.12": true
+  },
+  "build": {
+    "appId": "com.isomer.desktop",
+    "productName": "Isomer",
+    "files": [
+      "out/**"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ]
+    },
+    "publish": null
   }
 }

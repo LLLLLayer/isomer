@@ -1,6 +1,7 @@
 {
   "app": {
-    "title": "Isomer"
+    "title": "Isomer",
+    "updateReady": "新版本 v{{version}}"
   },
   "projects": {
     "add": "添加项目",

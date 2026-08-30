@@ -1,5 +1,13 @@
 import { create } from 'zustand'
-import type { CommitInfo, GitLogEntry, GitRefs, GitStatusSummary, Project } from '../../shared/ipc'
+import type {
+  CommitInfo,
+  GitLogEntry,
+  GitRefs,
+  GitStatusSummary,
+  IsmDetection,
+  Project,
+  UpdateInfo,
+} from '../../shared/ipc'
 import type { Comment, Snapshot } from '../../shared/ism-types'
 import type { AppError } from '../../shared/result'
 import type { Settings } from '../../shared/theme'
@@ -49,6 +57,11 @@ export interface AppState {
   /** Text queued for the terminal (agent summon); sent once a pty exists. */
   pendingTerminalInput: string | null
   settingsOpen: boolean
+  /** null = no newer release; undefined = not checked yet. */
+  updateInfo: UpdateInfo | null | undefined
+  updateStatus: 'idle' | 'checking' | 'error'
+  /** null = not found; undefined = not probed yet. */
+  ismDetection: IsmDetection | null | undefined
   lastError: AppError | null
 
   bootstrap(): Promise<void>
@@ -85,6 +98,9 @@ export interface AppState {
   clearPendingTerminalInput(): void
   openSettings(): void
   closeSettings(): void
+  checkUpdate(): Promise<void>
+  detectIsm(): Promise<void>
+  openExternal(url: string): Promise<void>
   setError(error: AppError): void
   clearError(): void
 }
@@ -119,6 +135,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   terminalDock: storage.get('terminalDock') === 'right' ? 'right' : 'bottom',
   pendingTerminalInput: null,
   settingsOpen: false,
+  updateInfo: undefined,
+  updateStatus: 'idle',
+  ismDetection: undefined,
   lastError: null,
 
   async bootstrap() {
@@ -133,6 +152,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     window.isomer.on('repo:changed', ({ projectId }) => {
       if (projectId === get().currentProjectId) void get().refreshProject()
     })
+    // A quiet startup check; failures stay silent (settings has a manual one).
+    setTimeout(() => {
+      void get()
+        .checkUpdate()
+        .catch(() => undefined)
+    }, 5_000)
     if (projects.length > 0) await get().openProject(projects[0].id)
   },
 
@@ -454,6 +479,27 @@ export const useAppStore = create<AppState>((set, get) => ({
   setTerminalDock(dock) {
     storage.set('terminalDock', dock)
     set({ terminalDock: dock })
+  },
+
+  async checkUpdate() {
+    if (get().updateStatus === 'checking') return
+    set({ updateStatus: 'checking' })
+    const r = await window.isomer.invoke('update:check', undefined)
+    if (!r.ok) {
+      set({ updateStatus: 'error' })
+      return
+    }
+    set({ updateStatus: 'idle', updateInfo: r.data })
+  },
+
+  async detectIsm() {
+    const d = await window.isomer.invoke('ism:detect', undefined)
+    set({ ismDetection: d })
+  },
+
+  async openExternal(url) {
+    const r = await window.isomer.invoke('shell:open-external', { url })
+    if (!r.ok) set({ lastError: r.error })
   },
 
   openSettings() {
