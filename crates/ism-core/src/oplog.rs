@@ -149,14 +149,21 @@ pub fn walk(git: &Git, limit: usize) -> Result<Vec<(String, Op)>> {
 }
 
 /// Newest-first walk including void entries (audit view).
+///
+/// `limit` bounds the number of OP entries returned, not data commits
+/// scanned — comment-only commits share the same chain and must never
+/// crowd ops out of the window. Scanning itself is capped generously.
 pub fn walk_raw(git: &Git, limit: usize) -> Result<Vec<(String, Op)>> {
     if !git.ref_exists(DATA_REF) {
         return Ok(Vec::new());
     }
-    let n = limit.to_string();
-    let list = git.out(&["rev-list", "--max-count", &n, DATA_REF])?;
+    const SCAN_CAP: &str = "100000";
+    let list = git.out(&["rev-list", "--max-count", SCAN_CAP, DATA_REF])?;
     let mut out = Vec::new();
     for sha in list.lines().filter(|l| !l.is_empty()) {
+        if out.len() >= limit {
+            break;
+        }
         if let Some(bytes) = git.blob_at(sha, "ops/current.json")? {
             let op: Op = serde_json::from_slice(&bytes)?;
             out.push((sha.to_string(), op));

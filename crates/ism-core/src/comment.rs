@@ -7,7 +7,9 @@
 
 use crate::error::{IsmError, Result};
 use crate::gitio::Git;
-use crate::model::{is_valid_change_id, now_epoch, Comment, CHANGE_ID_ALPHABET};
+use crate::model::{
+    is_valid_change_id, is_valid_comment_id, now_epoch, Comment, CHANGE_ID_ALPHABET,
+};
 use crate::oplog;
 use sha2::{Digest, Sha256};
 
@@ -36,11 +38,19 @@ pub fn resolve_change(git: &Git, target: &str) -> Result<String> {
             "change {target} has no metadata on refs/isomer/data"
         )));
     }
-    oplog::change_metas(git)?
+    let matches: Vec<String> = oplog::change_metas(git)?
         .into_iter()
-        .find(|m| m.name.as_deref() == Some(target))
+        .filter(|m| m.name.as_deref() == Some(target))
         .map(|m| m.id)
-        .ok_or_else(|| IsmError::UnknownRef(format!("no change named {target}")))
+        .collect();
+    match matches.as_slice() {
+        [] => Err(IsmError::UnknownRef(format!("no change named {target}"))),
+        [id] => Ok(id.clone()),
+        many => Err(IsmError::UnknownRef(format!(
+            "change name {target} is ambiguous ({}); use the i- id",
+            many.join(", ")
+        ))),
+    }
 }
 
 pub struct NewComment<'a> {
@@ -60,6 +70,9 @@ pub fn add(git: &Git, new: NewComment<'_>) -> Result<Comment> {
     }
     let change = resolve_change(git, new.change)?;
     if let Some(parent) = &new.reply_to {
+        if !is_valid_comment_id(parent) {
+            return Err(IsmError::UnknownRef(format!("not a comment id: {parent}")));
+        }
         let p = oplog::comment(git, parent)?
             .ok_or_else(|| IsmError::UnknownRef(format!("unknown comment: {parent}")))?;
         if p.change != change {
@@ -105,6 +118,9 @@ pub fn add(git: &Git, new: NewComment<'_>) -> Result<Comment> {
 
 /// Mark a comment resolved. Idempotent: resolving twice is not an error.
 pub fn resolve(git: &Git, id: &str) -> Result<Comment> {
+    if !is_valid_comment_id(id) {
+        return Err(IsmError::UnknownRef(format!("not a comment id: {id}")));
+    }
     let mut c = oplog::comment(git, id)?
         .ok_or_else(|| IsmError::UnknownRef(format!("unknown comment: {id}")))?;
     if !c.resolved {
