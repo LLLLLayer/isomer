@@ -1,90 +1,67 @@
 {
   "kind": "apply",
-  "branch": "feat/conflict-editor",
-  "old_head": "ca75e941b1445876b0ae5e8dfa75ed347f4c3546",
-  "new_head": "a35d997a4c6f283266b6904d869706444e5bcc31",
-  "base": "f19014fceb8a5d3d6b757d52083a829fca7c92e0",
-  "old_tree": "4628e7b6408a8e1d64224a8f1f47b8ee68781c72",
-  "new_tree": "4628e7b6408a8e1d64224a8f1f47b8ee68781c72",
-  "plan_digest": "sha256:c561fbb60fa2e307bd23b94ee0f6b807392f5078783db9ba4a03d6b5cc28c037",
-  "snapshot_digest": "sha256:328330cbc47f7890971cab07c44fd64379f4f1f0ae16754d849d5188e0633915",
+  "branch": "feat/repo-manager",
+  "old_head": "8e66250b5af95c22e4231a038a89da8f6b7483cf",
+  "new_head": "b4c06bde2348cf9f104e09ba0b7412497498b0c6",
+  "base": "003b0725c7c6b11e816a677c532abec73703f600",
+  "old_tree": "0aaa5bda7847df25771fbdd8840862460182161d",
+  "new_tree": "0aaa5bda7847df25771fbdd8840862460182161d",
+  "plan_digest": "sha256:ff2b0f77c4e1229afaee0b47e33b830e6fffab18018e5f907feeb980fa1e63f0",
+  "snapshot_digest": "sha256:4aff8d89ed73c745968bcf96043404b4c5c8441e23cadb6afc0f8da03c2ea6c3",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:328330cbc47f7890971cab07c44fd64379f4f1f0ae16754d849d5188e0633915",
-    "base": "f19014fceb8a5d3d6b757d52083a829fca7c92e0",
-    "head": "ca75e941b1445876b0ae5e8dfa75ed347f4c3546",
+    "snapshot_digest": "sha256:4aff8d89ed73c745968bcf96043404b4c5c8441e23cadb6afc0f8da03c2ea6c3",
+    "base": "003b0725c7c6b11e816a677c532abec73703f600",
+    "head": "8e66250b5af95c22e4231a038a89da8f6b7483cf",
     "nodes": [
       {
-        "name": "conflict-parse-model",
-        "summary": "Parse and resolve conflict markers, purely",
+        "name": "repo-registry-model",
+        "summary": "The registry learns pins, groups, and health",
         "from": [
-          "apps/desktop/src/renderer/conflicts.test.ts:1#d0e7",
-          "apps/desktop/src/renderer/conflicts.ts:1#d56b",
-          "apps/desktop/src/renderer/conflicts.test.ts:71#669a",
-          "apps/desktop/src/renderer/conflicts.ts:30#e4c6",
-          "apps/desktop/src/renderer/conflicts.ts:137#1353",
-          "apps/desktop/src/renderer/conflicts.ts:146#ef73",
-          "apps/desktop/src/renderer/conflicts.ts:150#b5fa",
-          "apps/desktop/src/renderer/conflicts.ts:155#1625",
-          "apps/desktop/src/renderer/conflicts.ts:162#5072",
-          "apps/desktop/src/renderer/conflicts.ts:165#b218"
+          "apps/desktop/src/main/services/projects.test.ts:1#2978",
+          "apps/desktop/src/main/services/projects.ts:59#00ff",
+          "apps/desktop/src/renderer/repos.test.ts:1#7e1b",
+          "apps/desktop/src/renderer/repos.ts:1#86f9"
         ]
       },
       {
-        "name": "conflict-ipc",
-        "summary": "Main lends the editor its hands: stages in, resolution out",
+        "name": "repo-manager-ipc",
+        "summary": "Overview, update, clone: the manager's three verbs",
         "from": [
-          "apps/desktop/src/main/ipc.ts:2#a9ff",
-          "apps/desktop/src/main/ipc.ts:300#4fae",
-          "apps/desktop/src/main/services/git.ts:577#0137",
-          "apps/desktop/src/shared/ipc.ts:20#e043",
-          "apps/desktop/src/shared/ipc.ts:202#d802",
-          "apps/desktop/src/shared/ipc.ts:320#6ee3",
-          "apps/desktop/src/main/ipc.ts:300#17f8",
-          "apps/desktop/src/main/ipc.ts:312#346e",
-          "apps/desktop/src/main/ipc.ts:314#a9d4",
-          "apps/desktop/src/main/ipc.ts:318#39d5",
-          "apps/desktop/src/main/ipc.ts:330#4822",
-          "apps/desktop/src/main/ipc.ts:334#bd2e",
-          "apps/desktop/src/main/ipc.ts:336#05d9",
-          "apps/desktop/src/shared/ipc.ts:205#3e48",
-          "apps/desktop/src/shared/ipc.ts:209#a2e4"
+          "apps/desktop/src/main/ipc.ts:5#187f",
+          "apps/desktop/src/main/ipc.ts:141#725c",
+          "apps/desktop/src/shared/ipc.ts:18#bbdf",
+          "apps/desktop/src/shared/ipc.ts:148#e1ed",
+          "apps/desktop/src/shared/ipc.ts:304#bdc0"
         ]
       },
       {
-        "name": "conflict-editor-ui",
-        "summary": "A dedicated three-pane conflict editor",
+        "name": "repo-manager-ui",
+        "summary": "One window, every repository",
         "from": [
-          "apps/desktop/src/renderer/app.css:2289#f256",
-          "apps/desktop/src/renderer/components/ChangesView.tsx:16#e92c",
-          "apps/desktop/src/renderer/components/ChangesView.tsx:52#8eb1",
-          "apps/desktop/src/renderer/components/ChangesView.tsx:69#2fd1",
-          "apps/desktop/src/renderer/components/ChangesView.tsx:211#300f",
-          "apps/desktop/src/renderer/components/ChangesView.tsx:354#7672",
-          "apps/desktop/src/renderer/components/ConflictEditor.tsx:1#65a3",
-          "apps/desktop/src/renderer/components/Insights.tsx:11#068e",
-          "apps/desktop/src/renderer/i18n/locales/en.json:207#517e",
-          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:207#b7ee",
-          "apps/desktop/src/renderer/app.css:2358#ee3c",
-          "apps/desktop/src/renderer/app.css:2396#a4e8",
-          "apps/desktop/src/renderer/app.css:2411#66b6",
-          "apps/desktop/src/renderer/components/ConflictEditor.tsx:25#44c0",
-          "apps/desktop/src/renderer/components/ConflictEditor.tsx:45#406c",
-          "apps/desktop/src/renderer/components/ConflictEditor.tsx:68#69f6",
-          "apps/desktop/src/renderer/components/ConflictEditor.tsx:84#acd2",
-          "apps/desktop/src/renderer/components/ConflictEditor.tsx:87#3071",
-          "apps/desktop/src/renderer/components/ConflictEditor.tsx:173#bbf2",
-          "apps/desktop/src/renderer/i18n/locales/en.json:214#e44f",
-          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:214#e713"
+          "apps/desktop/src/renderer/App.tsx:23#71fb",
+          "apps/desktop/src/renderer/App.tsx:210#6b6f",
+          "apps/desktop/src/renderer/app.css:2370#641a",
+          "apps/desktop/src/renderer/components/ProjectRail.tsx:2#fafe",
+          "apps/desktop/src/renderer/components/ProjectRail.tsx:11#17e5",
+          "apps/desktop/src/renderer/components/ProjectRail.tsx:28#62a8",
+          "apps/desktop/src/renderer/components/RepoManager.tsx:1#a63e",
+          "apps/desktop/src/renderer/i18n/locales/en.json:307#6165",
+          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:307#c58b",
+          "apps/desktop/src/renderer/store/store.ts:9#7830",
+          "apps/desktop/src/renderer/store/store.ts:67#a07e",
+          "apps/desktop/src/renderer/store/store.ts:115#e82e",
+          "apps/desktop/src/renderer/store/store.ts:189#d1da",
+          "apps/desktop/src/renderer/store/store.ts:608#081b"
         ]
       }
     ],
     "order": [
-      "conflict-parse-model",
-      "conflict-ipc",
-      "conflict-editor-ui"
+      "repo-registry-model",
+      "repo-manager-ipc",
+      "repo-manager-ui"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788114260"
+  "timestamp": "1788115200"
 }
