@@ -1,0 +1,5 @@
+{
+  "id": "i-v4ntyhjy",
+  "name": "release-no-rebuild",
+  "summary": "Ship node-pty prebuilds instead of rebuilding on CI"
+}

@@ -1,31 +1,31 @@
 {
   "kind": "apply",
   "branch": "main",
-  "old_head": "5eb72860020accbf41082d939e4c92c1c47795b1",
-  "new_head": "0ff1ea9763a865d974b935710374e355669942d6",
-  "base": "bb713de2b5dafacb8a9c7a92a5b283327aae1eb1",
-  "old_tree": "87a83d0a15423ede601599f0379fc638ec4ec308",
-  "new_tree": "87a83d0a15423ede601599f0379fc638ec4ec308",
-  "plan_digest": "sha256:73e34b9c96a8c7bb27d7611ab6c8dae7066e6992e55a004973a30de0716cb7aa",
-  "snapshot_digest": "sha256:28c517a87f9db585ebf8f1826425608c5614dbbdf20d4ec37d4bd493d18e47fd",
+  "old_head": "629f55586057976026ff4609426bcfdc51296499",
+  "new_head": "4fed982dcc0005cc69a1b01d5795769f09a33228",
+  "base": "0ff1ea9763a865d974b935710374e355669942d6",
+  "old_tree": "78aca10e64b7777ecb0dd0a751acab8f3d90450b",
+  "new_tree": "78aca10e64b7777ecb0dd0a751acab8f3d90450b",
+  "plan_digest": "sha256:309b8af49abbc4806f5d68f88af36302bc2f71ef85a924c4c07fa55897b4fa89",
+  "snapshot_digest": "sha256:62e27d8f4f193dea3b5e0bd6bc98146a6d6d6bc4ff4c4a272b7d9be49212d05e",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:28c517a87f9db585ebf8f1826425608c5614dbbdf20d4ec37d4bd493d18e47fd",
-    "base": "bb713de2b5dafacb8a9c7a92a5b283327aae1eb1",
-    "head": "5eb72860020accbf41082d939e4c92c1c47795b1",
+    "snapshot_digest": "sha256:62e27d8f4f193dea3b5e0bd6bc98146a6d6d6bc4ff4c4a272b7d9be49212d05e",
+    "base": "0ff1ea9763a865d974b935710374e355669942d6",
+    "head": "629f55586057976026ff4609426bcfdc51296499",
     "nodes": [
       {
-        "name": "release-same-version",
-        "summary": "Version stamping tolerates an already-matching package.json",
+        "name": "release-no-rebuild",
+        "summary": "Ship node-pty prebuilds instead of rebuilding on CI",
         "from": [
-          ".github/workflows/release.yml:36#d77c"
+          "apps/desktop/package.json:74#b94e"
         ]
       }
     ],
     "order": [
-      "release-same-version"
+      "release-no-rebuild"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788089081"
+  "timestamp": "1788089310"
 }
