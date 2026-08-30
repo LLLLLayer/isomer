@@ -139,55 +139,55 @@ export function Inspector(): React.JSX.Element {
             </li>
           ))}
         </ul>
-        {changeId && (
-          <form
-            className="comment-form"
-            onSubmit={(e) => {
-              e.preventDefault()
-              if (draft.trim() === '') return
-              void addComment({
-                change: replyTo ? replyTo.change : changeId,
-                body: draft,
-                path: replyTo ? undefined : anchor?.path,
-                line: replyTo ? undefined : anchor?.line,
-                replyTo: replyTo?.id,
-              })
-              setDraft('')
-              setReplyTo(null)
-              setCommentAnchor(null)
-            }}
-          >
-            {replyTo && (
-              <span className="anchor-chip">
-                <CornerDownRight size={11} strokeWidth={1.8} />
-                <span>{t('inspector.replyTo', { author: replyTo.author_name })}</span>
-                <button type="button" onClick={() => setReplyTo(null)}>
-                  <X size={11} strokeWidth={2} />
-                </button>
-              </span>
-            )}
-            {!replyTo && anchor && (
-              <span className="anchor-chip">
-                <span className="mono">
-                  {anchor.path}:{anchor.line}
-                </span>
-                <button type="button" onClick={() => setCommentAnchor(null)}>
-                  <X size={11} strokeWidth={2} />
-                </button>
-              </span>
-            )}
-            <textarea
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              rows={3}
-              placeholder={t('inspector.addComment')}
-            />
-            <button type="submit" className="primary-btn" disabled={draft.trim() === ''}>
-              {t('inspector.addComment')}
-            </button>
-          </form>
-        )}
       </div>
+      {changeId && (
+        <form
+          className="comment-form"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (draft.trim() === '') return
+            void addComment({
+              change: replyTo ? replyTo.change : changeId,
+              body: draft,
+              path: replyTo ? undefined : anchor?.path,
+              line: replyTo ? undefined : anchor?.line,
+              replyTo: replyTo?.id,
+            })
+            setDraft('')
+            setReplyTo(null)
+            setCommentAnchor(null)
+          }}
+        >
+          {replyTo && (
+            <span className="anchor-chip">
+              <CornerDownRight size={11} strokeWidth={1.8} />
+              <span>{t('inspector.replyTo', { author: replyTo.author_name })}</span>
+              <button type="button" onClick={() => setReplyTo(null)}>
+                <X size={11} strokeWidth={2} />
+              </button>
+            </span>
+          )}
+          {!replyTo && anchor && (
+            <span className="anchor-chip">
+              <span className="mono">
+                {anchor.path}:{anchor.line}
+              </span>
+              <button type="button" onClick={() => setCommentAnchor(null)}>
+                <X size={11} strokeWidth={2} />
+              </button>
+            </span>
+          )}
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            rows={3}
+            placeholder={t('inspector.addComment')}
+          />
+          <button type="submit" className="primary-btn" disabled={draft.trim() === ''}>
+            {t('inspector.addComment')}
+          </button>
+        </form>
+      )}
     </aside>
   )
 }

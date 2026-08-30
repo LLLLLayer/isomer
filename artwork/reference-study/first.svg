@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1440" viewBox="0 0 1080 1440" role="img" aria-labelledby="title desc">
+  <title id="title">Soft cobalt bag reference study</title>
+  <desc id="desc">A vector reconstruction study of a soft-focus cobalt blue bag on a white editorial canvas.</desc>
+
+  <defs>
+    <linearGradient id="membrane" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eef1ff" stop-opacity="0.92"/>
+      <stop offset="0.24" stop-color="#9ba7ff" stop-opacity="0.58"/>
+      <stop offset="0.57" stop-color="#5263ff" stop-opacity="0.34"/>
+      <stop offset="0.84" stop-color="#99a5ff" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#eef0ff" stop-opacity="0.9"/>
+    </linearGradient>
+
+    <linearGradient id="core" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2500fe"/>
+      <stop offset="0.72" stop-color="#2500fe"/>
+      <stop offset="1" stop-color="#3224ff"/>
+    </linearGradient>
+
+    <linearGradient id="hose" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2412f7"/>
+      <stop offset="0.72" stop-color="#2632e4"/>
+      <stop offset="1" stop-color="#5164e8"/>
+    </linearGradient>
+
+    <filter id="halo" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+
+    <filter id="softMembrane" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+
+    <filter id="softCore" x="-14%" y="-14%" width="128%" height="128%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+
+    <filter id="coreHalo" x="-24%" y="-24%" width="148%" height="148%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+
+    <filter id="innerSoft" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+
+    <filter id="softHose" x="-80%" y="-80%" width="260%" height="260%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+
+    <path id="bagOuter" d="M430 584
+      C430 553 447 535 472 528
+      L472 508
+      C472 486 488 473 511 473
+      L551 473
+      C575 473 591 487 591 509
+      L591 529
+      C618 537 637 558 639 584
+      C709 603 749 649 751 713
+      L751 1012
+      C750 1074 721 1103 664 1112
+      C625 1118 586 1108 544 1108
+      C500 1108 464 1118 420 1112
+      C356 1104 326 1074 326 1013
+      L326 714
+      C328 648 365 603 430 584 Z"/>
+
+    <path id="bagCore" d="M438 585
+      C397 598 369 650 368 728
+      L368 991
+      C368 1042 391 1064 438 1069
+      C474 1073 508 1063 544 1063
+      C582 1063 617 1073 653 1069
+      C694 1064 711 1041 711 993
+      L711 728
+      C710 660 684 599 642 585
+      C603 572 577 545 543 545
+      C510 545 479 572 438 585 Z"/>
+  </defs>
+
+  <rect width="1080" height="1440" fill="#fff"/>
+
+  <!-- restrained editorial masthead -->
+  <g text-anchor="middle" font-family="Verdana">
+    <text x="538.6" y="135" fill="#16c8ff" opacity="0.24" font-size="32.5" font-weight="800" letter-spacing="-1">ALL GOOD MOMENTS</text>
+    <text x="541.4" y="135" fill="#ff3a94" opacity="0.15" font-size="32.5" font-weight="800" letter-spacing="-1">ALL GOOD MOMENTS</text>
+    <text x="540" y="135" fill="#2630d8" font-size="32.5" font-weight="800" letter-spacing="-1">ALL GOOD MOMENTS</text>
+    <text x="540" y="159" fill="#7e86e9" font-size="12.5" font-weight="600" letter-spacing="0.1">daily visual recording</text>
+    <text x="540" y="174" fill="#7e86e9" font-size="12.5" font-weight="600" letter-spacing="0.1">for mengmeng</text>
+  </g>
+
+  <!-- soft outer color atmosphere -->
+  <use href="#bagOuter" fill="#5366ff" opacity="0.08" filter="url(#halo)" transform="translate(33 0) scale(0.929 1)"/>
+
+  <!-- translucent membrane and softly diffused cobalt fill -->
+  <use href="#bagOuter" fill="url(#membrane)" opacity="0.36" filter="url(#softMembrane)" transform="translate(33 0) scale(0.929 1)"/>
+  <g transform="translate(-5 0)">
+  <path d="M438 585
+      C397 598 369 650 368 728
+      L368 991
+      C368 1042 391 1064 438 1069
+      C474 1073 508 1063 544 1063
+      C582 1063 617 1073 653 1069
+      C694 1064 711 1041 711 993
+      L711 728
+      C710 660 684 599 642 585
+      C603 572 577 545 543 545
+      C510 545 479 572 438 585 Z"
+      fill="#687dff" opacity="0.25" filter="url(#coreHalo)"/>
+  <path d="M438 585
+      C397 598 369 650 368 728
+      L368 991
+      C368 1042 391 1064 438 1069
+      C474 1073 508 1063 544 1063
+      C582 1063 617 1073 653 1069
+      C694 1064 711 1041 711 993
+      L711 728
+      C710 660 684 599 642 585
+      C603 572 577 545 543 545
+      C510 545 479 572 438 585 Z"
+      fill="url(#core)" filter="url(#softCore)"/>
+  <path d="M438 585
+      C397 598 369 650 368 728
+      L368 991
+      C368 1042 391 1064 438 1069
+      C474 1073 508 1063 544 1063
+      C582 1063 617 1073 653 1069
+      C694 1064 711 1041 711 993
+      L711 728
+      C710 660 684 599 642 585
+      C603 572 577 545 543 545
+      C510 545 479 572 438 585 Z"
+      fill="url(#core)" opacity="0.78" transform="translate(54 82) scale(0.9)" filter="url(#softMembrane)"/>
+  <path d="M438 585
+      C397 598 369 650 368 728
+      L368 991
+      C368 1042 391 1064 438 1069
+      C474 1073 508 1063 544 1063
+      C582 1063 617 1073 653 1069
+      C694 1064 711 1041 711 993
+      L711 728
+      C710 660 684 599 642 585
+      C603 572 577 545 543 545
+      C510 545 479 572 438 585 Z"
+      fill="#2500fe" transform="translate(86.4 65.6) scale(0.84 0.92)" filter="url(#innerSoft)"/>
+
+  <!-- bottom optical weight and soft inner glow -->
+  <path d="M375 1008 C420 1059 486 1054 542 1054 C601 1054 658 1060 704 1008 C697 1054 678 1068 648 1071 C609 1075 580 1066 543 1066 C505 1066 472 1075 435 1071 C403 1067 383 1054 375 1008 Z"
+        fill="#4b2cff" opacity="0.2" filter="url(#softCore)"/>
+  <path d="M468 1104 H617 C615 1122 599 1130 579 1130 H506 C486 1130 470 1122 468 1104 Z"
+        fill="#8994ee" opacity="0.28" filter="url(#softMembrane)"/>
+  </g>
+
+  <!-- flexible tube: a blurred halo beneath a simple saturated core -->
+  <path d="M540 521 C540 490 548 464 565 442 L579 423" fill="none" stroke="#6373ff" stroke-width="32" stroke-linecap="round" opacity="0.3" filter="url(#softHose)"/>
+  <path d="M540 521 C540 490 548 464 565 442 L579 423" fill="none" stroke="url(#hose)" stroke-width="15" stroke-linecap="round"/>
+
+  <g transform="translate(580 424) rotate(-43)">
+    <rect x="-21" y="-10" width="82" height="42" rx="15" fill="#8793ff" opacity="0.45" filter="url(#softHose)"/>
+    <rect x="-18" y="-7" width="76" height="36" rx="13" fill="#6978ec" opacity="0.58" filter="url(#softMembrane)"/>
+    <rect x="-13" y="-3" width="67" height="27" rx="11" fill="#485bed" opacity="0.72"/>
+  </g>
+
+  <!-- deliberately crisp micro-label -->
+  <g transform="translate(493 727)">
+    <rect width="92" height="42" fill="#fff"/>
+    <text x="8" y="16" fill="#080808" font-family="Verdana" font-size="13" font-weight="800">Less</text>
+    <text x="8" y="32" fill="#080808" font-family="Verdana" font-size="13" font-weight="800">But Better</text>
+  </g>
+
+  <!-- nearly invisible carousel markers retained from the reference composition -->
+  <g transform="translate(505 1350)" fill="none" stroke="#ececf2" stroke-width="4" opacity="0.65">
+    <circle cx="0" cy="0" r="8"/>
+    <circle cx="25" cy="0" r="8"/>
+    <circle cx="50" cy="0" r="8"/>
+    <circle cx="75" cy="0" r="8"/>
+  </g>
+</svg>

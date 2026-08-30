@@ -65,6 +65,7 @@ export function DiffView({
   const [selPop, setSelPop] = useState<{
     x: number
     y: number
+    below: boolean
     path: string
     line: number
     quote: string
@@ -98,9 +99,14 @@ export function DiffView({
         return
       }
       const rect = range.getBoundingClientRect()
+      const box = containerRef.current.getBoundingClientRect()
+      // Centered above the selection, kept inside the diff pane; flips
+      // below when the selection starts at the very top.
+      const below = rect.top - 40 < box.top + 4
       setSelPop({
-        x: Math.min(rect.right, window.innerWidth - 120),
-        y: Math.max(rect.top - 34, 8),
+        x: Math.max(box.left + 10, Math.min(rect.left + rect.width / 2 - 44, box.right - 106)),
+        y: below ? rect.bottom + 10 : rect.top - 38,
+        below,
         path: row.dataset.path,
         line: Number(row.dataset.line),
         quote: sel.toString().slice(0, 400),
@@ -129,7 +135,7 @@ export function DiffView({
     >
       {selPop && review && (
         <button
-          className="sel-comment-btn"
+          className={`sel-comment-btn${selPop.below ? ' below' : ''}`}
           style={{ left: selPop.x, top: selPop.y }}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => {
