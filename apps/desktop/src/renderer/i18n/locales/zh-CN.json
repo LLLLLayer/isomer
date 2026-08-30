@@ -23,7 +23,10 @@
     "sideBySide": "左右对比",
     "unified": "单栏",
     "hunks": "{{count}} 个改动块",
-    "anchorHint": "评论这一行"
+    "anchorHint": "评论这一行",
+    "viewSplit": "以左右对比查看",
+    "viewUnified": "以单栏查看",
+    "narrowAuto": "窄窗下已用单栏"
   },
   "inspector": {
     "title": "详情",

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronDown, ChevronRight, Copy, MessageSquarePlus } from 'lucide-react'
+import { Check, ChevronDown, ChevronRight, Columns2, Copy, MessageSquarePlus } from 'lucide-react'
 import type { Comment } from '../../shared/ism-types'
 import type { EmphRange, FileDiff, UnifiedRow } from '../diff'
 import { emphasisRanges, intraline, splitRows } from '../diff'
@@ -28,8 +28,20 @@ export function DiffView({
 }): React.JSX.Element {
   const { t } = useTranslation()
   const layout = useAppStore((s) => s.settings.diffLayout)
-  const updateSettings = useAppStore((s) => s.updateSettings)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Split view needs real width; in a narrow pane it degrades into a
+  // one-word-per-line transpose, so fall back to unified automatically.
+  const [width, setWidth] = useState(Number.POSITIVE_INFINITY)
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() => setWidth(el.clientWidth))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  const narrow = width < 700
+  const split = layout === 'split' && !narrow
 
   // Threads keyed by path:line — top-level comments only; replies render
   // inside their parent's thread wherever it is anchored.
@@ -60,24 +72,60 @@ export function DiffView({
       <div className="diff-toolbar">
         <span className="muted">{t('diff.files', { count: files.length })}</span>
         <span className="spacer" />
-        <div className="segmented">
-          <button
-            className={layout === 'split' ? 'active' : ''}
-            onClick={() => void updateSettings({ diffLayout: 'split' })}
-          >
-            {t('review.sideBySide')}
-          </button>
-          <button
-            className={layout === 'unified' ? 'active' : ''}
-            onClick={() => void updateSettings({ diffLayout: 'unified' })}
-          >
-            {t('review.unified')}
-          </button>
-        </div>
+        {narrow && layout === 'split' && (
+          <span className="muted">{t('review.narrowAuto')}</span>
+        )}
+        <DiffViewMenu />
       </div>
       {files.map((f) => (
-        <FileCard key={f.path} file={f} split={layout === 'split'} review={review} threads={threads} />
+        <FileCard key={f.path} file={f} split={split} review={review} threads={threads} />
       ))}
+    </div>
+  )
+}
+
+/** Fork-style view options for the diff (View as Split / Unified). */
+function DiffViewMenu(): React.JSX.Element {
+  const { t } = useTranslation()
+  const layout = useAppStore((s) => s.settings.diffLayout)
+  const updateSettings = useAppStore((s) => s.updateSettings)
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: MouseEvent): void => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    window.addEventListener('mousedown', onDown)
+    return () => window.removeEventListener('mousedown', onDown)
+  }, [open])
+
+  const item = (key: 'split' | 'unified', label: string): React.JSX.Element => (
+    <button
+      key={key}
+      className="menu-item"
+      onClick={() => {
+        void updateSettings({ diffLayout: key })
+        setOpen(false)
+      }}
+    >
+      <span className="menu-check">{layout === key && <Check size={13} strokeWidth={2} />}</span>
+      {label}
+    </button>
+  )
+
+  return (
+    <div className="menu-anchor" ref={ref}>
+      <button className="icon-btn" title={t('files.viewOptions')} onClick={() => setOpen(!open)}>
+        <Columns2 size={14} strokeWidth={1.8} />
+      </button>
+      {open && (
+        <div className="menu">
+          {item('split', t('review.viewSplit'))}
+          {item('unified', t('review.viewUnified'))}
+        </div>
+      )}
     </div>
   )
 }

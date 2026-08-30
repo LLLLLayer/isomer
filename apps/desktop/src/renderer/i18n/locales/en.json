@@ -23,7 +23,10 @@
     "sideBySide": "Side by side",
     "unified": "Unified",
     "hunks": "{{count}} hunks",
-    "anchorHint": "Comment on this line"
+    "anchorHint": "Comment on this line",
+    "viewSplit": "View as Split",
+    "viewUnified": "View as Unified",
+    "narrowAuto": "unified (narrow pane)"
   },
   "inspector": {
     "title": "Details",
