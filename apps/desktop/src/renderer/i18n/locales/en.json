@@ -1,5 +1,7 @@
 {
-  "app": { "title": "Isomer" },
+  "app": {
+    "title": "Isomer"
+  },
   "projects": {
     "add": "Add project",
     "empty": "No projects yet.",
@@ -10,7 +12,8 @@
     "empty": "The branch is at the trunk — nothing to organize.",
     "untracked": "untracked",
     "anomalies": "Anomalies",
-    "lastOp": "Last operation"
+    "lastOp": "Last operation",
+    "count": "{{count}} changes"
   },
   "review": {
     "title": "Review",

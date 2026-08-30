@@ -1,6 +1,13 @@
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '../store/store'
 
+/** Deterministic pleasant hue per project name. */
+function hueOf(name: string): number {
+  let h = 0
+  for (const c of name) h = (h * 31 + c.charCodeAt(0)) % 360
+  return h
+}
+
 export function ProjectRail(): React.JSX.Element {
   const { t } = useTranslation()
   const projects = useAppStore((s) => s.projects)
@@ -14,6 +21,7 @@ export function ProjectRail(): React.JSX.Element {
         <button
           key={p.id}
           className={`project-chip${p.id === current ? ' active' : ''}`}
+          style={{ background: `hsl(${hueOf(p.name)} 55% 46%)` }}
           title={p.path}
           onClick={() => void openProject(p.id)}
         >

@@ -1,5 +1,7 @@
 {
-  "app": { "title": "Isomer" },
+  "app": {
+    "title": "Isomer"
+  },
   "projects": {
     "add": "添加项目",
     "empty": "还没有项目。",
@@ -10,7 +12,8 @@
     "empty": "分支与主干一致——没有可整理的内容。",
     "untracked": "未跟踪",
     "anomalies": "异常",
-    "lastOp": "最近操作"
+    "lastOp": "最近操作",
+    "count": "{{count}} 个变更"
   },
   "review": {
     "title": "评审",

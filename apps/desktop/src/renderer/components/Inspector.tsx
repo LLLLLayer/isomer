@@ -16,9 +16,16 @@ export function Inspector(): React.JSX.Element {
   const changeId = commit?.change_id ?? null
   // No selection ⇒ all comments; a selected but untracked commit has no
   // identity, so nothing can be anchored to it.
-  const visible = (commit && !changeId ? [] : comments)
+  const filtered = (commit && !changeId ? [] : comments)
     .filter((c) => (changeId ? c.change === changeId : true))
     .filter((c) => !unresolvedOnly || !c.resolved)
+  // Thread order: top-level comments in arrival order, each followed by its
+  // replies (same-second timestamps would otherwise interleave threads).
+  const topLevel = filtered.filter((c) => !c.parent)
+  const visible = topLevel.flatMap((parent) => [
+    parent,
+    ...filtered.filter((c) => c.parent === parent.id),
+  ])
 
   return (
     <aside className="pane inspector">
@@ -26,7 +33,7 @@ export function Inspector(): React.JSX.Element {
       <section>
         <h3>
           {t('inspector.comments')}
-          <label className="muted toggle-label">
+          <label className="toggle-label">
             <input
               type="checkbox"
               checked={unresolvedOnly}
@@ -38,13 +45,17 @@ export function Inspector(): React.JSX.Element {
         {visible.length === 0 && <p className="empty">{t('inspector.noComments')}</p>}
         <ul className="comment-list">
           {visible.map((c) => (
-            <li key={c.id} className={`comment${c.resolved ? ' resolved' : ''}`}>
-              <div className="comment-head mono muted">
-                {c.author_name} · {c.path ? `${c.path}:${c.line ?? ''}` : c.change}
+            <li
+              key={c.id}
+              className={`comment${c.resolved ? ' resolved' : ''}${c.parent ? ' reply' : ''}`}
+            >
+              <div className="comment-head">
+                <span className="author">{c.author_name}</span>
+                <span className="anchor">{c.path ? `${c.path}:${c.line ?? ''}` : c.change}</span>
               </div>
               <div className="comment-body">{c.body}</div>
               {!c.resolved && (
-                <button className="link" onClick={() => void resolveComment(c.id)}>
+                <button className="ghost-btn" onClick={() => void resolveComment(c.id)}>
                   {t('inspector.resolve')}
                 </button>
               )}
@@ -67,7 +78,9 @@ export function Inspector(): React.JSX.Element {
               rows={3}
               placeholder={t('inspector.addComment')}
             />
-            <button type="submit">{t('inspector.addComment')}</button>
+            <button type="submit" className="primary-btn" disabled={draft.trim() === ''}>
+              {t('inspector.addComment')}
+            </button>
           </form>
         )}
       </section>

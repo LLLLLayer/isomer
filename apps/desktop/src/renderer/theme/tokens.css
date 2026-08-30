@@ -8,6 +8,7 @@
   --fg-muted: #656d76;
   --border: #d1d9e0;
   --accent: #0969da;
+  --on-accent: #ffffff;
   --ok: #1a7f37;
   --warn: #bc4c00;
   --err: #cf222e;
@@ -20,6 +21,7 @@
   --fg-muted: #7d8590;
   --border: #30363d;
   --accent: #4493f8;
+  --on-accent: #ffffff;
   --ok: #3fb950;
   --warn: #d29922;
   --err: #f85149;

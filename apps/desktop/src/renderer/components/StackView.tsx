@@ -32,7 +32,8 @@ export function StackView(): React.JSX.Element {
     <section className="pane stack">
       <header className="pane-title">
         {t('stack.title')}
-        <span className="mono muted"> {snapshot.branch}</span>
+        <span className="spacer" />
+        <span>{t('stack.count', { count: commits.length })}</span>
       </header>
       <ol className="stack-list">
         {commits.map((c) => {
@@ -45,9 +46,9 @@ export function StackView(): React.JSX.Element {
               >
                 <span className="summary">{c.title}</span>
                 <span className="badges">
-                  <span className="mono badge">{c.change_id ?? t('stack.untracked')}</span>
-                  <span className="mono muted">{c.sha.slice(0, 8)}</span>
-                  {unresolved > 0 && <span className="badge warn">{unresolved}</span>}
+                  <span className="chip">{c.change_id ?? t('stack.untracked')}</span>
+                  <span className="sha">{c.sha.slice(0, 8)}</span>
+                  {unresolved > 0 && <span className="count-pill">{unresolved}</span>}
                 </span>
               </button>
             </li>
@@ -56,9 +57,9 @@ export function StackView(): React.JSX.Element {
       </ol>
       {snapshot.anomalies.length > 0 && (
         <footer className="anomalies">
-          <span className="muted">{t('stack.anomalies')}: </span>
+          <span className="muted">{t('stack.anomalies')}</span>
           {snapshot.anomalies.map((a, i) => (
-            <span key={i} className="badge warn mono">
+            <span key={i} className="badge warn">
               {a.kind}
             </span>
           ))}
