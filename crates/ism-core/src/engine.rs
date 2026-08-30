@@ -79,6 +79,21 @@ pub fn apply(git: &Git, plan: &Plan) -> Result<ApplyOutcome> {
         .iter()
         .filter_map(|c| c.change_id.as_deref().map(|id| (c.sha.as_str(), id)))
         .collect();
+    // Total hunks per commit: identity may only be inherited by a node that
+    // owns the WHOLE source commit — a split must mint fresh ids, or both
+    // halves would carry the same trailer (duplicate_id on our own output).
+    let commit_hunk_count: HashMap<&str, usize> = snap
+        .commits
+        .iter()
+        .map(|c| (c.sha.as_str(), c.hunks.len()))
+        .collect();
+    // Ids explicitly claimed by any node must not also be inherited.
+    let explicit_ids: std::collections::HashSet<&str> = ctx
+        .checked
+        .nodes
+        .iter()
+        .filter_map(|n| n.change.as_deref())
+        .collect();
 
     // -- forge the new chain (invisible until the ref flips) ------------------
     let mut replay = Replay::new(alg);
@@ -119,10 +134,15 @@ pub fn apply(git: &Git, plan: &Plan) -> Result<ApplyOutcome> {
             .change
             .clone()
             .or_else(|| {
-                if node.source_commits.len() == 1 {
+                let owns_whole_commit = node.source_commits.len() == 1
+                    && commit_hunk_count
+                        .get(node.source_commits[0].as_str())
+                        .is_some_and(|&n| n == node.hunk_idxs.len());
+                if owns_whole_commit {
                     stack_change_of
                         .get(node.source_commits[0].as_str())
                         .map(|s| s.to_string())
+                        .filter(|id| !explicit_ids.contains(id.as_str()))
                 } else {
                     None
                 }
@@ -213,14 +233,20 @@ pub fn apply(git: &Git, plan: &Plan) -> Result<ApplyOutcome> {
         tool_version: env!("CARGO_PKG_VERSION").to_string(),
         timestamp: crate::model::now_epoch(),
     };
-    let op_sha = oplog::append(git, &op, &change_metas, Some(&ctx.analysis.trunk))?;
+    let trunk = (!ctx.analysis.trunk.is_empty()).then_some(ctx.analysis.trunk.as_str());
+    let op_sha = oplog::append(git, &op, &change_metas, trunk)?;
     if let Err(e) = git.update_ref_cas(&branch_ref, &parent_commit, Some(&old_head)) {
         // Void the journaled op explicitly: the branch moved while we worked,
-        // so its entry must not stand as the branch's latest state.
-        oplog::append_void(git, &op_sha, &op)?;
+        // so its entry must not stand as the branch's latest state. Should
+        // the void append itself fail (e.g. a raced data ref), the E101 must
+        // still be the caller's error — reconcile will void the entry later.
+        let void_note = match oplog::append_void(git, &op_sha, &op) {
+            Ok(_) => "the journaled op was voided".to_string(),
+            Err(e2) => format!("voiding the journaled op also failed ({e2}); it will be reconciled on the next command"),
+        };
         return Err(IsmError::Precondition(format!(
             "branch {branch} moved during apply (ref update refused: {e}); \
-the journaled op was voided — re-run `ism inspect` and rebuild the plan"
+{void_note} — re-run `ism inspect` and rebuild the plan"
         )));
     }
 
