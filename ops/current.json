@@ -1,67 +1,107 @@
 {
   "kind": "apply",
-  "branch": "feat/repo-manager",
-  "old_head": "8e66250b5af95c22e4231a038a89da8f6b7483cf",
-  "new_head": "b4c06bde2348cf9f104e09ba0b7412497498b0c6",
-  "base": "003b0725c7c6b11e816a677c532abec73703f600",
-  "old_tree": "0aaa5bda7847df25771fbdd8840862460182161d",
-  "new_tree": "0aaa5bda7847df25771fbdd8840862460182161d",
-  "plan_digest": "sha256:ff2b0f77c4e1229afaee0b47e33b830e6fffab18018e5f907feeb980fa1e63f0",
-  "snapshot_digest": "sha256:4aff8d89ed73c745968bcf96043404b4c5c8441e23cadb6afc0f8da03c2ea6c3",
+  "branch": "feat/stack-pr",
+  "old_head": "653b7a89a4200010c16e34de222375da9e837613",
+  "new_head": "9af41236218fb0641b51889036763d1e4b916e31",
+  "base": "2b210a701956adb524064ca8bef23a4442ea945f",
+  "old_tree": "218c953b4571b40102423ae6577fc383927edc95",
+  "new_tree": "218c953b4571b40102423ae6577fc383927edc95",
+  "plan_digest": "sha256:e1044a0ddb3ac794167fb73f23d1cf2e500c653d4d90b4c3ee0e833b3401b564",
+  "snapshot_digest": "sha256:fcd09adcb1f514ab58e8f62ffad671a2959fc0b38b2a04e598a60ab9561e7a4b",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:4aff8d89ed73c745968bcf96043404b4c5c8441e23cadb6afc0f8da03c2ea6c3",
-    "base": "003b0725c7c6b11e816a677c532abec73703f600",
-    "head": "8e66250b5af95c22e4231a038a89da8f6b7483cf",
+    "snapshot_digest": "sha256:fcd09adcb1f514ab58e8f62ffad671a2959fc0b38b2a04e598a60ab9561e7a4b",
+    "base": "2b210a701956adb524064ca8bef23a4442ea945f",
+    "head": "653b7a89a4200010c16e34de222375da9e837613",
     "nodes": [
       {
-        "name": "repo-registry-model",
-        "summary": "The registry learns pins, groups, and health",
+        "name": "stackpr-plan-model",
+        "summary": "The PR chain, planned purely",
         "from": [
-          "apps/desktop/src/main/services/projects.test.ts:1#2978",
-          "apps/desktop/src/main/services/projects.ts:59#00ff",
-          "apps/desktop/src/renderer/repos.test.ts:1#7e1b",
-          "apps/desktop/src/renderer/repos.ts:1#86f9"
+          "apps/desktop/src/main/services/stackplan.test.ts:1#6a69",
+          "apps/desktop/src/main/services/stackplan.ts:1#ce98",
+          "apps/desktop/src/main/services/stackplan.test.ts:20#60ea",
+          "apps/desktop/src/main/services/stackplan.test.ts:30#25ee",
+          "apps/desktop/src/main/services/stackplan.test.ts:39#2dd6",
+          "apps/desktop/src/main/services/stackplan.test.ts:81#be16",
+          "apps/desktop/src/main/services/stackplan.test.ts:84#c000",
+          "apps/desktop/src/main/services/stackplan.test.ts:90#a723",
+          "apps/desktop/src/main/services/stackplan.ts:50#9048",
+          "apps/desktop/src/main/services/stackplan.ts:56#2345",
+          "apps/desktop/src/main/services/stackplan.ts:60#7c5f",
+          "apps/desktop/src/main/services/stackplan.ts:87#556a",
+          "apps/desktop/src/main/services/stackplan.ts:98#8a63",
+          "apps/desktop/src/main/services/stackplan.ts:122#0b80",
+          "apps/desktop/src/main/services/stackplan.ts:148#d001",
+          "apps/desktop/src/main/services/stackplan.ts:157#8de1",
+          "apps/desktop/src/main/services/stackplan.ts:166#6d10"
         ]
       },
       {
-        "name": "repo-manager-ipc",
-        "summary": "Overview, update, clone: the manager's three verbs",
+        "name": "stackpr-execution",
+        "summary": "Main executes the chain through the user's own gh",
         "from": [
-          "apps/desktop/src/main/ipc.ts:5#187f",
-          "apps/desktop/src/main/ipc.ts:141#725c",
-          "apps/desktop/src/shared/ipc.ts:18#bbdf",
-          "apps/desktop/src/shared/ipc.ts:148#e1ed",
-          "apps/desktop/src/shared/ipc.ts:304#bdc0"
+          "apps/desktop/src/main/ipc.ts:5#edd9",
+          "apps/desktop/src/main/ipc.ts:15#fb19",
+          "apps/desktop/src/main/ipc.ts:46#00bd",
+          "apps/desktop/src/main/ipc.ts:374#b35a",
+          "apps/desktop/src/main/services/git.ts:583#07ae",
+          "apps/desktop/src/main/services/stack.ts:1#b964",
+          "apps/desktop/src/shared/ipc.ts:20#948a",
+          "apps/desktop/src/shared/ipc.ts:237#c40d",
+          "apps/desktop/src/shared/ipc.ts:346#9eb3",
+          "apps/desktop/src/main/ipc.ts:392#6c22",
+          "apps/desktop/src/main/ipc.ts:401#1933",
+          "apps/desktop/src/main/services/stack.ts:28#3917",
+          "apps/desktop/src/main/services/stack.ts:38#439c",
+          "apps/desktop/src/main/services/stack.ts:56#3f86",
+          "apps/desktop/src/main/services/stack.ts:61#78b3",
+          "apps/desktop/src/main/services/stack.ts:92#7769"
         ]
       },
       {
-        "name": "repo-manager-ui",
-        "summary": "One window, every repository",
+        "name": "stackpr-ui",
+        "summary": "One button from stack to chain",
         "from": [
-          "apps/desktop/src/renderer/App.tsx:23#71fb",
-          "apps/desktop/src/renderer/App.tsx:210#6b6f",
-          "apps/desktop/src/renderer/app.css:2370#641a",
-          "apps/desktop/src/renderer/components/ProjectRail.tsx:2#fafe",
-          "apps/desktop/src/renderer/components/ProjectRail.tsx:11#17e5",
-          "apps/desktop/src/renderer/components/ProjectRail.tsx:28#62a8",
-          "apps/desktop/src/renderer/components/RepoManager.tsx:1#a63e",
-          "apps/desktop/src/renderer/i18n/locales/en.json:307#6165",
-          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:307#c58b",
-          "apps/desktop/src/renderer/store/store.ts:9#7830",
-          "apps/desktop/src/renderer/store/store.ts:67#a07e",
-          "apps/desktop/src/renderer/store/store.ts:115#e82e",
-          "apps/desktop/src/renderer/store/store.ts:189#d1da",
-          "apps/desktop/src/renderer/store/store.ts:608#081b"
+          "apps/desktop/src/renderer/app.css:323#32f8",
+          "apps/desktop/src/renderer/components/StackView.tsx:8#d6b9",
+          "apps/desktop/src/renderer/components/StackView.tsx:19#02e2",
+          "apps/desktop/src/renderer/components/StackView.tsx:34#02bd",
+          "apps/desktop/src/renderer/components/StackView.tsx:86#0d88",
+          "apps/desktop/src/renderer/components/StackView.tsx:95#0544",
+          "apps/desktop/src/renderer/components/SubmitStack.tsx:1#b86c",
+          "apps/desktop/src/renderer/i18n/locales/en.json:29#51e1",
+          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:29#6bb6",
+          "apps/desktop/src/renderer/components/SubmitStack.tsx:21#d300",
+          "apps/desktop/src/renderer/components/SubmitStack.tsx:24#0012",
+          "apps/desktop/src/renderer/components/SubmitStack.tsx:30#c222",
+          "apps/desktop/src/renderer/components/SubmitStack.tsx:32#4725",
+          "apps/desktop/src/renderer/components/SubmitStack.tsx:38#fb20",
+          "apps/desktop/src/renderer/components/SubmitStack.tsx:52#7c96",
+          "apps/desktop/src/renderer/components/SubmitStack.tsx:63#112f",
+          "apps/desktop/src/renderer/components/SubmitStack.tsx:70#7bca"
+        ]
+      },
+      {
+        "name": "shot-delay-knob",
+        "summary": "Shot tooling learns to wait",
+        "from": [
+          "apps/desktop/src/main/index.ts:54#fc24",
+          "apps/desktop/src/main/index.ts:58#398f",
+          "apps/desktop/src/main/index.ts:94#1b3d",
+          "apps/desktop/src/main/index.ts:16#002c",
+          "apps/desktop/src/main/index.ts:61#e52f",
+          "apps/desktop/src/main/index.ts:97#450a"
         ]
       }
     ],
     "order": [
-      "repo-registry-model",
-      "repo-manager-ipc",
-      "repo-manager-ui"
+      "stackpr-plan-model",
+      "stackpr-execution",
+      "stackpr-ui",
+      "shot-delay-knob"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788115200"
+  "timestamp": "1788115433"
 }
