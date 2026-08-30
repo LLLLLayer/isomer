@@ -232,7 +232,24 @@ function GraphList({
       {label}
     </button>
   )
-  const rows = useMemo(() => graphLayout(log), [log])
+  // Search results are disconnected commits — parent links point outside
+  // the set, so a topology walk would fabricate lanes. Draw a flat rail.
+  const flat = entries !== null
+  const rows = useMemo(
+    () =>
+      flat
+        ? log.map(() => ({
+            dot: 0,
+            merge: false,
+            through: [] as [number, number][],
+            into: [] as number[],
+            out: [] as number[],
+            topCount: 0,
+            bottomCount: 0,
+          }))
+        : graphLayout(log),
+    [flat, log],
+  )
   const lanes = Math.min(
     MAX_LANES,
     rows.reduce((m, r) => Math.max(m, r.topCount, r.bottomCount), 1),

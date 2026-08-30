@@ -133,7 +133,12 @@ export class GitService {
       ['CHERRY_PICK_HEAD', 'cherry-pick'],
       ['REVERT_HEAD', 'revert'],
     ]
-    const r = await this.run(cwd, ['rev-parse', ...probes.map(([name]) => `--git-path=${name}`)])
+    // NB: rev-parse only understands the space-separated form; the `=`
+    // form is echoed back verbatim (exit 0) and would silently break this.
+    const r = await this.run(cwd, [
+      'rev-parse',
+      ...probes.flatMap(([name]) => ['--git-path', name]),
+    ])
     if (r.code !== 0) return null
     const paths = r.stdout.trim().split('\n')
     const { existsSync } = await import('node:fs')

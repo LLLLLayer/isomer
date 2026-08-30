@@ -77,7 +77,7 @@ export function OrganizeView(): React.JSX.Element {
     const used = new Set<string>()
     return snapshot.commits.map((c) => {
       let name = slugify(c.title)
-      while (used.has(name)) name = `${name}-2`.slice(0, 40)
+      for (let i = 2; used.has(name); i++) name = `${slugify(c.title).slice(0, 36)}-${i}`
       used.add(name)
       return {
         key: `n${keySeq++}`,
@@ -168,9 +168,9 @@ export function OrganizeView(): React.JSX.Element {
     snapshot_digest: snapshot?.snapshot_digest,
     base: snapshot?.base,
     head: snapshot?.head,
-    order: nodes.map((n) => n.name),
+    order: nodes.map((n) => slugify(n.name)),
     nodes: nodes.map((n) => ({
-      name: n.name,
+      name: slugify(n.name),
       summary: n.summary,
       ...(n.description.trim() !== '' ? { description: n.description } : {}),
       from: n.from,
@@ -210,7 +210,8 @@ export function OrganizeView(): React.JSX.Element {
 
   const undo = async (): Promise<void> => {
     if (!projectId || busy) return
-    await window.isomer.invoke('ism:undo', { projectId })
+    const r = await window.isomer.invoke('ism:undo', { projectId })
+    if (!r.ok) setCheckResult({ ok: false, errors: [r.error] })
     setProof(null)
     await refreshProject()
   }
@@ -297,7 +298,12 @@ export function OrganizeView(): React.JSX.Element {
                 <input
                   className="draft-name mono"
                   value={n.name}
-                  onChange={(e) => patch(n.key, { name: slugify(e.target.value) || n.name })}
+                  onChange={(e) =>
+                    patch(n.key, {
+                      name: e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-').slice(0, 40),
+                    })
+                  }
+                  onBlur={(e) => patch(n.key, { name: slugify(e.target.value) })}
                 />
                 <span className="spacer" />
                 <span className="muted">{t('review.hunks', { count: n.from.length })}</span>
