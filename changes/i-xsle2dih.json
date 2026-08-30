@@ -1,0 +1,6 @@
+{
+  "id": "i-xsle2dih",
+  "name": "app-ui-polish",
+  "summary": "Rework the desktop UI to the Codex-minimal baseline",
+  "body": "The scaffold CSS was function-first and looked it. Now per design/09:\na draggable titlebar hosts the traffic lights, project name and a\nbranch pill (they used to overlap the pane titles); hue-derived\nproject avatars with an active indicator; change cards with identity\nchips, muted shas and unresolved-comment pills; a segmented\nside-by-side/unified control; kind-colored hunk pills with aligned\n+N/-N stats; threaded comments grouped under their parents (same-\nsecond timestamps used to invert reply order) with ghost/primary\nbuttons; custom-styled selects in a slim statusbar. All color goes\nthrough the token layer — the no-hex-outside-tokens test caught two\nviolations and a new --on-accent token resolves them."
+}
