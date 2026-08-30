@@ -33,6 +33,24 @@ describe('parseStatusV2', () => {
     const raw = '1 .M N... 100644 100644 100644 abc def my dir/my file.txt'
     expect(parseStatusV2(raw).entries[0].path).toBe('my dir/my file.txt')
   })
+
+  it('reads rename records with the score field and NUL-separated origPath', () => {
+    // Captured from real `git status --porcelain=v2 -z` after `git mv`.
+    const raw =
+      '2 RM N... 100644 100644 100644 45b983be 45b983be R100 b file.txt\0' +
+      '1 was here.txt\0' + // origPath starting with "1 " must not become an entry
+      '? untracked.txt\0'
+    const s = parseStatusV2(raw)
+    expect(s.entries).toEqual([
+      { code: 'RM', path: 'b file.txt', origPath: '1 was here.txt' },
+      { code: '??', path: 'untracked.txt' },
+    ])
+  })
+
+  it('reads unmerged records (10 fields before the path)', () => {
+    const raw = 'u UU N... 100644 100644 100644 100644 a1 b2 c3 conflicted.txt'
+    expect(parseStatusV2(raw).entries).toEqual([{ code: 'UU', path: 'conflicted.txt' }])
+  })
 })
 
 describe('parseLog', () => {
@@ -51,5 +69,11 @@ describe('parseLog', () => {
       changeId: 'i-abcdefgh',
     })
     expect(log[1].changeId).toBeNull()
+  })
+
+  it('treats multiple trailers (a squash of changes) as having no identity', () => {
+    // With separator=%x2C two trailers arrive comma-joined.
+    const raw = 'cccc\x1fsquash\x1fA\x1fa@x\x1f1700000002\x1fi-aaaaaaaa,i-bbbbbbbb\n'
+    expect(parseLog(raw)[0].changeId).toBeNull()
   })
 })

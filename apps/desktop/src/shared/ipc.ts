@@ -22,8 +22,8 @@ export interface GitStatusSummary {
   upstream: string | null
   ahead: number
   behind: number
-  /** [XY code, path] entries from porcelain v2. */
-  entries: { code: string; path: string }[]
+  /** Entries from porcelain v2; origPath present for renames/copies. */
+  entries: { code: string; path: string; origPath?: string }[]
 }
 
 export interface GitLogEntry {

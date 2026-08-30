@@ -111,7 +111,17 @@ export function registerIpc(exec: Exec): { dispose(): void } {
   handle('pty:create', async ({ projectId, cols, rows }) => {
     const dir = cwd(projectId)
     if (!dir) return NO_PROJECT
-    return { ok: true, data: { id: pty.create(dir, cols, rows) } }
+    try {
+      return { ok: true, data: { id: pty.create(dir, cols, rows) } }
+    } catch (e) {
+      // node-pty is native; a broken build (ABI mismatch) must surface as a
+      // structured error, not an unhandled rejection.
+      return err({
+        code: 'PTY',
+        message: e instanceof Error ? e.message : String(e),
+        hint: 'reinstall dependencies (node-pty native build)',
+      })
+    }
   })
   handle('pty:input', async ({ id, data }) => pty.write(id, data))
   handle('pty:resize', async ({ id, cols, rows }) => pty.resize(id, cols, rows))

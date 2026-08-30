@@ -73,7 +73,9 @@ export class PtyService {
       }
     }
     const shell =
-      process.platform === 'win32' ? 'powershell.exe' : process.env.SHELL || '/bin/zsh'
+      process.platform === 'win32'
+        ? 'powershell.exe'
+        : process.env.SHELL || (process.platform === 'darwin' ? '/bin/zsh' : '/bin/bash')
     const id = randomUUID()
     const pty = nodePty.spawn(shell, [], {
       name: 'xterm-256color',

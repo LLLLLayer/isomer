@@ -21,19 +21,25 @@ export const realExec: Exec = (command, args, opts) =>
       env: process.env,
       stdio: ['ignore', 'pipe', 'pipe'],
     })
-    let stdout = ''
-    let stderr = ''
+    // Accumulate raw buffers and decode once: per-chunk decoding corrupts
+    // multi-byte UTF-8 characters that straddle pipe-chunk boundaries.
+    const stdout: Buffer[] = []
+    const stderr: Buffer[] = []
     const timer = opts.timeoutMs
       ? setTimeout(() => child.kill('SIGKILL'), opts.timeoutMs)
       : undefined
-    child.stdout.on('data', (d: Buffer) => (stdout += d.toString('utf8')))
-    child.stderr.on('data', (d: Buffer) => (stderr += d.toString('utf8')))
+    child.stdout.on('data', (d: Buffer) => stdout.push(d))
+    child.stderr.on('data', (d: Buffer) => stderr.push(d))
     child.on('error', (e) => {
       if (timer) clearTimeout(timer)
       reject(e)
     })
     child.on('close', (code) => {
       if (timer) clearTimeout(timer)
-      resolve({ code: code ?? -1, stdout, stderr })
+      resolve({
+        code: code ?? -1,
+        stdout: Buffer.concat(stdout).toString('utf8'),
+        stderr: Buffer.concat(stderr).toString('utf8'),
+      })
     })
   })

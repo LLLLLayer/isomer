@@ -33,6 +33,10 @@ function createWindow(): void {
       app.quit()
     }
   })
+  win.webContents.on('did-fail-load', (_e, code, desc) => {
+    console.error(`renderer failed to load: ${code} ${desc}`)
+    if (SMOKE) app.exit(1)
+  })
   // External links go to the system browser, never in-app.
   win.webContents.setWindowOpenHandler(({ url }) => {
     void shell.openExternal(url)
@@ -55,6 +59,9 @@ void app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => {
+  // No window ⇒ no terminal UI; reap pty sessions so shells never outlive
+  // their tabs (on macOS the app itself stays alive).
+  disposeIpc?.()
   if (process.platform !== 'darwin') app.quit()
 })
 
