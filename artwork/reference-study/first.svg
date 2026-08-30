@@ -24,6 +24,17 @@
       <stop offset="1" stop-color="#5164e8"/>
     </linearGradient>
 
+    <linearGradient id="tubeAlpha" x1="0" y1="420" x2="0" y2="525" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="0.48" stop-color="#fff"/>
+      <stop offset="0.72" stop-color="#777"/>
+      <stop offset="1" stop-color="#000"/>
+    </linearGradient>
+
+    <mask id="tubeFade" x="460" y="380" width="190" height="180" maskUnits="userSpaceOnUse">
+      <rect x="460" y="380" width="190" height="180" fill="url(#tubeAlpha)"/>
+    </mask>
+
     <filter id="halo" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
       <feGaussianBlur stdDeviation="12"/>
     </filter>
@@ -33,11 +44,15 @@
     </filter>
 
     <filter id="softCore" x="-14%" y="-14%" width="128%" height="128%" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="14"/>
+      <feGaussianBlur stdDeviation="9"/>
     </filter>
 
     <filter id="coreHalo" x="-24%" y="-24%" width="148%" height="148%" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="20"/>
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+
+    <filter id="topSoft" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="13"/>
     </filter>
 
     <filter id="innerSoft" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
@@ -89,12 +104,25 @@
     <text x="540" y="174" fill="#7e86e9" font-size="12.5" font-weight="600" letter-spacing="0.1">for mengmeng</text>
   </g>
 
+  <!-- the tube sits behind the translucent neck, so its lower end is optically softened -->
+  <g mask="url(#tubeFade)">
+  <path d="M535 521 C535 486 543 458 560 435 L574 412" fill="none" stroke="#6373ff" stroke-width="32" stroke-linecap="round" opacity="0.3" filter="url(#softHose)"/>
+  <path d="M535 521 C535 486 543 458 560 435 L574 412" fill="none" stroke="url(#hose)" stroke-width="12" stroke-linecap="round"/>
+  </g>
+
+  <g transform="translate(571 413) rotate(-43)">
+    <rect x="-21" y="-10" width="82" height="42" rx="15" fill="#8793ff" opacity="0.45" filter="url(#softHose)"/>
+    <rect x="-18" y="-7" width="76" height="36" rx="13" fill="#6978ec" opacity="0.58" filter="url(#softMembrane)"/>
+    <rect x="-13" y="-3" width="67" height="27" rx="11" fill="#485bed" opacity="0.72"/>
+  </g>
+
   <!-- soft outer color atmosphere -->
   <use href="#bagOuter" fill="#5366ff" opacity="0.08" filter="url(#halo)" transform="translate(33 0) scale(0.929 1)"/>
 
   <!-- translucent membrane and softly diffused cobalt fill -->
-  <use href="#bagOuter" fill="url(#membrane)" opacity="0.36" filter="url(#softMembrane)" transform="translate(33 0) scale(0.929 1)"/>
+  <use href="#bagOuter" fill="url(#membrane)" opacity="0.5" filter="url(#softMembrane)" transform="translate(33 0) scale(0.929 1)"/>
   <g transform="translate(-5 0)">
+  <ellipse cx="543" cy="600" rx="90" ry="85" fill="#3150ff" opacity="0.82" filter="url(#topSoft)"/>
   <path d="M438 585
       C397 598 369 650 368 728
       L368 991
@@ -142,23 +170,13 @@
       C710 660 684 599 642 585
       C603 572 577 545 543 545
       C510 545 479 572 438 585 Z"
-      fill="#2500fe" transform="translate(86.4 65.6) scale(0.84 0.92)" filter="url(#innerSoft)"/>
+      fill="#2500fe" transform="translate(86.4 75.6) scale(0.84 0.92)" filter="url(#innerSoft)"/>
 
   <!-- bottom optical weight and soft inner glow -->
   <path d="M375 1008 C420 1059 486 1054 542 1054 C601 1054 658 1060 704 1008 C697 1054 678 1068 648 1071 C609 1075 580 1066 543 1066 C505 1066 472 1075 435 1071 C403 1067 383 1054 375 1008 Z"
         fill="#4b2cff" opacity="0.2" filter="url(#softCore)"/>
   <path d="M468 1104 H617 C615 1122 599 1130 579 1130 H506 C486 1130 470 1122 468 1104 Z"
-        fill="#8994ee" opacity="0.28" filter="url(#softMembrane)"/>
-  </g>
-
-  <!-- flexible tube: a blurred halo beneath a simple saturated core -->
-  <path d="M540 521 C540 490 548 464 565 442 L579 423" fill="none" stroke="#6373ff" stroke-width="32" stroke-linecap="round" opacity="0.3" filter="url(#softHose)"/>
-  <path d="M540 521 C540 490 548 464 565 442 L579 423" fill="none" stroke="url(#hose)" stroke-width="15" stroke-linecap="round"/>
-
-  <g transform="translate(580 424) rotate(-43)">
-    <rect x="-21" y="-10" width="82" height="42" rx="15" fill="#8793ff" opacity="0.45" filter="url(#softHose)"/>
-    <rect x="-18" y="-7" width="76" height="36" rx="13" fill="#6978ec" opacity="0.58" filter="url(#softMembrane)"/>
-    <rect x="-13" y="-3" width="67" height="27" rx="11" fill="#485bed" opacity="0.72"/>
+        fill="#8994ee" opacity="0.5" filter="url(#softMembrane)"/>
   </g>
 
   <!-- deliberately crisp micro-label -->

@@ -98,6 +98,15 @@ export function DiffView({
         setSelPop(null)
         return
       }
+      // Selection.toString() leaks user-select:none gutters (line numbers,
+      // +/- markers); collect the intersected code cells' text instead.
+      const cells = [...containerRef.current.querySelectorAll('.diff-row .code')]
+        .filter((el) => range.intersectsNode(el))
+        .slice(0, 20)
+      const quote = cells
+        .map((el) => el.textContent ?? '')
+        .join('\n')
+        .slice(0, 400)
       const rect = range.getBoundingClientRect()
       const box = containerRef.current.getBoundingClientRect()
       // Centered above the selection, kept inside the diff pane; flips
@@ -109,7 +118,7 @@ export function DiffView({
         below,
         path: row.dataset.path,
         line: Number(row.dataset.line),
-        quote: sel.toString().slice(0, 400),
+        quote,
       })
     }, 0)
   }
@@ -139,7 +148,8 @@ export function DiffView({
           style={{ left: selPop.x, top: selPop.y }}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => {
-            review.onAnchor(selPop.path, selPop.line)
+            // Inline draft only — echoing the anchor into the side pane
+            // would open two composers for one comment.
             setDraftAt({ path: selPop.path, line: selPop.line, quote: selPop.quote })
             setSelPop(null)
             window.getSelection()?.removeAllRanges()

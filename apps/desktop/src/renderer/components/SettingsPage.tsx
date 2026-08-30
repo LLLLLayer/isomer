@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import {
   ArrowLeft,
   Bot,
+  PanelLeft,
   CheckCircle2,
   Copy,
   Download,
@@ -33,6 +34,7 @@ export function SettingsPage(): React.JSX.Element | null {
   const checkUpdate = useAppStore((s) => s.checkUpdate)
   const openExternal = useAppStore((s) => s.openExternal)
   const [section, setSection] = useState<SectionKey>('general')
+  const [navCollapsed, setNavCollapsed] = useState(false)
   const [version, setVersion] = useState('')
 
   useEffect(() => {
@@ -87,14 +89,22 @@ export function SettingsPage(): React.JSX.Element | null {
           <ArrowLeft size={14} strokeWidth={1.8} />
           {t('settings.back')}
         </button>
+        <button
+          className="icon-btn"
+          title={t('sidebar.toggle')}
+          onClick={() => setNavCollapsed((c) => !c)}
+        >
+          <PanelLeft size={14} strokeWidth={1.8} />
+        </button>
         <span className="settings-title">{t('settings.title')}</span>
       </header>
       <div className="settings-body">
-        <nav className="settings-nav">
+        <nav className={`settings-nav${navCollapsed ? ' collapsed' : ''}`}>
           {NAV.map((n) => (
             <button
               key={n.key}
               className={`side-item${section === n.key ? ' active' : ''}`}
+              title={n.label}
               onClick={() => setSection(n.key)}
             >
               <span className="side-icon">{n.icon}</span>
