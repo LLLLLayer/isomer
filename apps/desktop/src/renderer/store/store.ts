@@ -52,6 +52,7 @@ export interface AppState {
   patches: Record<string, string>
   /** Pending file/line anchor for the next comment (set from the diff). */
   commentAnchor: { path: string; line: number } | null
+  sidebarCollapsed: boolean
   terminalOpen: boolean
   terminalDock: 'bottom' | 'right'
   /** Text queued for the terminal (agent summon); sent once a pty exists. */
@@ -91,6 +92,7 @@ export interface AppState {
   runNet(verb: 'fetch' | 'pull' | 'push'): Promise<void>
   addComment(input: { change: string; body: string; path?: string; line?: number; replyTo?: string }): Promise<void>
   resolveComment(id: string): Promise<void>
+  toggleSidebar(): void
   toggleTerminal(): void
   setTerminalDock(dock: 'bottom' | 'right'): void
   /** Open the terminal pre-filled with the agent command + fix prompt. */
@@ -131,6 +133,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedChangeId: null,
   patches: {},
   commentAnchor: null,
+  sidebarCollapsed: storage.get('sidebarCollapsed') === '1',
   terminalOpen: false,
   terminalDock: storage.get('terminalDock') === 'right' ? 'right' : 'bottom',
   pendingTerminalInput: null,
@@ -459,6 +462,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       return
     }
     set({ comments: get().comments.map((c) => (c.id === r.data.id ? r.data : c)) })
+  },
+
+  toggleSidebar() {
+    const collapsed = !get().sidebarCollapsed
+    storage.set('sidebarCollapsed', collapsed ? '1' : '0')
+    set({ sidebarCollapsed: collapsed })
   },
 
   toggleTerminal() {

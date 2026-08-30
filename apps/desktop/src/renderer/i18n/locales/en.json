@@ -104,7 +104,8 @@
     "tags": "Tags",
     "stashes": "Stashes",
     "filter": "Filter",
-    "submodules": "Submodules"
+    "submodules": "Submodules",
+    "toggle": "Toggle sidebar"
   },
   "toolbar": {
     "fetch": "Fetch",
@@ -143,7 +144,10 @@
     "viewOptions": "View options",
     "viewAsTree": "View as Tree",
     "viewAsList": "View as List",
-    "viewAsCombined": "View as Combined List"
+    "viewAsCombined": "View as Combined List",
+    "reveal": "Reveal in Finder",
+    "openDefault": "Open with Default App",
+    "copyPath": "Copy Path"
   },
   "branch": {
     "checkout": "Checkout",

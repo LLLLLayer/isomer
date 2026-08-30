@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { parseUnifiedDiff } from '../diff'
 import { dayKey, graphLayout } from '../graph'
 import { useAppStore } from '../store/store'
+import { useFileContextMenu } from './FileContextMenu'
 import { DiffView } from './DiffView'
 import { FileTreePanel } from './FileTreePanel'
 import { useState } from 'react'
@@ -28,6 +29,7 @@ export function HistoryView(): React.JSX.Element {
   const tab = useAppStore((s) => s.detailTab)
   const setDetailTab = useAppStore((s) => s.setDetailTab)
   const [treeFile, setTreeFile] = useState<string | null>(null)
+  const fileMenu = useFileContextMenu()
 
   if (log.length === 0) {
     return (
@@ -57,6 +59,7 @@ export function HistoryView(): React.JSX.Element {
   const [listH, resizeList] = usePaneSize('commit-list', 300, 140, 640)
   return (
     <div className="history-view">
+      {fileMenu.menu}
       <div className="commit-list" style={{ height: listH, maxHeight: 'none' }}>
         <GraphList
           selected={selected}
@@ -104,6 +107,7 @@ export function HistoryView(): React.JSX.Element {
                 paths={files.map((f) => f.path)}
                 selected={treeFile}
                 onSelect={setTreeFile}
+                onFileContextMenu={fileMenu.onContextMenu}
               />
               <div className="tree-diff">
                 {treeFile ? (

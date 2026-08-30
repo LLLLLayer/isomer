@@ -1,4 +1,5 @@
-import { BrowserWindow, app, dialog, ipcMain, nativeTheme } from 'electron'
+import { BrowserWindow, app, dialog, ipcMain, nativeTheme, shell } from 'electron'
+import { isAbsolute, resolve, sep } from 'node:path'
 import type { InvokeChannel, InvokeContracts, PushChannel, PushContracts } from '../shared/ipc'
 import { err } from '../shared/result'
 import type { Exec } from './services/exec'

@@ -7,6 +7,7 @@ import {
   ArrowUp,
   Download,
   GitBranch,
+  PanelLeft,
   Settings,
   SquareTerminal,
 } from 'lucide-react'
@@ -57,6 +58,10 @@ export function App(): React.JSX.Element {
   const bootstrap = useAppStore((s) => s.bootstrap)
   const toggleTerminal = useAppStore((s) => s.toggleTerminal)
   const openSettings = useAppStore((s) => s.openSettings)
+  const sidebarCollapsed = useAppStore((s) => s.sidebarCollapsed)
+  const toggleSidebar = useAppStore((s) => s.toggleSidebar)
+  const updateInfo = useAppStore((s) => s.updateInfo)
+  const openExternal = useAppStore((s) => s.openExternal)
   const lastError = useAppStore((s) => s.lastError)
   const clearError = useAppStore((s) => s.clearError)
   useTheme(settings.theme)
@@ -94,6 +99,15 @@ export function App(): React.JSX.Element {
     <div className="app-shell">
       <header className="titlebar">
         <div className="toolbar">
+          <button
+            className={`toolbar-btn icon-only${sidebarCollapsed ? '' : ' active'}`}
+            title={t('sidebar.toggle')}
+            onClick={toggleSidebar}
+          >
+            <span className="toolbar-icon">
+              <PanelLeft size={16} strokeWidth={1.8} />
+            </span>
+          </button>
           {netBtn('fetch')}
           {netBtn('pull')}
           {netBtn('push')}
@@ -136,10 +150,14 @@ export function App(): React.JSX.Element {
       </header>
       <div className="main-row">
         <ProjectRail />
-        <div className="pane-wrap" style={{ width: sidebarW }}>
-          <Sidebar />
-        </div>
-        <Splitter axis="x" onDelta={resizeSidebar} />
+        {!sidebarCollapsed && (
+          <>
+            <div className="pane-wrap" style={{ width: sidebarW }}>
+              <Sidebar />
+            </div>
+            <Splitter axis="x" onDelta={resizeSidebar} />
+          </>
+        )}
         {view === 'changes' && <ChangesView />}
         {view === 'history' && <HistoryView />}
         {view === 'stack' && <StackColumns />}

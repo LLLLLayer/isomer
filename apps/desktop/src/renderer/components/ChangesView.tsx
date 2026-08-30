@@ -6,6 +6,7 @@ import { DiffView } from './DiffView'
 import { Splitter, usePaneSize } from '../resize'
 import { splitPath } from '../filetree'
 import { storage } from '../storage'
+import { useFileContextMenu } from './FileContextMenu'
 import { FileListMenu, type FileListMode } from './FileListMenu'
 import { FileTreePanel } from './FileTreePanel'
 import { useState } from 'react'
@@ -29,6 +30,7 @@ export function ChangesView(): React.JSX.Element {
   const setCommitAmend = useAppStore((s) => s.setCommitAmend)
   const doCommit = useAppStore((s) => s.doCommit)
 
+  const fileMenu = useFileContextMenu()
   const entries = status?.entries ?? []
   // Porcelain v2 XY: X = staged side, Y = worktree side.
   const unstaged = entries.filter((e) => e.code === '??' || (e.code[1] ?? '.') !== '.')
@@ -49,6 +51,7 @@ export function ChangesView(): React.JSX.Element {
         className={`file-row${e.path === selectedPath && area === selectedArea ? ' active' : ''}`}
         title={e.path}
         onClick={() => void selectPath(e.path, area)}
+        onContextMenu={(ev) => fileMenu.onContextMenu(ev, e.path)}
       >
         {statusChip(e, area)}
         {listMode === 'list' ? (
@@ -76,6 +79,7 @@ export function ChangesView(): React.JSX.Element {
           const e = list.find((x) => x.path === path)
           return e ? statusChip(e, area) : null
         }}
+        onFileContextMenu={fileMenu.onContextMenu}
       />
     ) : (
       <>{list.map((e) => fileRow(e, area))}</>
@@ -91,6 +95,7 @@ export function ChangesView(): React.JSX.Element {
   }
   return (
     <div className="changes-view">
+      {fileMenu.menu}
       <aside className="stage-column" style={{ width: colW }}>
         <div className="area-header">
           <span>{t('changes.unstaged')}</span>

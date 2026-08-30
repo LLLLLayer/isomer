@@ -104,7 +104,8 @@
     "tags": "标签",
     "stashes": "贮藏",
     "filter": "筛选",
-    "submodules": "子模块"
+    "submodules": "子模块",
+    "toggle": "收起/展开侧边栏"
   },
   "toolbar": {
     "fetch": "拉取远端",
@@ -143,7 +144,10 @@
     "viewOptions": "视图选项",
     "viewAsTree": "以树形查看",
     "viewAsList": "以列表查看",
-    "viewAsCombined": "以完整路径查看"
+    "viewAsCombined": "以完整路径查看",
+    "reveal": "在 Finder 中显示",
+    "openDefault": "用默认应用打开",
+    "copyPath": "复制路径"
   },
   "branch": {
     "checkout": "检出",

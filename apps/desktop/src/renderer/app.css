@@ -80,22 +80,25 @@
   width: 36px;
   height: 36px;
   border-radius: var(--radius-l);
-  border: none;
-  color: var(--on-accent);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--fg) 5%, transparent);
+  color: var(--fg-muted);
   font-family: var(--font-mono);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  opacity: 0.62;
-  transition: opacity 120ms, transform 120ms;
+  transition: background 120ms, color 120ms;
 }
 
 .project-chip:hover {
-  opacity: 0.9;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
 }
 
 .project-chip.active {
-  opacity: 1;
+  background: var(--fg);
+  border-color: var(--fg);
+  color: var(--bg);
 }
 
 .project-chip.active::before {
@@ -106,7 +109,7 @@
   bottom: 8px;
   width: 3px;
   border-radius: 2px;
-  background: var(--accent);
+  background: var(--fg);
 }
 
 .project-chip.add {
@@ -119,8 +122,8 @@
 }
 
 .project-chip.add:hover {
-  color: var(--accent);
-  border-color: var(--accent);
+  color: var(--fg);
+  border-color: var(--fg);
 }
 
 /* ==== panes ============================================================= */
@@ -1218,6 +1221,10 @@ input[type='checkbox'] {
 }
 
 /* ==== fork-style toolbar ================================================ */
+
+.toolbar-btn.icon-only {
+  padding: 4px 8px;
+}
 
 .toolbar-btn {
   display: flex;

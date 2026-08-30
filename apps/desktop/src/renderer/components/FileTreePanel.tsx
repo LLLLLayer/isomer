@@ -9,11 +9,13 @@ export function FileTreePanel({
   selected,
   onSelect,
   badge,
+  onFileContextMenu,
 }: {
   paths: string[]
   selected: string | null
   onSelect: (path: string) => void
   badge?: (path: string) => React.ReactNode
+  onFileContextMenu?: (e: React.MouseEvent, path: string) => void
 }): React.JSX.Element {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const toggle = (path: string): void => {
@@ -50,6 +52,7 @@ export function FileTreePanel({
           style={pad}
           title={n.path}
           onClick={() => onSelect(n.path)}
+          onContextMenu={onFileContextMenu ? (e) => onFileContextMenu(e, n.path) : undefined}
         >
           <span className="tree-chevron-spacer" />
           <FileText size={14} strokeWidth={1.8} className="tree-glyph" />
