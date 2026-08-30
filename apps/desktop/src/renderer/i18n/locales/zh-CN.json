@@ -15,7 +15,9 @@
     "anomalies": "异常",
     "lastOp": "最近操作",
     "count": "{{count}} 个变更",
-    "history": "最近历史"
+    "history": "最近历史",
+    "expand": "展开描述",
+    "noBody": "没有描述。"
   },
   "review": {
     "title": "评审",

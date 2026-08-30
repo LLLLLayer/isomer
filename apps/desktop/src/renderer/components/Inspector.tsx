@@ -3,17 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Bot, Copy, CornerDownRight, X } from 'lucide-react'
 import type { Comment } from '../../shared/ism-types'
 import { useAppStore } from '../store/store'
-
-function relTime(iso: string, t: (k: string, o?: Record<string, unknown>) => string): string {
-  const then = Date.parse(iso)
-  if (Number.isNaN(then)) return ''
-  const mins = Math.round((Date.now() - then) / 60_000)
-  if (mins < 1) return t('time.now')
-  if (mins < 60) return t('time.minutes', { count: mins })
-  const hours = Math.round(mins / 60)
-  if (hours < 24) return t('time.hours', { count: hours })
-  return t('time.days', { count: Math.round(hours / 24) })
-}
+import { relTime } from '../time'
 
 /** Detail pane: the selected change's comment threads (summary view — the
  * diff shows them inline at their lines), a composer, and the agent hook. */

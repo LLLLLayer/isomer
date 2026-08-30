@@ -2094,3 +2094,84 @@ button.side-header {
   padding: 3px 10px;
   cursor: pointer;
 }
+
+/* ==== story history (trunk fallback) ==================================== */
+
+.stack-list.story {
+  position: relative;
+}
+
+.story-day {
+  list-style: none;
+  margin: 2px 0 8px 30px;
+}
+
+.story-item {
+  position: relative;
+  list-style: none;
+  padding-left: 26px;
+  margin-bottom: 10px;
+}
+
+.story-item::before {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: -12px;
+  bottom: -12px;
+  width: 1.5px;
+  background: var(--border);
+}
+
+.story-item:last-child::before {
+  bottom: auto;
+  height: 34px;
+}
+
+.story-item::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 15px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fg-muted);
+  border: 2px solid var(--bg);
+}
+
+.story-item.active::after {
+  background: var(--accent);
+}
+
+.story-expand {
+  position: absolute;
+  right: 6px;
+  top: 8px;
+}
+
+.story-body {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--fg-muted);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--bg-raised);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+}
+
+.ref-badge.tag {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 45%, var(--border));
+  background: color-mix(in srgb, var(--warn) 8%, transparent);
+}
+
+.story-item .change-card {
+  width: 100%;
+}
+
+.story-item .change-card .summary {
+  padding-right: 22px;
+}

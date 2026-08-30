@@ -15,7 +15,9 @@
     "anomalies": "Anomalies",
     "lastOp": "Last operation",
     "count": "{{count}} changes",
-    "history": "Recent history"
+    "history": "Recent history",
+    "expand": "Show description",
+    "noBody": "No description."
   },
   "review": {
     "title": "Review",

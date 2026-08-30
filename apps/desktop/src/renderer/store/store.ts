@@ -52,6 +52,8 @@ export interface AppState {
   patches: Record<string, string>
   /** Pending file/line anchor for the next comment (set from the diff). */
   commentAnchor: { path: string; line: number } | null
+  /** Commit descriptions fetched on demand (story view expansion). */
+  commitBodies: Record<string, string>
   sidebarCollapsed: boolean
   terminalOpen: boolean
   terminalDock: 'bottom' | 'right'
@@ -76,6 +78,7 @@ export interface AppState {
   setDetailTab(tab: DetailTab): void
   selectPath(path: string | null, area?: ChangeArea): Promise<void>
   selectCommit(sha: string | null): Promise<void>
+  loadCommitBody(sha: string): Promise<void>
   stagePaths(paths: string[]): Promise<void>
   unstagePaths(paths: string[]): Promise<void>
   setCommitField(field: 'subject' | 'description', value: string): void
@@ -145,6 +148,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedChangeId: null,
   patches: {},
   commentAnchor: null,
+  commitBodies: {},
   sidebarCollapsed: storage.get('sidebarCollapsed') === '1',
   terminalOpen: false,
   terminalDock: storage.get('terminalDock') === 'right' ? 'right' : 'bottom',
@@ -218,6 +222,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       selectedChangeId: null,
       patches: {},
       commentAnchor: null,
+      commitBodies: {},
     })
     void window.isomer.invoke('repo:watch', { projectId: id })
     if (get().pendingTerminalInput) set({ pendingTerminalInput: null })
@@ -327,6 +332,14 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setDetailTab(tab) {
     set({ detailTab: tab })
+  },
+
+  async loadCommitBody(sha) {
+    const id = get().currentProjectId
+    if (!id || sha in get().commitBodies) return
+    const r = await window.isomer.invoke('git:commit-info', { projectId: id, sha })
+    if (get().currentProjectId !== id) return
+    set({ commitBodies: { ...get().commitBodies, [sha]: r.ok ? r.data.body : '' } })
   },
 
   async stagePaths(paths) {
