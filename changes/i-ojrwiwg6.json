@@ -1,0 +1,9 @@
+{
+  "id": "i-ojrwiwg6",
+  "name": "stack-history-review",
+  "summary": "Make the trunk stack view reviewable, not decorative",
+  "body": "With no pending stack, the history cards used to be inert while the\nreview pane asked you to select a change — a dead end. Cards now\nselect: the review pane shows the picked commit's full highlighted\ndiff, the inspector filters comments by that commit's change identity\n(and lets you add one), and the newest commit is selected on entry.",
+  "deps": [
+    "columns-flex-root-cause"
+  ]
+}

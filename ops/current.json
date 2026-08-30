@@ -1,95 +1,58 @@
 {
   "kind": "apply",
   "branch": "main",
-  "old_head": "8691ec6d3b4c8140549e738cba5695d2beb91e67",
-  "new_head": "3da79542bfe91058d8f688631762eb71d22b5953",
-  "base": "0f69f61e25b199bebe13113083e2fb3a01b7ed73",
-  "old_tree": "89ea08f6a314d3108d59f269315fdcbdc1995eae",
-  "new_tree": "89ea08f6a314d3108d59f269315fdcbdc1995eae",
-  "plan_digest": "sha256:80bde4e1c3fb71323a540b5b632645170403985d2bb5305ba8fce82be5f198f8",
-  "snapshot_digest": "sha256:525972ef1e4d49efe075297ce69caa8e932479daf71c38b0dc9d8b0e580ab3f1",
+  "old_head": "97f6bde6a91caf2522f3c6b459e5e9d1a339d177",
+  "new_head": "eb330f960eea34839b1e60321a99460f9299c1f2",
+  "base": "3da79542bfe91058d8f688631762eb71d22b5953",
+  "old_tree": "70ff59115f5e96dc11e53785d1dceb8ba3ae9f66",
+  "new_tree": "70ff59115f5e96dc11e53785d1dceb8ba3ae9f66",
+  "plan_digest": "sha256:dc331d6f149ba71d8d7f63b4074f9bfb964ef4abeea0c55403a3847df8fa6bf3",
+  "snapshot_digest": "sha256:7697a655ef80f10ebdc96e79a7a83a05841c0e110c577b5bf21019a7a833df82",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:525972ef1e4d49efe075297ce69caa8e932479daf71c38b0dc9d8b0e580ab3f1",
-    "base": "0f69f61e25b199bebe13113083e2fb3a01b7ed73",
+    "snapshot_digest": "sha256:7697a655ef80f10ebdc96e79a7a83a05841c0e110c577b5bf21019a7a833df82",
+    "base": "3da79542bfe91058d8f688631762eb71d22b5953",
     "nodes": [
       {
-        "name": "layout-containment",
-        "summary": "Own the window: the shell never scrolls or under-fills",
-        "body": "Two related layout escapes: xterm's first fit in an unconstrained\ncontainer pushed the shell into document scrolling, and the previous\npatch's html/body/#root height rule missed its anchor silently, so\nthe shell sized to content and left a dead band under the statusbar.\nThe height chain now lives in tokens.css (asserted on edit), every\nfixed-size wrapper is a .pane-wrap with a complete min-size chain,\nand each region scrolls only inside itself.",
+        "name": "columns-flex-root-cause",
+        "summary": "Kill the ghost grid: .columns was never actually flex",
+        "body": "Two earlier grid-to-flex edits had silently missed their anchor (the\nrule's widths had drifted), so .columns stayed a 3-column grid the\nwhole time — five flex children crammed into three cells put the\nreview pane in the wrong column and dropped the inspector to a second\nrow. Diagnosed with a new layout probe in ISOMER_SHOT mode (dumps\nbounding boxes and computed display), which also gains\nISOMER_SHOT_VIEW to force a landing view for captures. Every CSS\nsurgery in this round asserts its anchor now.",
         "from": [
-          "apps/desktop/src/renderer/App.tsx:31#c52b",
-          "apps/desktop/src/renderer/App.tsx:37#5a78",
-          "apps/desktop/src/renderer/App.tsx:128#f4cd",
-          "apps/desktop/src/renderer/App.tsx:138#eccc",
-          "apps/desktop/src/renderer/App.tsx:147#3449",
-          "apps/desktop/src/renderer/app.css:8#0c47",
-          "apps/desktop/src/renderer/app.css:48#a22d",
-          "apps/desktop/src/renderer/theme/tokens.css:56#8b0f"
+          "apps/desktop/src/main/index.ts:54#1175",
+          "apps/desktop/src/main/index.ts:87#b879",
+          "apps/desktop/src/main/index.ts:92#e9ab",
+          "apps/desktop/src/main/index.ts:96#c590",
+          "apps/desktop/src/renderer/app.css:52#09a5",
+          "apps/desktop/src/renderer/app.css:54#af6f",
+          "apps/desktop/src/renderer/app.css:56#18d8",
+          "apps/desktop/src/renderer/store/store.ts:201#8ba8",
+          "apps/desktop/src/renderer/store/store.ts:204#b8cc"
         ]
       },
       {
-        "name": "file-list-views",
-        "summary": "Fork's file-list vocabulary: Tree, List, Combined List",
-        "body": "A view-options menu on the changes list switches between a\ncollapsible file tree (folder glyphs, chevrons, per-file status\nbadges), Fork's default name-plus-dimmed-directory list, and the\nfull-path combined list; the choice persists. The commit detail's\nFile Tree tab is now interactive: pick a file, see its diff beside\nthe tree. Sidebar labels no longer wrap.",
+        "name": "stack-history-review",
+        "summary": "Make the trunk stack view reviewable, not decorative",
+        "body": "With no pending stack, the history cards used to be inert while the\nreview pane asked you to select a change — a dead end. Cards now\nselect: the review pane shows the picked commit's full highlighted\ndiff, the inspector filters comments by that commit's change identity\n(and lets you add one), and the newest commit is selected on entry.",
         "from": [
-          "apps/desktop/src/renderer/components/ChangesView.tsx:7#499d",
-          "apps/desktop/src/renderer/components/ChangesView.tsx:37#7a87",
-          "apps/desktop/src/renderer/components/ChangesView.tsx:44#1127",
-          "apps/desktop/src/renderer/components/ChangesView.tsx:85#43db",
-          "apps/desktop/src/renderer/components/ChangesView.tsx:98#0553",
-          "apps/desktop/src/renderer/components/ChangesView.tsx:107#d5a6",
-          "apps/desktop/src/renderer/components/ChangesView.tsx:119#3c73",
-          "apps/desktop/src/renderer/components/FileListMenu.tsx:1#3d83",
-          "apps/desktop/src/renderer/components/FileTreePanel.tsx:1#92a4",
-          "apps/desktop/src/renderer/components/HistoryView.tsx:3#0c95",
-          "apps/desktop/src/renderer/components/HistoryView.tsx:6#59b0",
-          "apps/desktop/src/renderer/components/HistoryView.tsx:16#e236",
-          "apps/desktop/src/renderer/components/HistoryView.tsx:29#7427",
-          "apps/desktop/src/renderer/components/HistoryView.tsx:116#f59b",
-          "apps/desktop/src/renderer/components/Sidebar.tsx:1#a445",
-          "apps/desktop/src/renderer/components/Sidebar.tsx:73#f91e",
-          "apps/desktop/src/renderer/components/Sidebar.tsx:79#808a",
-          "apps/desktop/src/renderer/components/Sidebar.tsx:117#afc1",
-          "apps/desktop/src/renderer/filetree.test.ts:2#7e5f",
-          "apps/desktop/src/renderer/filetree.test.ts:26#f92f",
-          "apps/desktop/src/renderer/filetree.ts:39#02e7"
+          "apps/desktop/src/renderer/components/Inspector.tsx:17#7952",
+          "apps/desktop/src/renderer/components/Inspector.tsx:21#0aca",
+          "apps/desktop/src/renderer/components/ReviewView.tsx:3#9449",
+          "apps/desktop/src/renderer/components/ReviewView.tsx:6#0ae7",
+          "apps/desktop/src/renderer/components/ReviewView.tsx:19#d34b",
+          "apps/desktop/src/renderer/components/StackView.tsx:12#a454",
+          "apps/desktop/src/renderer/components/StackView.tsx:25#ba2a",
+          "apps/desktop/src/renderer/components/StackView.tsx:34#258d"
         ],
         "deps": [
-          "layout-containment"
-        ]
-      },
-      {
-        "name": "branch-menu",
-        "summary": "Branch context menu: checkout, create, rename, delete, copy",
-        "body": "Right-click a branch for the essentials (double-click checks out).\nCreate and rename prompt inline; delete confirms while showing the\nexact git command it will run — transparency as a feature. All ops\nspawn real git, surface stderr on failure, and refresh through the\nwatcher path.",
-        "from": [
-          "apps/desktop/src/main/ipc.ts:116#026c",
-          "apps/desktop/src/main/services/git.ts:205#441a",
-          "apps/desktop/src/renderer/app.css:1527#51c3",
-          "apps/desktop/src/renderer/components/Modals.tsx:1#7128",
-          "apps/desktop/src/renderer/components/Sidebar.tsx:3#1551",
-          "apps/desktop/src/renderer/components/Sidebar.tsx:39#9ee4",
-          "apps/desktop/src/renderer/components/Sidebar.tsx:82#d6f5",
-          "apps/desktop/src/renderer/components/Sidebar.tsx:131#8a6b",
-          "apps/desktop/src/renderer/i18n/locales/en.json:107#6bc5",
-          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:107#99f3",
-          "apps/desktop/src/renderer/store/store.ts:68#e98e",
-          "apps/desktop/src/renderer/store/store.ts:330#1f1b",
-          "apps/desktop/src/shared/ipc.ts:78#ad70",
-          "apps/desktop/src/shared/ipc.ts:150#34dc"
-        ],
-        "deps": [
-          "file-list-views"
+          "columns-flex-root-cause"
         ]
       }
     ],
     "order": [
-      "layout-containment",
-      "file-list-views",
-      "branch-menu"
+      "columns-flex-root-cause",
+      "stack-history-review"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788079969"
+  "timestamp": "1788081263"
 }

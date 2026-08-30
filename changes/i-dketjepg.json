@@ -1,0 +1,6 @@
+{
+  "id": "i-dketjepg",
+  "name": "columns-flex-root-cause",
+  "summary": "Kill the ghost grid: .columns was never actually flex",
+  "body": "Two earlier grid-to-flex edits had silently missed their anchor (the\nrule's widths had drifted), so .columns stayed a 3-column grid the\nwhole time — five flex children crammed into three cells put the\nreview pane in the wrong column and dropped the inspector to a second\nrow. Diagnosed with a new layout probe in ISOMER_SHOT mode (dumps\nbounding boxes and computed display), which also gains\nISOMER_SHOT_VIEW to force a landing view for captures. Every CSS\nsurgery in this round asserts its anchor now."
+}
