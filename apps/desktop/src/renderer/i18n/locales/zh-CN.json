@@ -40,7 +40,14 @@
     "submitRun": "新建 / 更新 {{count}} 个 PR",
     "submitting": "提交中…",
     "doneNote": "完成——PR 链与变更栈一致。",
-    "viewPr": "打开"
+    "viewPr": "打开",
+    "viewList": "列表",
+    "viewGraph": "图",
+    "edgeTip": "“{{to}}”依赖“{{from}}”——{{count}} 处改动块依赖",
+    "legendUp": "上游（它依赖的）",
+    "legendDown": "下游（依赖它的）",
+    "legendFlow": "base ↑ head",
+    "legendTip": "边由依赖指向依赖它的变更（自下而上）；边越粗，钉住的改动块依赖越多。"
   },
   "review": {
     "title": "评审",

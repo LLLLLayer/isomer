@@ -40,7 +40,14 @@
     "submitRun": "Create / update {{count}} PRs",
     "submitting": "Submitting…",
     "doneNote": "Done — the chain matches the stack.",
-    "viewPr": "Open"
+    "viewPr": "Open",
+    "viewList": "List",
+    "viewGraph": "Graph",
+    "edgeTip": "“{{to}}” needs “{{from}}” — {{count}} pinned hunk dependencies",
+    "legendUp": "upstream",
+    "legendDown": "downstream",
+    "legendFlow": "base ↑ head",
+    "legendTip": "Edges point from dependency to dependent, bottom to top; a thicker edge means more pinned hunk dependencies."
   },
   "review": {
     "title": "Review",

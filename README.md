@@ -70,8 +70,9 @@ talks to ism exclusively by spawning the CLI and parsing its JSON:
   in the UI — provably safe interactive rebase.
 - The stack shows its **evidence**: change-level dependency edges derived
   from line identities (an `independent` chip is a proof the change can
-  land alone), a proof strip with copyable bare-git verification commands,
-  and per-change review state.
+  land alone), a graph view that draws the dependency DAG bottom-up with
+  upstream/downstream lineage highlighting, a proof strip with copyable
+  bare-git verification commands, and per-change review state.
 - **Stacked PRs**: one click maps the stack onto a GitHub PR chain through
   your own `gh` (one branch per change, each PR based on the one below);
   re-running syncs the same PRs by change identity even after a reorganize

@@ -14,8 +14,10 @@ import type { IsmOp } from '../../shared/ipc'
 import { dayKey } from '../graph'
 import { appliedProof, verifyCommands } from '../proof'
 import { changeDeps } from '../stackdeps'
+import { storage } from '../storage'
 import { useAppStore } from '../store/store'
 import { relTime } from '../time'
+import { StackGraph } from './StackGraph'
 import { SubmitStackModal } from './SubmitStack'
 
 /** The change stack: base→head as cards with the evidence only ism has —
@@ -32,6 +34,13 @@ export function StackView(): React.JSX.Element {
   const projectId = useAppStore((s) => s.currentProjectId)
   const [latestOp, setLatestOp] = useState<IsmOp | null>(null)
   const [submitOpen, setSubmitOpen] = useState(false)
+  const [view, setViewState] = useState<'list' | 'graph'>(() =>
+    storage.get('isomer.stackView') === 'graph' ? 'graph' : 'list',
+  )
+  const setView = (v: 'list' | 'graph'): void => {
+    setViewState(v)
+    storage.set('isomer.stackView', v)
+  }
 
   const stacked = snapshot !== null && snapshot.commits.length > 0
   useEffect(() => {
@@ -83,6 +92,20 @@ export function StackView(): React.JSX.Element {
             {t('stack.unresolvedTotal', { count: totalUnresolved })}
           </span>
         )}
+        <div className="segmented">
+          <button
+            className={view === 'list' ? 'active' : ''}
+            onClick={() => setView('list')}
+          >
+            {t('stack.viewList')}
+          </button>
+          <button
+            className={view === 'graph' ? 'active' : ''}
+            onClick={() => setView('graph')}
+          >
+            {t('stack.viewGraph')}
+          </button>
+        </div>
         <button
           className="icon-btn labeled"
           title={t('stack.submitTitle')}
@@ -108,67 +131,92 @@ export function StackView(): React.JSX.Element {
           </button>
         </div>
       )}
-      <ol className="stack-list">
-        {commits.map((c) => {
-          const unresolved = c.change_id ? (unresolvedByChange.get(c.change_id) ?? 0) : 0
-          const edges = deps?.bySha.get(c.sha)
-          const free = deps?.independent.has(c.sha) ?? false
-          const approved = c.change_id !== null && approvals[c.change_id] === true
-          return (
-            <li key={c.sha} className="stack-item">
-              <button
-                className={`change-card${selected === c.sha ? ' active' : ''}`}
-                onClick={() => selectChange(c.sha)}
-              >
-                <span className="summary">{c.title}</span>
-                <span className="badges">
-                  {free && (
-                    <span className="dep-chip free" title={t('stack.independentTip')}>
-                      <Unlink size={10} strokeWidth={2} /> {t('stack.independent')}
-                    </span>
-                  )}
-                  {edges && edges.needs.length > 0 && (
-                    <span
-                      className="dep-chip"
-                      title={edges.needs
-                        .map((n) =>
-                          t('stack.needsTip', {
-                            target: titleOf.get(n.target) ?? n.target.slice(0, 7),
-                            count: n.via.length,
-                          }),
-                        )
-                        .join('\n')}
-                      onClick={(ev) => {
-                        ev.stopPropagation()
-                        selectChange(edges.needs[0].target)
-                      }}
-                    >
-                      <Link2 size={10} strokeWidth={2} />{' '}
-                      {t('stack.needs', { count: edges.needs.length })}
-                    </span>
-                  )}
-                  {approved && (
-                    <span className="dep-chip approved">
-                      <CheckCircle2 size={10} strokeWidth={2} /> {t('stack.approved')}
-                    </span>
-                  )}
-                  <span className="muted">{t('review.hunks', { count: c.hunks.length })}</span>
-                  {unresolved > 0 && <span className="count-pill">{unresolved}</span>}
-                </span>
-              </button>
-              {c.change_id !== null && (
+      {view === 'graph' && deps && (
+        <StackGraph
+          commits={snapshot.commits}
+          deps={deps}
+          selected={selected}
+          onSelect={selectChange}
+          approvedShas={
+            new Set(
+              snapshot.commits
+                .filter((c) => c.change_id !== null && approvals[c.change_id] === true)
+                .map((c) => c.sha),
+            )
+          }
+          unresolvedBySha={
+            new Map(
+              snapshot.commits.map((c) => [
+                c.sha,
+                c.change_id !== null ? (unresolvedByChange.get(c.change_id) ?? 0) : 0,
+              ]),
+            )
+          }
+        />
+      )}
+      {view === 'list' && (
+        <ol className="stack-list">
+          {commits.map((c) => {
+            const unresolved = c.change_id ? (unresolvedByChange.get(c.change_id) ?? 0) : 0
+            const edges = deps?.bySha.get(c.sha)
+            const free = deps?.independent.has(c.sha) ?? false
+            const approved = c.change_id !== null && approvals[c.change_id] === true
+            return (
+              <li key={c.sha} className="stack-item">
                 <button
-                  className={`approve-btn icon-btn${approved ? ' on' : ''}`}
-                  title={approved ? t('stack.unapprove') : t('stack.approve')}
-                  onClick={() => c.change_id !== null && toggleApproval(c.change_id)}
+                  className={`change-card${selected === c.sha ? ' active' : ''}`}
+                  onClick={() => selectChange(c.sha)}
                 >
-                  <CheckCircle2 size={13} strokeWidth={1.8} />
+                  <span className="summary">{c.title}</span>
+                  <span className="badges">
+                    {free && (
+                      <span className="dep-chip free" title={t('stack.independentTip')}>
+                        <Unlink size={10} strokeWidth={2} /> {t('stack.independent')}
+                      </span>
+                    )}
+                    {edges && edges.needs.length > 0 && (
+                      <span
+                        className="dep-chip"
+                        title={edges.needs
+                          .map((n) =>
+                            t('stack.needsTip', {
+                              target: titleOf.get(n.target) ?? n.target.slice(0, 7),
+                              count: n.via.length,
+                            }),
+                          )
+                          .join('\n')}
+                        onClick={(ev) => {
+                          ev.stopPropagation()
+                          selectChange(edges.needs[0].target)
+                        }}
+                      >
+                        <Link2 size={10} strokeWidth={2} />{' '}
+                        {t('stack.needs', { count: edges.needs.length })}
+                      </span>
+                    )}
+                    {approved && (
+                      <span className="dep-chip approved">
+                        <CheckCircle2 size={10} strokeWidth={2} /> {t('stack.approved')}
+                      </span>
+                    )}
+                    <span className="muted">{t('review.hunks', { count: c.hunks.length })}</span>
+                    {unresolved > 0 && <span className="count-pill">{unresolved}</span>}
+                  </span>
                 </button>
-              )}
-            </li>
-          )
-        })}
-      </ol>
+                {c.change_id !== null && (
+                  <button
+                    className={`approve-btn icon-btn${approved ? ' on' : ''}`}
+                    title={approved ? t('stack.unapprove') : t('stack.approve')}
+                    onClick={() => c.change_id !== null && toggleApproval(c.change_id)}
+                  >
+                    <CheckCircle2 size={13} strokeWidth={1.8} />
+                  </button>
+                )}
+              </li>
+            )
+          })}
+        </ol>
+      )}
       {snapshot.anomalies.length > 0 && (
         <footer className="anomalies">
           <span className="muted">{t('stack.anomalies')}</span>
