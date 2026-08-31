@@ -391,6 +391,10 @@
   padding: 8px 12px;
   gap: 4px;
   justify-content: center;
+  /* Chromium's UA stylesheet gives <button> align-items: flex-start, so
+     children take content width and a long title silently outgrows the
+     card — its own box never overflows and text-overflow never fires. */
+  align-items: stretch;
   border-radius: var(--radius);
   background: var(--bg);
   border-color: var(--border);
@@ -401,6 +405,10 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.sg-card .badges {
+  min-width: 0;
 }
 
 .sg-card.active {
