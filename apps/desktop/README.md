@@ -48,7 +48,9 @@ Three processes, strict contracts:
   `projects.ts` (repo registry with pin/group metadata).
 - **Renderer** — React + zustand. Views: Local Changes (hunk-level staging,
   conflict flow), All Commits (topology graph, search), Change Stack
-  (review with inline, line-anchored comments), Organize (the stack editor:
+  (review with inline, line-anchored comments; a List | Graph toggle draws
+  the change-level dependency DAG bottom-up with upstream/downstream
+  lineage highlighting), Organize (the stack editor:
   drafts → R1–R8 check → apply → tree-equality proof), plus a full-page
   Settings and a Cmd+P quick launcher. All colors come from
   `src/renderer/theme/tokens.css`; a test rejects raw hex anywhere else.

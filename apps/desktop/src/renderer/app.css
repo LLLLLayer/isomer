@@ -309,6 +309,164 @@
   color: var(--ok);
 }
 
+/* ---- stack graph: the change-level dependency DAG --------------------- */
+
+.stack-graph {
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-l);
+  background: var(--bg-raised);
+}
+
+.stack-graph svg {
+  display: block;
+}
+
+.sg-edge {
+  fill: none;
+  stroke: color-mix(in srgb, var(--fg-muted) 55%, transparent);
+  transition: opacity 120ms, stroke 120ms;
+}
+
+.sg-edge.up {
+  stroke: var(--accent);
+}
+
+.sg-edge.down {
+  stroke: var(--graph-5);
+}
+
+.sg-edge.dim {
+  opacity: 0.15;
+}
+
+#sg-arrow path {
+  fill: color-mix(in srgb, var(--fg-muted) 75%, transparent);
+}
+
+#sg-arrow-up path {
+  fill: var(--accent);
+}
+
+#sg-arrow-down path {
+  fill: var(--graph-5);
+}
+
+.sg-node {
+  cursor: pointer;
+}
+
+.sg-node rect {
+  fill: var(--bg);
+  stroke: var(--border);
+  transition: stroke 120ms, opacity 120ms;
+}
+
+.sg-node.free rect {
+  stroke: color-mix(in srgb, var(--ok) 50%, var(--border));
+}
+
+.sg-node:hover rect,
+.sg-node:focus-visible rect,
+.sg-node.focus rect {
+  stroke: var(--accent);
+}
+
+.sg-node:focus-visible {
+  outline: none;
+}
+
+.sg-node.focus rect {
+  stroke-width: 1.6;
+  fill: color-mix(in srgb, var(--accent) 6%, var(--bg));
+}
+
+.sg-node.up rect {
+  stroke: var(--accent);
+}
+
+.sg-node.down rect {
+  stroke: var(--graph-5);
+}
+
+.sg-node.dim {
+  opacity: 0.35;
+}
+
+.sg-label {
+  height: 100%;
+  padding: 7px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sg-title {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sg-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+}
+
+.sg-free {
+  color: var(--ok);
+  font-weight: 600;
+}
+
+.sg-approved {
+  display: inline-flex;
+  color: var(--ok);
+}
+
+.sg-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--fg-muted);
+  padding: 6px 10px;
+  border-top: 1px solid var(--border);
+  position: sticky;
+  left: 0;
+}
+
+.sg-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.sg-key {
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.sg-key.up {
+  background: var(--accent);
+}
+
+.sg-key.down {
+  background: var(--graph-5);
+}
+
+.sg-key.free {
+  background: var(--ok);
+}
+
 .organize-hunk.violated {
   border-color: color-mix(in srgb, var(--warn) 45%, transparent);
   background: color-mix(in srgb, var(--warn) 6%, transparent);
