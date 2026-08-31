@@ -119,7 +119,7 @@ export function StackView(): React.JSX.Element {
       {proven && latestOp && (
         <div className="proof-strip">
           <ShieldCheck size={13} strokeWidth={1.8} />
-          <span>{t('stack.proven')}</span>
+          <span className="proof-label">{t('stack.proven')}</span>
           <span className="mono muted">{latestOp.new_tree.slice(0, 12)}</span>
           <span className="spacer" />
           <button

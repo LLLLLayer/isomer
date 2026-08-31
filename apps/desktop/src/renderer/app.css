@@ -142,7 +142,9 @@
 .pane-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  /* Narrow panes: controls flow onto extra rows — never overlap or clip. */
+  flex-wrap: wrap;
+  gap: 6px 8px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -233,6 +235,7 @@
   text-align: center;
   font-size: 10px;
   font-weight: 700;
+  white-space: nowrap;
   color: var(--warn);
   background: color-mix(in srgb, var(--warn) 14%, transparent);
   border-radius: 99px;
@@ -302,6 +305,14 @@
 
 .proof-strip .mono {
   font-family: var(--font-mono);
+}
+
+.proof-strip .proof-label {
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .proof-tick {
