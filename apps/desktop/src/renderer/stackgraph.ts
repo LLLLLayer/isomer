@@ -1,86 +1,75 @@
-/** Layered DAG layout for the change stack, pure and renderer-agnostic.
+/** Rail layout for the change-stack dependency graph, pure and
+ * renderer-agnostic.
  *
- * Columns are longest dependency paths: a change sits one column right of
- * its deepest dependency, so every edge points strictly left→right
- * (upstream → downstream). Rows start from stack order and pull toward the
- * mean row of the dependencies, which keeps diamonds compact without a
- * full crossing-minimization pass.
+ * Graph mode keeps the list's full-width, readable cards (head first, base
+ * at the bottom) and draws dependency edges as brackets in a left gutter —
+ * the same shape every commit-graph rail uses, so it stays legible at any
+ * pane width. Edges spanning overlapping row ranges get distinct lanes;
+ * edges that merely touch at a shared card may share one, so a chain reads
+ * as a single continuous line.
  */
 import type { ChangeDeps } from './stackdeps'
 
-export interface GraphNode {
-  sha: string
-  /** Column index, 0 = deepest upstream. */
-  layer: number
-  /** Row within the column. */
-  row: number
-}
-
-export interface GraphEdge {
-  /** Dependency (upstream, drawn left). */
+export interface RailEdge {
+  /** Dependency (the lower card — closer to base). */
   from: string
-  /** Dependent (downstream, drawn right). */
+  /** Dependent (the upper card). */
   to: string
   /** Pinned hunk-dependency pairs — the edge's evidence weight. */
   via: number
+  /** Gutter lane, 0 = nearest the cards. */
+  lane: number
 }
 
-export interface StackGraphLayout {
-  nodes: GraphNode[]
-  edges: GraphEdge[]
-  columns: number
-  rows: number
+export interface RailLayout {
+  /** Display order: head first (top), base last — same as the list. */
+  order: string[]
+  edges: RailEdge[]
+  lanes: number
 }
 
 /** Lay out `commits` (git order, base→head) against the change-level dep
- * map from `changeDeps`. Dependencies always point at earlier commits, so
- * a single pass resolves every layer; an edge whose target is not laid
- * out (malformed input) is dropped rather than drawn dangling. */
-export function stackGraphLayout(
+ * map from `changeDeps`. An edge whose endpoint is not in the commits
+ * (malformed input) is dropped rather than drawn dangling. */
+export function railLayout(
   commits: { sha: string }[],
   bySha: Map<string, ChangeDeps>,
-): StackGraphLayout {
-  const layerOf = new Map<string, number>()
-  const rowOf = new Map<string, number>()
-  const taken = new Map<number, Set<number>>()
-  const nodes: GraphNode[] = []
-  const edges: GraphEdge[] = []
+): RailLayout {
+  const order = commits.map((c) => c.sha).reverse()
+  const rowOf = new Map(order.map((sha, row) => [sha, row]))
 
+  const raw: { from: string; to: string; via: number; lo: number; hi: number }[] = []
   for (const c of commits) {
-    const needs = (bySha.get(c.sha)?.needs ?? []).filter((n) => layerOf.has(n.target))
-    let layer = 0
-    for (const n of needs) layer = Math.max(layer, (layerOf.get(n.target) ?? 0) + 1)
-    layerOf.set(c.sha, layer)
-
-    const rows = taken.get(layer) ?? new Set<number>()
-    taken.set(layer, rows)
-    // Aim at the mean row of the dependencies (stack order for roots),
-    // then take the nearest free slot: desired, +1, -1, +2, -2, …
-    const desired =
-      needs.length === 0
-        ? rows.size
-        : Math.round(needs.reduce((a, n) => a + (rowOf.get(n.target) ?? 0), 0) / needs.length)
-    let row = -1
-    for (let off = 0; row === -1; off++) {
-      for (const cand of off === 0 ? [desired] : [desired + off, desired - off]) {
-        if (cand >= 0 && !rows.has(cand)) {
-          row = cand
-          break
-        }
-      }
+    for (const n of bySha.get(c.sha)?.needs ?? []) {
+      const a = rowOf.get(n.target)
+      const b = rowOf.get(c.sha)
+      if (a === undefined || b === undefined || a === b) continue
+      raw.push({
+        from: n.target,
+        to: c.sha,
+        via: n.via.length,
+        lo: Math.min(a, b),
+        hi: Math.max(a, b),
+      })
     }
-    rows.add(row)
-    rowOf.set(c.sha, row)
-    nodes.push({ sha: c.sha, layer, row })
-    for (const n of needs) edges.push({ from: n.target, to: c.sha, via: n.via.length })
   }
 
-  return {
-    nodes,
-    edges,
-    columns: nodes.reduce((a, n) => Math.max(a, n.layer + 1), 0),
-    rows: nodes.reduce((a, n) => Math.max(a, n.row + 1), 0),
-  }
+  // Greedy interval partitioning over row spans: smallest lane whose last
+  // edge ends at or above this one's start (touching = sharing one card).
+  raw.sort((x, y) => x.lo - y.lo || x.hi - y.hi)
+  const laneEnd: number[] = []
+  const edges: RailEdge[] = raw.map((e) => {
+    let lane = laneEnd.findIndex((end) => end <= e.lo)
+    if (lane === -1) {
+      lane = laneEnd.length
+      laneEnd.push(e.hi)
+    } else {
+      laneEnd[lane] = e.hi
+    }
+    return { from: e.from, to: e.to, via: e.via, lane }
+  })
+
+  return { order, edges, lanes: laneEnd.length }
 }
 
 /** Transitive upstream (dependencies) and downstream (dependents) of one
