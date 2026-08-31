@@ -1,16 +1,16 @@
 {
   "kind": "apply",
   "branch": "feat/stack-graph",
-  "old_head": "f2f02bc04a093f1cb7a848183b37d899ea35d7d7",
-  "new_head": "9adcf9df7f2733d9bd438121a04c0371d089bf6c",
+  "old_head": "ec4f08846e73ce925b082d0fd7a3f10e4e6cd5f5",
+  "new_head": "7160a1208e7b6767a43a161afd407f1b853831bd",
   "base": "13f7cfa66baa8536bf872e3096705de33ea2f194",
-  "old_tree": "f891af6fb5edb79cffa1c4fcc4b009ddaf07ed35",
-  "new_tree": "f891af6fb5edb79cffa1c4fcc4b009ddaf07ed35",
-  "plan_digest": "sha256:ab8fdfab981a4fbd0728d85ae069595f2a0f97dc5309480425aa336ebab68d94",
-  "snapshot_digest": "sha256:1b510bc23e524ea311510fe92782452564896747e83256a6c5b9167ac1be25e4",
+  "old_tree": "93198e2e12295af41bff6731670987d929220106",
+  "new_tree": "93198e2e12295af41bff6731670987d929220106",
+  "plan_digest": "sha256:f32dcabe4cb0f3b49f1f2a117b2a79e9fa2d12fc4c47583d67aac3aab2c9485b",
+  "snapshot_digest": "sha256:08b6c3b6ca4c23b519b403bb3ae5e400109eec3665b2b75bea677cb77bd79bb9",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:1b510bc23e524ea311510fe92782452564896747e83256a6c5b9167ac1be25e4",
+    "snapshot_digest": "sha256:08b6c3b6ca4c23b519b403bb3ae5e400109eec3665b2b75bea677cb77bd79bb9",
     "nodes": [
       {
         "name": "dag-layout",
@@ -18,8 +18,8 @@
         "summary": "The change DAG learns layers and lineage",
         "body": "A pure, renderer-agnostic layout for the change-level dependency graph: columns are longest dependency paths so every edge points strictly upstream-to-downstream, rows pull toward the mean row of the dependencies to keep diamonds compact, and lineage() walks the transitive closure both ways for highlighting.",
         "from": [
-          "apps/desktop/src/renderer/stackgraph.test.ts:1#1af5",
-          "apps/desktop/src/renderer/stackgraph.ts:1#da8a"
+          "apps/desktop/src/renderer/stackgraph.test.ts:1#bfac",
+          "apps/desktop/src/renderer/stackgraph.ts:1#c13f"
         ]
       },
       {
@@ -28,21 +28,26 @@
         "summary": "The stack draws itself as a graph",
         "body": "A List | Graph toggle on the Change Stack view. Graph mode renders the dependency DAG as an SVG drawn bottom-up (base at the bottom, like the stack it linearizes into): independent changes get the ok hue, hovering or selecting a change lights its upstream lineage in accent and its downstream lineage in graph-5 while the rest dims, edge thickness encodes how many pinned hunk dependencies prove the edge, and the whole drawing shrinks to the pane width via viewBox scaling. The chosen mode persists.",
         "from": [
-          "README.md:73#079c",
-          "apps/desktop/README.md:51#fd89",
-          "apps/desktop/src/renderer/app.css:312#3413",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:1#80e6",
-          "apps/desktop/src/renderer/components/StackView.tsx:17#26d2",
-          "apps/desktop/src/renderer/components/StackView.tsx:20#39d1",
-          "apps/desktop/src/renderer/components/StackView.tsx:37#cc71",
-          "apps/desktop/src/renderer/components/StackView.tsx:95#b8b9",
-          "apps/desktop/src/renderer/components/StackView.tsx:134#3a0e",
-          "apps/desktop/src/renderer/components/StackView.tsx:167#9e85",
-          "apps/desktop/src/renderer/components/StackView.tsx:170#4078",
-          "apps/desktop/src/renderer/components/StackView.tsx:206#b8c3",
-          "apps/desktop/src/renderer/i18n/locales/en.json:43#a3ad",
-          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:43#5708",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:32#da2a"
+          "README.md:73#fe76",
+          "apps/desktop/README.md:51#4c12",
+          "apps/desktop/src/renderer/app.css:312#9b98",
+          "apps/desktop/src/renderer/components/StackGraph.tsx:1#8c1f",
+          "apps/desktop/src/renderer/components/StackView.tsx:17#bc27",
+          "apps/desktop/src/renderer/components/StackView.tsx:20#e21e",
+          "apps/desktop/src/renderer/components/StackView.tsx:37#bdf4",
+          "apps/desktop/src/renderer/components/StackView.tsx:95#1cfa",
+          "apps/desktop/src/renderer/components/StackView.tsx:134#f3b9",
+          "apps/desktop/src/renderer/components/StackView.tsx:167#44c7",
+          "apps/desktop/src/renderer/components/StackView.tsx:170#a988",
+          "apps/desktop/src/renderer/components/StackView.tsx:206#e39a",
+          "apps/desktop/src/renderer/i18n/locales/en.json:43#a8e3",
+          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:43#11d8",
+          "apps/desktop/src/renderer/app.css:370#59e7",
+          "apps/desktop/src/renderer/app.css:375#95fe",
+          "apps/desktop/src/renderer/components/StackGraph.tsx:13#f68a",
+          "apps/desktop/src/renderer/components/StackGraph.tsx:76#3e87",
+          "apps/desktop/src/renderer/components/StackGraph.tsx:136#3efb",
+          "apps/desktop/src/renderer/components/StackGraph.tsx:140#c714"
         ]
       }
     ],
@@ -52,5 +57,5 @@
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788182123"
+  "timestamp": "1788182839"
 }
