@@ -1,101 +1,31 @@
 {
   "kind": "apply",
-  "branch": "feat/stack-rail",
-  "old_head": "0ccb300af8c68f658a5d70f7ad4437272462934b",
-  "new_head": "dd5df4220970d3eb42acd280d7fd7b9810ab250a",
-  "base": "6dca01bf56e096d8d212af3a11342fe028561c60",
-  "old_tree": "63a24f1057022bdf6cffc758f98c07a6e704cafe",
-  "new_tree": "63a24f1057022bdf6cffc758f98c07a6e704cafe",
-  "plan_digest": "sha256:dec73a826c50152a92ed737bc26df128bc4d9ae9bca3ef8cc4a4e983ae712c53",
-  "snapshot_digest": "sha256:20252463d6516bf345ea889c48b08b6714719ff98128031956cb43acf649560b",
+  "branch": "fix/sg-ellipsis",
+  "old_head": "1bcfd630215e04ae7c942bb32484dc527cca158b",
+  "new_head": "3f67267cfff9a31fd5c0e6e969163c624b8716bb",
+  "base": "9da0e8f33a2573d77e297d2eaddcf3228dbf34d9",
+  "old_tree": "634624892d60f1fe8cf4716d5c87bb849eb159a8",
+  "new_tree": "634624892d60f1fe8cf4716d5c87bb849eb159a8",
+  "plan_digest": "sha256:0a9b1ea4fb6c7c40b9732575ec58d257ff051ec4cc10a68d4b31b50a0e5182f4",
+  "snapshot_digest": "sha256:29df0f9f23f96064c206c5e83de2c1289119f02ce84b2c1d781917643d55fd65",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:20252463d6516bf345ea889c48b08b6714719ff98128031956cb43acf649560b",
+    "snapshot_digest": "sha256:29df0f9f23f96064c206c5e83de2c1289119f02ce84b2c1d781917643d55fd65",
     "nodes": [
       {
-        "name": "narrow-pane",
-        "change": "i-3oygpnwo",
-        "summary": "Narrow panes stop eating the header",
-        "body": "At 220px the stack header overlapped its own controls (the unresolved pill rendered over the view toggle, Submit PRs was clipped) and the proof strip wrapped to three lines. Pane titles now wrap instead of overflowing, count pills refuse to break, and the proof label ellipsizes so the strip stays one line with the hash and copy button intact.",
+        "name": "ua-stretch",
+        "summary": "Buttons secretly refuse to stretch their children",
+        "body": "Chromium's UA stylesheet gives <button> align-items: flex-start, so the rail card's summary span took its content width, never overflowed its own box, and text-overflow: ellipsis never fired — long titles were hard-clipped at the card border instead. Restore align-items: stretch on the card and the ellipsis works; the badges row now also spans the card, putting the unresolved pill at the right edge. Root-caused with an in-app computed-style probe (span 180.7px inside a 166.9px card).",
         "from": [
-          "apps/desktop/src/renderer/app.css:145#d5e6",
-          "apps/desktop/src/renderer/app.css:239#eb08",
-          "apps/desktop/src/renderer/app.css:311#3b89",
-          "apps/desktop/src/renderer/components/StackView.tsx:122#e90b",
-          "apps/desktop/src/renderer/app.css:147#10de"
-        ]
-      },
-      {
-        "name": "rail-lanes",
-        "change": "i-vh3khsmc",
-        "summary": "The rail learns interval lanes",
-        "body": "railLayout replaces the 2D canvas layout: cards keep list order (head first), dependency edges become gutter brackets, and greedy interval partitioning over row spans assigns lanes — properly overlapping spans get distinct lanes while edges that merely share a card may share one, so a chain reads as a single continuous line. lineage() is unchanged.",
-        "from": [
-          "apps/desktop/src/renderer/stackgraph.test.ts:3#55cb",
-          "apps/desktop/src/renderer/stackgraph.test.ts:39#f956",
-          "apps/desktop/src/renderer/stackgraph.test.ts:51#2452",
-          "apps/desktop/src/renderer/stackgraph.test.ts:80#3692",
-          "apps/desktop/src/renderer/stackgraph.test.ts:84#d57d",
-          "apps/desktop/src/renderer/stackgraph.test.ts:88#687b",
-          "apps/desktop/src/renderer/stackgraph.test.ts:90#c124",
-          "apps/desktop/src/renderer/stackgraph.test.ts:93#b6f0",
-          "apps/desktop/src/renderer/stackgraph.test.ts:95#0ce4",
-          "apps/desktop/src/renderer/stackgraph.test.ts:100#530c",
-          "apps/desktop/src/renderer/stackgraph.test.ts:111#c41f",
-          "apps/desktop/src/renderer/stackgraph.ts:1#f9d0",
-          "apps/desktop/src/renderer/stackgraph.ts:4#d2f7",
-          "apps/desktop/src/renderer/stackgraph.ts:13#f9bd",
-          "apps/desktop/src/renderer/stackgraph.ts:16#f820",
-          "apps/desktop/src/renderer/stackgraph.ts:20#6306",
-          "apps/desktop/src/renderer/stackgraph.ts:24#b1f4",
-          "apps/desktop/src/renderer/stackgraph.ts:32#def1",
-          "apps/desktop/src/renderer/stackgraph.ts:37#8e2c",
-          "apps/desktop/src/renderer/stackgraph.ts:41#fb45",
-          "apps/desktop/src/renderer/stackgraph.ts:43#4cdc",
-          "apps/desktop/src/renderer/stackgraph.ts:54#ff6d",
-          "apps/desktop/src/renderer/stackgraph.ts:57#3416"
-        ]
-      },
-      {
-        "name": "rail-view",
-        "change": "i-hgpaaeru",
-        "summary": "Graph mode becomes a rail beside full cards",
-        "body": "The canvas DAG could not survive a 220-480px pane: fixed-width nodes truncated titles and the drawing either shrank into illegibility or clipped. Graph mode now keeps the list's full-width, fixed-height cards (native buttons — keyboard accessible for free) and draws the dependency evidence as bracket edges in a left rail, the shape every commit graph uses. Lineage highlighting, edge-weight strokes, and evidence tooltips carry over unchanged.",
-        "from": [
-          "apps/desktop/README.md:51#e0b4",
-          "apps/desktop/src/renderer/app.css:367#c8db",
-          "apps/desktop/src/renderer/app.css:373#2a92",
-          "apps/desktop/src/renderer/app.css:378#c178",
-          "apps/desktop/src/renderer/app.css:386#d7d6",
-          "apps/desktop/src/renderer/app.css:395#3b4d",
-          "apps/desktop/src/renderer/app.css:401#625d",
-          "apps/desktop/src/renderer/app.css:407#7ac7",
-          "apps/desktop/src/renderer/app.css:412#8e37",
-          "apps/desktop/src/renderer/app.css:437#ed8b",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:3#e1d5",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:6#ad2e",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:8#48fe",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:13#7a5c",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:31#2718",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:42#f991",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:47#210b",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:56#c46e",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:68#8604",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:139#6904",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:144#72cb",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:147#1d97",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:1#2e6d",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:30#cbcc",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:36#86d5"
+          "apps/desktop/src/renderer/app.css:394#0575",
+          "apps/desktop/src/renderer/app.css:410#2487"
         ]
       }
     ],
     "order": [
-      "narrow-pane",
-      "rail-lanes",
-      "rail-view"
+      "ua-stretch"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788184424"
+  "timestamp": "1788185081"
 }

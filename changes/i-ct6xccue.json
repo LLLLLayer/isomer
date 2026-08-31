@@ -1,0 +1,6 @@
+{
+  "id": "i-ct6xccue",
+  "name": "ua-stretch",
+  "summary": "Buttons secretly refuse to stretch their children",
+  "body": "Chromium's UA stylesheet gives <button> align-items: flex-start, so the rail card's summary span took its content width, never overflowed its own box, and text-overflow: ellipsis never fired — long titles were hard-clipped at the card border instead. Restore align-items: stretch on the card and the ellipsis works; the badges row now also spans the card, putting the unresolved pill at the right edge. Root-caused with an in-app computed-style probe (span 180.7px inside a 166.9px card)."
+}
