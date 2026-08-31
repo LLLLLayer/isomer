@@ -1,0 +1,6 @@
+{
+  "id": "i-guaa5fen",
+  "name": "graph-view",
+  "summary": "The stack draws itself as a graph",
+  "body": "A List | Graph toggle on the Change Stack view. Graph mode renders the dependency DAG as an SVG drawn bottom-up (base at the bottom, like the stack it linearizes into): independent changes get the ok hue, hovering or selecting a change lights its upstream lineage in accent and its downstream lineage in graph-5 while the rest dims, edge thickness encodes how many pinned hunk dependencies prove the edge, and the whole drawing shrinks to the pane width via viewBox scaling. The chosen mode persists."
+}

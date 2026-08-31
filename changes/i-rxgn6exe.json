@@ -1,0 +1,6 @@
+{
+  "id": "i-rxgn6exe",
+  "name": "dag-layout",
+  "summary": "The change DAG learns layers and lineage",
+  "body": "A pure, renderer-agnostic layout for the change-level dependency graph: columns are longest dependency paths so every edge points strictly upstream-to-downstream, rows pull toward the mean row of the dependencies to keep diamonds compact, and lineage() walks the transitive closure both ways for highlighting."
+}
