@@ -1,0 +1,6 @@
+{
+  "id": "i-nrqx3qcz",
+  "name": "tree-view",
+  "summary": "Graph mode grows rings, not wires",
+  "body": "The rail rendering answered no user question, so tree mode now draws the outline the stacked-PR world settled on: full-width cards indented under what they build on, guide lines and elbows like a file tree, a #n landing-position badge per row, clickable \"+ needs\" chips for diamond arms (labels truncate, tooltips keep the evidence), and lineage coloring that only adds — upstream accent, downstream graph-5, nothing dimmed into looking disabled. The toggle reads List | Tree; the legacy graph preference maps to tree."
+}

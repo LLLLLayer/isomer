@@ -1,0 +1,6 @@
+{
+  "id": "i-fvvgtgyv",
+  "name": "tree-model",
+  "summary": "The stack learns to be an outline",
+  "body": "stackTree replaces the rail layout: the stack stays a linearization (landing order is the spine), and dependency structure becomes indentation — a change nests under its deepest dependency (git-nearest on ties), diamond arms beyond the tree edge are kept as annotations, and every row carries its 1-based landing position so grouping by structure never loses the order. File-tree guide columns and elbow flags are computed here, pure and tested; malformed forward/self/unknown deps are dropped so the tree cannot cycle."
+}

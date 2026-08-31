@@ -1,31 +1,67 @@
 {
   "kind": "apply",
-  "branch": "fix/sg-ellipsis",
-  "old_head": "1bcfd630215e04ae7c942bb32484dc527cca158b",
-  "new_head": "3f67267cfff9a31fd5c0e6e969163c624b8716bb",
-  "base": "9da0e8f33a2573d77e297d2eaddcf3228dbf34d9",
-  "old_tree": "634624892d60f1fe8cf4716d5c87bb849eb159a8",
-  "new_tree": "634624892d60f1fe8cf4716d5c87bb849eb159a8",
-  "plan_digest": "sha256:0a9b1ea4fb6c7c40b9732575ec58d257ff051ec4cc10a68d4b31b50a0e5182f4",
-  "snapshot_digest": "sha256:29df0f9f23f96064c206c5e83de2c1289119f02ce84b2c1d781917643d55fd65",
+  "branch": "feat/stack-tree",
+  "old_head": "7fb9d22cc527b958d9b15537fea02a8d094b91a5",
+  "new_head": "0c8b9c38e0f3b51057fc033ae654e584d78794a2",
+  "base": "995dc606d190236302f1a9824f6167de462ce5cd",
+  "old_tree": "bb639fa961016b0b593b3e18fcc006215adea21b",
+  "new_tree": "bb639fa961016b0b593b3e18fcc006215adea21b",
+  "plan_digest": "sha256:baaf6a05cd5936232f36c5a3836a3a627c32873e679291a96b2db148d96baed5",
+  "snapshot_digest": "sha256:1a534c8ec72d3ed9ada8637fc4cdddfc6e6c8109d06d978694a3e45d4a3370b0",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:29df0f9f23f96064c206c5e83de2c1289119f02ce84b2c1d781917643d55fd65",
+    "snapshot_digest": "sha256:1a534c8ec72d3ed9ada8637fc4cdddfc6e6c8109d06d978694a3e45d4a3370b0",
     "nodes": [
       {
-        "name": "ua-stretch",
-        "summary": "Buttons secretly refuse to stretch their children",
-        "body": "Chromium's UA stylesheet gives <button> align-items: flex-start, so the rail card's summary span took its content width, never overflowed its own box, and text-overflow: ellipsis never fired — long titles were hard-clipped at the card border instead. Restore align-items: stretch on the card and the ellipsis works; the badges row now also spans the card, putting the unresolved pill at the right edge. Root-caused with an in-app computed-style probe (span 180.7px inside a 166.9px card).",
+        "name": "tree-model",
+        "summary": "The stack learns to be an outline",
+        "body": "stackTree replaces the rail layout: the stack stays a linearization (landing order is the spine), and dependency structure becomes indentation — a change nests under its deepest dependency (git-nearest on ties), diamond arms beyond the tree edge are kept as annotations, and every row carries its 1-based landing position so grouping by structure never loses the order. File-tree guide columns and elbow flags are computed here, pure and tested; malformed forward/self/unknown deps are dropped so the tree cannot cycle.",
         "from": [
-          "apps/desktop/src/renderer/app.css:394#0575",
-          "apps/desktop/src/renderer/app.css:410#2487"
+          "apps/desktop/src/renderer/stackgraph.test.ts:0#6857",
+          "apps/desktop/src/renderer/stackgraph.ts:0#e3ea",
+          "apps/desktop/src/renderer/stacktree.test.ts:1#55e4",
+          "apps/desktop/src/renderer/stacktree.ts:1#f0b2"
+        ]
+      },
+      {
+        "name": "tree-view",
+        "summary": "Graph mode grows rings, not wires",
+        "body": "The rail rendering answered no user question, so tree mode now draws the outline the stacked-PR world settled on: full-width cards indented under what they build on, guide lines and elbows like a file tree, a #n landing-position badge per row, clickable \"+ needs\" chips for diamond arms (labels truncate, tooltips keep the evidence), and lineage coloring that only adds — upstream accent, downstream graph-5, nothing dimmed into looking disabled. The toggle reads List | Tree; the legacy graph preference maps to tree.",
+        "from": [
+          "README.md:73#6fc2",
+          "apps/desktop/README.md:51#e152",
+          "apps/desktop/src/renderer/app.css:332#ed22",
+          "apps/desktop/src/renderer/app.css:340#c151",
+          "apps/desktop/src/renderer/app.css:346#3846",
+          "apps/desktop/src/renderer/app.css:351#d55a",
+          "apps/desktop/src/renderer/app.css:356#2145",
+          "apps/desktop/src/renderer/app.css:362#bed8",
+          "apps/desktop/src/renderer/app.css:372#8dcb",
+          "apps/desktop/src/renderer/app.css:384#f87c",
+          "apps/desktop/src/renderer/app.css:393#d96c",
+          "apps/desktop/src/renderer/app.css:423#ea04",
+          "apps/desktop/src/renderer/app.css:438#7112",
+          "apps/desktop/src/renderer/app.css:475#fb92",
+          "apps/desktop/src/renderer/components/StackGraph.tsx:0#55fd",
+          "apps/desktop/src/renderer/components/StackTree.tsx:1#07b4",
+          "apps/desktop/src/renderer/components/StackView.tsx:20#183f",
+          "apps/desktop/src/renderer/components/StackView.tsx:37#25e5",
+          "apps/desktop/src/renderer/components/StackView.tsx:41#c660",
+          "apps/desktop/src/renderer/components/StackView.tsx:104#7049",
+          "apps/desktop/src/renderer/components/StackView.tsx:107#92dc",
+          "apps/desktop/src/renderer/components/StackView.tsx:135#5f1c",
+          "apps/desktop/src/renderer/i18n/locales/en.json:44#7ed3",
+          "apps/desktop/src/renderer/i18n/locales/en.json:47#86aa",
+          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:44#01d9",
+          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:47#40bf"
         ]
       }
     ],
     "order": [
-      "ua-stretch"
+      "tree-model",
+      "tree-view"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788185081"
+  "timestamp": "1788198015"
 }
