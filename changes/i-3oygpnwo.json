@@ -1,0 +1,6 @@
+{
+  "id": "i-3oygpnwo",
+  "name": "narrow-pane",
+  "summary": "Narrow panes stop eating the header",
+  "body": "At 220px the stack header overlapped its own controls (the unresolved pill rendered over the view toggle, Submit PRs was clipped) and the proof strip wrapped to three lines. Pane titles now wrap instead of overflowing, count pills refuse to break, and the proof label ellipsizes so the strip stays one line with the hash and copy button intact."
+}

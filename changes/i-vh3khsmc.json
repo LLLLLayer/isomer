@@ -1,0 +1,6 @@
+{
+  "id": "i-vh3khsmc",
+  "name": "rail-lanes",
+  "summary": "The rail learns interval lanes",
+  "body": "railLayout replaces the 2D canvas layout: cards keep list order (head first), dependency edges become gutter brackets, and greedy interval partitioning over row spans assigns lanes — properly overlapping spans get distinct lanes while edges that merely share a card may share one, so a chain reads as a single continuous line. lineage() is unchanged."
+}

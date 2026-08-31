@@ -1,0 +1,6 @@
+{
+  "id": "i-hgpaaeru",
+  "name": "rail-view",
+  "summary": "Graph mode becomes a rail beside full cards",
+  "body": "The canvas DAG could not survive a 220-480px pane: fixed-width nodes truncated titles and the drawing either shrank into illegibility or clipped. Graph mode now keeps the list's full-width, fixed-height cards (native buttons — keyboard accessible for free) and draws the dependency evidence as bracket edges in a left rail, the shape every commit graph uses. Lineage highlighting, edge-weight strokes, and evidence tooltips carry over unchanged."
+}
