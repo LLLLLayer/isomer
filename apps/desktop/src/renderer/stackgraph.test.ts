@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { changeDeps } from './stackdeps'
-import { lineage, stackGraphLayout } from './stackgraph'
+import { lineage, railLayout } from './stackgraph'
 
 /** Build the change-level dep map from a compact fixture. */
 const depsOf = (
@@ -36,74 +36,80 @@ const diamond = depsOf(
   ],
 )
 
-describe('stackGraphLayout', () => {
-  it('lays a pure chain on one row, one column per change', () => {
-    const l = stackGraphLayout([{ sha: 'A' }, { sha: 'B' }, { sha: 'C' }], chain.bySha)
-    expect(l.nodes).toEqual([
-      { sha: 'A', layer: 0, row: 0 },
-      { sha: 'B', layer: 1, row: 0 },
-      { sha: 'C', layer: 2, row: 0 },
-    ])
-    expect(l.columns).toBe(3)
-    expect(l.rows).toBe(1)
+describe('railLayout', () => {
+  it('orders cards head-first, like the list', () => {
+    const l = railLayout([{ sha: 'A' }, { sha: 'B' }, { sha: 'C' }], chain.bySha)
+    expect(l.order).toEqual(['C', 'B', 'A'])
   })
 
-  it('stacks independent changes in one column, in stack order', () => {
+  it('folds a pure chain onto a single lane', () => {
+    const l = railLayout([{ sha: 'A' }, { sha: 'B' }, { sha: 'C' }], chain.bySha)
+    expect(l.edges).toEqual([
+      { from: 'B', to: 'C', via: 1, lane: 0 },
+      { from: 'A', to: 'B', via: 1, lane: 0 },
+    ])
+    expect(l.lanes).toBe(1)
+  })
+
+  it('gives properly overlapping spans distinct lanes', () => {
+    const l = railLayout(
+      [{ sha: 'A' }, { sha: 'B' }, { sha: 'C' }, { sha: 'D' }],
+      diamond.bySha,
+    )
+    // Display rows: D=0 C=1 B=2 A=3. Spans: B→D [0,2] and C→D [0,1]
+    // overlap; A→B [2,3] and A→C [1,3] overlap.
+    const rowOf = new Map(l.order.map((sha, i) => [sha, i]))
+    const span = (e: { from: string; to: string }): [number, number] => {
+      const a = rowOf.get(e.from) as number
+      const b = rowOf.get(e.to) as number
+      return [Math.min(a, b), Math.max(a, b)]
+    }
+    for (const x of l.edges) {
+      for (const y of l.edges) {
+        if (x === y || x.lane !== y.lane) continue
+        const [xl, xh] = span(x)
+        const [yl, yh] = span(y)
+        // Same lane ⇒ the spans may only touch at a single shared card.
+        expect(Math.max(xl, yl)).toBeGreaterThanOrEqual(Math.min(xh, yh))
+      }
+    }
+    expect(l.lanes).toBe(2)
+    expect(l.edges).toHaveLength(4)
+  })
+
+  it('yields no edges and zero lanes for independent changes', () => {
     const free = depsOf(
       [
         ['A', ['f:1#a']],
         ['B', ['g:1#b']],
-        ['C', ['h:1#c']],
       ],
       [],
     )
-    const l = stackGraphLayout([{ sha: 'A' }, { sha: 'B' }, { sha: 'C' }], free.bySha)
-    expect(l.nodes.map((n) => [n.layer, n.row])).toEqual([
-      [0, 0],
-      [0, 1],
-      [0, 2],
-    ])
+    const l = railLayout([{ sha: 'A' }, { sha: 'B' }], free.bySha)
     expect(l.edges).toEqual([])
+    expect(l.lanes).toBe(0)
   })
 
-  it('spreads a diamond over rows and layers by longest path', () => {
-    const l = stackGraphLayout(
-      [{ sha: 'A' }, { sha: 'B' }, { sha: 'C' }, { sha: 'D' }],
-      diamond.bySha,
-    )
-    const at = new Map(l.nodes.map((n) => [n.sha, n]))
-    expect(at.get('A')).toMatchObject({ layer: 0, row: 0 })
-    // B and C both depend on A: same column, distinct rows.
-    expect(at.get('B')?.layer).toBe(1)
-    expect(at.get('C')?.layer).toBe(1)
-    expect(at.get('B')?.row).not.toBe(at.get('C')?.row)
-    // D joins both arms one column right, pulled between their rows.
-    expect(at.get('D')?.layer).toBe(2)
-    expect(l.columns).toBe(3)
-    expect(l.rows).toBe(2)
-  })
-
-  it('emits one edge per dependency with its evidence weight', () => {
-    const l = stackGraphLayout([{ sha: 'A' }, { sha: 'B' }, { sha: 'C' }], chain.bySha)
-    expect(l.edges).toEqual([
-      { from: 'A', to: 'B', via: 1 },
-      { from: 'B', to: 'C', via: 1 },
-    ])
-  })
-
-  it('drops edges whose target is not in the laid-out commits', () => {
+  it('drops edges whose endpoint is not in the commits', () => {
     // Malformed input: the dep map knows a change the commit list lacks.
-    const l = stackGraphLayout([{ sha: 'B' }], chain.bySha)
-    expect(l.nodes).toEqual([{ sha: 'B', layer: 0, row: 0 }])
+    const l = railLayout([{ sha: 'B' }], chain.bySha)
+    expect(l.order).toEqual(['B'])
     expect(l.edges).toEqual([])
   })
 
-  it('never assigns a negative row when pulled toward row 0', () => {
-    const l = stackGraphLayout(
-      [{ sha: 'A' }, { sha: 'B' }, { sha: 'C' }, { sha: 'D' }],
-      diamond.bySha,
+  it('carries the evidence weight on every edge', () => {
+    const heavy = depsOf(
+      [
+        ['A', ['f:1#a', 'f:5#b']],
+        ['B', ['f:9#c']],
+      ],
+      [
+        ['f:9#c', 'f:1#a'],
+        ['f:9#c', 'f:5#b'],
+      ],
     )
-    for (const n of l.nodes) expect(n.row).toBeGreaterThanOrEqual(0)
+    const l = railLayout([{ sha: 'A' }, { sha: 'B' }], heavy.bySha)
+    expect(l.edges).toEqual([{ from: 'A', to: 'B', via: 2, lane: 0 }])
   })
 })
 
