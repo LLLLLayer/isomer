@@ -29,6 +29,11 @@ Drive scripts run inside an async wrapper: sequence steps with
 that outlive the script's promise are unreliable. The shot window never
 has OS focus, so `.focus()`/`.blur()` won't fire React `onBlur`; dispatch
 `focusout` or use a keyboard path (inputs that matter also commit on Enter).
+When a layout bug survives screenshots, make the shot carry its own
+evidence: have the drive script append a `<pre>` of
+`getComputedStyle`/`clientWidth`/`scrollWidth` readings to the DOM, so
+the numbers land inside the capture itself (vitest is layout-blind and
+a picture alone can lie at a different pane width).
 
 ## Architecture
 
@@ -62,6 +67,14 @@ Gotchas that cost real time once (do not relearn them):
 
 - `git rev-parse --git-path=X` (equals form) is echoed back verbatim with
   exit 0 — always pass `--git-path X` as two arguments.
+- Chromium's UA stylesheet gives `<button>` `align-items: flex-start`:
+  children of a column-flex button keep their content width, so
+  `text-overflow: ellipsis` on them never fires — set `align-items:
+  stretch` explicitly.
+- `app.css` is one global sheet and the later rule wins at equal
+  specificity: `.tree-row` already belonged to the file tree when the
+  stack outline reused the name, which silently zeroed the outline's
+  guide lines and restyled the file tree. Grep before naming.
 - The terminal pty session lives outside the React tree; dock switches
   remount the drawer across parents and must not kill the shell.
 - node-pty ships NAPI prebuilds; never let electron-builder rebuild it
