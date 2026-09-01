@@ -1,0 +1,6 @@
+{
+  "id": "i-iuahb2fn",
+  "name": "forest-plan",
+  "summary": "The PR chain becomes a forest",
+  "body": "planStack now reads the hard deps: weakly connected components submit in parallel, a change bases on its single dependency (a tree of PRs), and a component holding a diamond degrades to a chain in landing order. The executor pushes ism-slice mirrors instead of stack shas, so every PR carries only its own component’s history. Soft (semantic) deps are not yet part of the forest computation — a known limitation recorded in the design log."
+}

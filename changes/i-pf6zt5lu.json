@@ -1,0 +1,6 @@
+{
+  "id": "i-pf6zt5lu",
+  "name": "slice-core",
+  "summary": "ism slice: forge a component onto the base",
+  "body": "A partial replay is legal exactly when the selection is dependency-closed — which makes stacked-PR branch mirrors constructive: replay the selected changes onto the stack base, forge one commit per change with the original message and author, touch no refs, and print {base, commits, tip}. A selection that leans on an unselected change is refused with E030. This exists because the first forest E2E proved that pushing the stack’s own shas lets a “parallel” PR merge the entire prefix."
+}

@@ -1,49 +1,76 @@
 {
   "kind": "apply",
   "branch": "docs/round-five",
-  "old_head": "78a107242f3cc56d07eeaeb26ad772a5c05e5a9d",
-  "new_head": "137c34672972817fb8794b24c130e79375e95759",
-  "base": "184c4356cc7bf010b3d97929b9f0372e0cdf7d5b",
-  "old_tree": "b613541eb8566b458cb2fb8d81a46db2312e258c",
-  "new_tree": "b613541eb8566b458cb2fb8d81a46db2312e258c",
-  "plan_digest": "sha256:59f89be6c64d01f0f2667471cbd8b99a333379e8caaa1658462c42600686de7c",
-  "snapshot_digest": "sha256:aeef16ec71b94b5f97111bc7577d20b9c48d7286751ffc24a8154da8e2fa47a0",
+  "old_head": "c6868b2e14de2c9c1eb1c9f69ba85ab50a889cc5",
+  "new_head": "3447a27dcc0a1b1dc58930ed41e5f3a88592e4ba",
+  "base": "199b77930ecc35a17c0b183b68edda7431ddd238",
+  "old_tree": "42b5f9136a941868f7443a680e8b2c287975414b",
+  "new_tree": "42b5f9136a941868f7443a680e8b2c287975414b",
+  "plan_digest": "sha256:1ed173b5e82573a764cc8172f5119dade125ff9af6234f559a1717a8b8fa6f34",
+  "snapshot_digest": "sha256:e25ffba98053b1deb85f82952ad7783da04370fead626de46f780714973a6f61",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:aeef16ec71b94b5f97111bc7577d20b9c48d7286751ffc24a8154da8e2fa47a0",
+    "snapshot_digest": "sha256:e25ffba98053b1deb85f82952ad7783da04370fead626de46f780714973a6f61",
     "nodes": [
       {
-        "name": "tree-doc",
-        "summary": "CLAUDE.md learns the tree view",
-        "body": "The renderer bullet now tells future sessions where the Change Stack outline lives: stacktree.ts derives it, StackTree.tsx renders it.",
+        "name": "slice-core",
+        "summary": "ism slice: forge a component onto the base",
+        "body": "A partial replay is legal exactly when the selection is dependency-closed — which makes stacked-PR branch mirrors constructive: replay the selected changes onto the stack base, forge one commit per change with the original message and author, touch no refs, and print {base, commits, tip}. A selection that leans on an unselected change is refused with E030. This exists because the first forest E2E proved that pushing the stack’s own shas lets a “parallel” PR merge the entire prefix.",
         "from": [
-          "CLAUDE.md:65#aaf1"
+          "crates/ism-cli/skill/SKILL.md:110#2e06",
+          "crates/ism-cli/src/main.rs:62#1fa2",
+          "crates/ism-cli/src/main.rs:281#3267",
+          "crates/ism-cli/tests/e2e.rs:296#fe05",
+          "crates/ism-core/src/lib.rs:17#d563",
+          "crates/ism-core/src/slice.rs:1#26aa",
+          "skills/ism/SKILL.md:110#1c03"
         ]
       },
       {
-        "name": "scars",
-        "summary": "Two scars join the gotcha list",
-        "body": "Chromium's UA stylesheet gives <button> align-items: flex-start, so ellipsis on a column-flex button's children never fires without an explicit stretch; and app.css is one global sheet where the later equal-specificity rule wins — the .tree-row collision zeroed the outline's guide lines while restyling the file tree. The CLAUDE.md tree-view sentence gains the grep-before-naming rule, which is why this change builds on it.",
+        "name": "forest-plan",
+        "summary": "The PR chain becomes a forest",
+        "body": "planStack now reads the hard deps: weakly connected components submit in parallel, a change bases on its single dependency (a tree of PRs), and a component holding a diamond degrades to a chain in landing order. The executor pushes ism-slice mirrors instead of stack shas, so every PR carries only its own component’s history. Soft (semantic) deps are not yet part of the forest computation — a known limitation recorded in the design log.",
         "from": [
-          "CLAUDE.md:65#ed45",
-          "apps/desktop/README.md:65#fab0"
-        ]
-      },
-      {
-        "name": "shot-evidence",
-        "summary": "The shot carries its own evidence",
-        "body": "Document the computed-style probe: a drive script can append a <pre> of getComputedStyle/clientWidth/scrollWidth readings to the DOM so the numbers land inside the capture — vitest is layout-blind and a picture alone can lie at a different pane width.",
-        "from": [
-          "apps/desktop/README.md:32#93b3"
+          "README.md:77#2f6e",
+          "apps/desktop/src/main/ipc.ts:24#14f7",
+          "apps/desktop/src/main/ipc.ts:562#0af4",
+          "apps/desktop/src/main/ipc.ts:625#8f27",
+          "apps/desktop/src/main/ipc.ts:641#c556",
+          "apps/desktop/src/main/services/stackplan.test.ts:2#9723",
+          "apps/desktop/src/main/services/stackplan.test.ts:13#e9f1",
+          "apps/desktop/src/main/services/stackplan.test.ts:24#3da0",
+          "apps/desktop/src/main/services/stackplan.test.ts:34#8fbd",
+          "apps/desktop/src/main/services/stackplan.test.ts:127#6c02",
+          "apps/desktop/src/main/services/stackplan.test.ts:146#bff0",
+          "apps/desktop/src/main/services/stackplan.test.ts:169#3376",
+          "apps/desktop/src/main/services/stackplan.test.ts:202#43f9",
+          "apps/desktop/src/main/services/stackplan.test.ts:223#1219",
+          "apps/desktop/src/main/services/stackplan.test.ts:225#30bc",
+          "apps/desktop/src/main/services/stackplan.test.ts:228#426f",
+          "apps/desktop/src/main/services/stackplan.test.ts:238#31dd",
+          "apps/desktop/src/main/services/stackplan.test.ts:247#08b5",
+          "apps/desktop/src/main/services/stackplan.test.ts:253#24d4",
+          "apps/desktop/src/main/services/stackplan.ts:2#018a",
+          "apps/desktop/src/main/services/stackplan.ts:18#e973",
+          "apps/desktop/src/main/services/stackplan.ts:54#e2aa",
+          "apps/desktop/src/main/services/stackplan.ts:73#8fec",
+          "apps/desktop/src/main/services/stackplan.ts:118#9cfa",
+          "apps/desktop/src/main/services/stackplan.ts:127#42b4",
+          "apps/desktop/src/main/services/stackplan.ts:134#98a4",
+          "apps/desktop/src/main/services/stackplan.ts:190#5207",
+          "apps/desktop/src/main/services/stackplan.ts:232#bb26",
+          "apps/desktop/src/main/services/stackplan.ts:237#eb4e",
+          "apps/desktop/src/main/services/stackplan.ts:251#1f1b",
+          "apps/desktop/src/renderer/i18n/locales/en.json:39#5d05",
+          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:39#0ff6"
         ]
       }
     ],
     "order": [
-      "tree-doc",
-      "scars",
-      "shot-evidence"
+      "slice-core",
+      "forest-plan"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788231907"
+  "timestamp": "1788233692"
 }
