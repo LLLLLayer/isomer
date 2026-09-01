@@ -42,12 +42,13 @@
     "doneNote": "Done — the chain matches the stack.",
     "viewPr": "Open",
     "viewList": "List",
-    "viewGraph": "Graph",
-    "edgeTip": "“{{to}}” needs “{{from}}” — {{count}} pinned hunk dependencies",
     "legendUp": "upstream",
     "legendDown": "downstream",
-    "legendFlow": "base ↑ head",
-    "legendTip": "Edges point from dependency to dependent, bottom to top; a thicker edge means more pinned hunk dependencies."
+    "legendFlow": "indent = builds on it · #n = landing order",
+    "legendTip": "Selecting or hovering a change colors its upstream (blue) and downstream (violet) lineage. Rows group by subtree; the #n badge is the landing order.",
+    "viewTree": "Tree",
+    "extraNeeds": "+ needs “{{target}}”",
+    "posTip": "Landing position {{n}} — the order apply produces"
   },
   "review": {
     "title": "Review",
