@@ -74,8 +74,10 @@ talks to ism exclusively by spawning the CLI and parsing its JSON:
   builds on it, every row keeps its landing position, diamond arms become
   clickable "+ needs" chips — a proof strip with copyable bare-git
   verification commands, and per-change review state.
-- **Stacked PRs**: one click maps the stack onto a GitHub PR chain through
-  your own `gh` (one branch per change, each PR based on the one below);
+- **Stacked PRs**: one click maps the stack onto a GitHub PR *forest*
+  through your own `gh` — hard deps decide the bases, independent
+  components submit as parallel chains, and `ism slice` forges each
+  branch mirror so a PR carries only its own component's history;
   re-running syncs the same PRs by change identity even after a reorganize
   rewrites every sha.
 - Review built in: select code to comment in place; comments anchor to

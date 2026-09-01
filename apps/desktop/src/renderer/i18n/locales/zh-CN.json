@@ -36,7 +36,7 @@
     "retargetTo": "基底 → {{base}}",
     "orphanNote": "PR #{{number}}（{{branch}}）已不对应任何变更——请手动关闭。",
     "unresolvedWarn": "此栈还有 {{count}} 条未解决评论。",
-    "trunkNote": "最底部 PR 落在 {{trunk}}。分支是变更的强制推送镜像。",
+    "trunkNote": "各分量的根落在 {{trunk}}；相互独立的分量并行成链。分支是各变更的强推镜像。",
     "submitRun": "新建 / 更新 {{count}} 个 PR",
     "submitting": "提交中…",
     "doneNote": "完成——PR 链与变更栈一致。",

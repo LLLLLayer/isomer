@@ -21,7 +21,7 @@ import { ProjectRegistry, projectsFile } from './services/projects'
 import { PtyService } from './services/pty'
 import { SettingsStore, settingsFile } from './services/settings'
 import { StackService } from './services/stack'
-import { type StackChange, planStack } from './services/stackplan'
+import { type StackChange, changeNeeds, planStack } from './services/stackplan'
 import { checkForUpdate } from './services/updates'
 import { RepoWatcher } from './services/watcher'
 
@@ -559,6 +559,13 @@ export function registerIpc(exec: Exec): { dispose(): void } {
         sha: c.sha,
       })
     }
+    // Hard deps decide the PR forest: parallel components, tree bases,
+    // diamond components degraded to chains — all inside planStack.
+    const needs = changeNeeds(
+      snap.data.commits.map((c) => ({ change_id: c.change_id as string, hunks: c.hunks })),
+      snap.data.deps,
+    )
+    for (const c of changes) c.needs = needs.get(c.id) ?? []
     return { ok: true, data: changes }
   }
 
@@ -615,10 +622,34 @@ export function registerIpc(exec: Exec): { dispose(): void } {
         hint: gh === 'missing' ? 'brew install gh' : 'run `gh auth login` in a terminal',
       })
     }
+    // A branch must contain its base-link history and NOTHING else —
+    // pushing the stack's own shas would drag every earlier change along
+    // and let a "parallel" PR merge the whole prefix. Each push gets its
+    // own dependency-closed slice; deterministic forging makes sibling
+    // prefixes the same commits, so tree-shaped plans truly fork. All
+    // slices run before any push: a failure leaves the remote untouched.
+    // O(depth^2) forged commits per submit; deterministic forging dedupes
+    // the objects, so this stays cheap at real stack sizes.
+    const forged = new Map<string, string>()
+    for (const push of plan.pushes) {
+      const sliced = await ism.run<{ tip: string }>(dir, ['slice', ...push.history])
+      if (!sliced.ok) return sliced
+      forged.set(push.change.id, sliced.data.tip)
+    }
     const results: StackSubmitOutcome['results'] = []
     // Bottom-up: a PR's base branch must exist before the PR is created.
     for (const action of plan.actions) {
-      const pushed = await stack.pushBranch(dir, action.push.change.sha, action.push.branch)
+      const mirror = forged.get(action.push.change.id)
+      if (mirror === undefined) {
+        // Unreachable while actions and pushes are the same rows — but a
+        // regression must fail structuredly, not push "undefined".
+        return err({
+          code: 'SLICE_MISSING',
+          message: `no forged mirror for ${action.push.change.id}`,
+          hint: 'the slice output is out of step with the plan — report this',
+        })
+      }
+      const pushed = await stack.pushBranch(dir, mirror, action.push.branch)
       if (!pushed.ok) return pushed
       if (action.kind === 'create') {
         const created = await stack.createPr(dir, {
