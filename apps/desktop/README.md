@@ -29,6 +29,11 @@ Drive scripts run inside an async wrapper: sequence steps with
 that outlive the script's promise are unreliable. The shot window never
 has OS focus, so `.focus()`/`.blur()` won't fire React `onBlur`; dispatch
 `focusout` or use a keyboard path (inputs that matter also commit on Enter).
+When a layout bug survives screenshots, make the shot carry its own
+evidence: have the drive script append a `<pre>` of
+`getComputedStyle`/`clientWidth`/`scrollWidth` readings to the DOM, so
+the numbers land inside the capture itself (vitest is layout-blind and
+a picture alone can lie at a different pane width).
 
 ## Architecture
 
