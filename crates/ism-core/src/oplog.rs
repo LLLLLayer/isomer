@@ -109,7 +109,7 @@ fn append_data_commit(
     let root = git.mktree(&root_listing)?;
 
     let parents: Vec<&str> = old.iter().map(|s| s.as_str()).collect();
-    let commit = git.commit_tree(&root, &parents, subject, None, false)?;
+    let commit = git.commit_tree(&root, &parents, subject, None, None, false)?;
     git.update_ref_cas(DATA_REF, &commit, old.as_deref())?;
     Ok(commit)
 }

@@ -107,6 +107,12 @@ reproduction they can run themselves:
 `ism undo` reverts the latest operation (append-only op log; redo = undo of
 undo). If the branch was already pushed, warn about `--force-with-lease`.
 
+`ism slice <change-id>...` forges the selected changes onto the stack
+base as loose commits (original messages and authors preserved; no refs,
+worktree, or index touched) and prints `{base, commits, tip}` — branch
+mirrors for stacked-PR submission. The selection must be dependency-closed:
+a selected change may only depend on selected changes (E030 otherwise).
+
 `ism ops --limit <n>` lists op-log records as JSON, newest first — each with
 `kind` (apply/undo/void), `old_head`/`new_head`, and the archival
 `old_tree`/`new_tree` anchors, so you can audit or re-verify any past

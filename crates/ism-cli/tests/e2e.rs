@@ -294,6 +294,161 @@ fn pick_reorders_whole_commits_and_preserves_ids() {
 }
 
 #[test]
+fn slice_forges_dep_closed_subsets_onto_base() {
+    // Chain c1←c2 in a.txt plus an independent c3 in b.txt.
+    let r = Repo::new();
+    r.write("a.txt", "one\ntwo\nthree\n");
+    r.write("keep.txt", "anchor\n");
+    let base = r.commit_all("base");
+    r.git(&["checkout", "-q", "-b", "feat"]);
+    r.write("a.txt", "one\nTWO\nthree\n");
+    r.commit_all("c1: rewrite two");
+    r.write("a.txt", "one\nTWO!\nthree\n");
+    r.commit_all("c2: emphasize");
+    r.write("b.txt", "solo\n");
+    r.commit_all("c3: add b");
+
+    // Organize so every change has an identity.
+    let snap = inspect(&r);
+    let a = hunks_of(&snap, "a.txt");
+    let b = hunks_of(&snap, "b.txt");
+    assert_eq!((a.len(), b.len()), (2, 1));
+    let plan = serde_json::json!({
+        "version": 1,
+        "snapshot_digest": snap["snapshot_digest"],
+        "nodes": [
+            {"name": "c1", "from": [a[0]], "summary": "Rewrite two"},
+            {"name": "c2", "from": [a[1]], "summary": "Emphasize"},
+            {"name": "c3", "from": b, "summary": "Add b"}
+        ],
+        "order": ["c1", "c2", "c3"]
+    });
+    let plan_path = r.write_plan(&plan);
+    let (code, json, raw) = r.ism(&["apply", plan_path.to_str().unwrap()]);
+    assert_eq!(code, 0, "apply failed: {raw}");
+    let changes = json.unwrap()["changes"].as_array().unwrap().to_vec();
+    let id = |i: usize| changes[i]["id"].as_str().unwrap().to_string();
+
+    // Slice the independent change: one commit, parented on base, whose
+    // tree differs from base ONLY by b.txt.
+    let (code, json, raw) = r.ism(&["slice", &id(2)]);
+    assert_eq!(code, 0, "slice failed: {raw}");
+    let out = json.unwrap();
+    assert_eq!(out["base"].as_str().unwrap(), base);
+    let tip = out["tip"].as_str().unwrap().to_string();
+    let parent = r.git(&["rev-parse", &format!("{tip}^")]);
+    assert_eq!(parent, base);
+    let diff = r.git(&["diff", "--name-only", &format!("{base}..{tip}")]);
+    assert_eq!(diff, "b.txt");
+    // The mirror keeps the identity trailer.
+    let msg = r.git(&["show", "-s", "--format=%B", &tip]);
+    assert!(msg.contains(&format!("Isomer-Change: {}", id(2))));
+
+    // Slice the chain: two commits, tips diff touches only a.txt and the
+    // final content matches the head's version of the file.
+    let (code, json, raw) = r.ism(&["slice", &id(0), &id(1)]);
+    assert_eq!(code, 0, "chain slice failed: {raw}");
+    let out = json.unwrap();
+    assert_eq!(out["commits"].as_array().unwrap().len(), 2);
+    let tip = out["tip"].as_str().unwrap().to_string();
+    let diff = r.git(&["diff", "--name-only", &format!("{base}..{tip}")]);
+    assert_eq!(diff, "a.txt");
+    let content = r.git(&["show", &format!("{tip}:a.txt")]);
+    assert_eq!(content, "one\nTWO!\nthree");
+
+    // A slice that excludes a hard dependency is refused with E030, and
+    // forges nothing.
+    let (code, json, _raw) = r.ism(&["slice", &id(1)]);
+    assert_ne!(code, 0);
+    let err = json.unwrap();
+    assert_eq!(err["ok"], false);
+    assert_eq!(err["errors"][0]["code"], "E030");
+
+    // The branch never moved: slice is refs-untouched by construction.
+    let head = r.git(&["rev-parse", "HEAD"]);
+    assert_eq!(head, changes[2]["commit"].as_str().unwrap());
+}
+
+#[test]
+fn slice_forks_siblings_deterministically() {
+    // root ← left, root ← right: two closure slices must fork at an
+    // IDENTICAL root mirror (pinned committer date), and neither sibling's
+    // history may contain the other.
+    let r = Repo::new();
+    r.write("f.txt", "l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\nl9\n");
+    let base = r.commit_all("base");
+    r.git(&["checkout", "-q", "-b", "feat"]);
+    r.write("f.txt", "L1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\nl9\n");
+    r.commit_all("root: rewrite l1");
+    r.write("f.txt", "L1!\nl2\nl3\nl4\nl5\nl6\nl7\nl8\nl9\n");
+    r.commit_all("left: emphasize l1");
+    r.write("f.txt", "L1!\nl2\nl3\nl4\nl5\nl6\nl7\nl8\nL9\n");
+    r.commit_all("right: rewrite l9 (adjacent to nothing new)");
+
+    let snap = inspect(&r);
+    let f = hunks_of(&snap, "f.txt");
+    assert_eq!(f.len(), 3);
+    let plan = serde_json::json!({
+        "version": 1,
+        "snapshot_digest": snap["snapshot_digest"],
+        "nodes": [
+            {"name": "root", "from": [f[0]], "summary": "Root"},
+            {"name": "left", "from": [f[1]], "summary": "Left"},
+            {"name": "right", "from": [f[2]], "summary": "Right"}
+        ],
+        "order": ["root", "left", "right"]
+    });
+    let plan_path = r.write_plan(&plan);
+    let (code, json, raw) = r.ism(&["apply", plan_path.to_str().unwrap()]);
+    assert_eq!(code, 0, "apply failed: {raw}");
+    let changes = json.unwrap()["changes"].as_array().unwrap().to_vec();
+    let id = |i: usize| changes[i]["id"].as_str().unwrap().to_string();
+
+    let (c1, j1, r1) = r.ism(&["slice", &id(0), &id(1)]);
+    assert_eq!(c1, 0, "left slice failed: {r1}");
+    let left = j1.unwrap();
+    let (c2, j2, r2) = r.ism(&["slice", &id(0), &id(2)]);
+    assert_eq!(c2, 0, "right slice failed: {r2}");
+    let right = j2.unwrap();
+
+    // The shared prefix forged the SAME commit in both slices.
+    let root_a = left["commits"][0]["commit"].as_str().unwrap();
+    let root_b = right["commits"][0]["commit"].as_str().unwrap();
+    assert_eq!(
+        root_a, root_b,
+        "sibling slices must fork at one root mirror"
+    );
+    // Idempotency: a re-run forges byte-identical tips.
+    let (_, j3, _) = r.ism(&["slice", &id(0), &id(1)]);
+    assert_eq!(j3.unwrap()["tip"], left["tip"]);
+    // Neither sibling contains the other.
+    let ltip = left["tip"].as_str().unwrap();
+    let rtip = right["tip"].as_str().unwrap();
+    let lhist = r.git(&["rev-list", ltip]);
+    assert!(!lhist.contains(rtip));
+    let rhist = r.git(&["rev-list", rtip]);
+    assert!(!rhist.contains(ltip));
+    // Mirror messages are byte-equal to the originals.
+    let orig = r.git(&[
+        "show",
+        "-s",
+        "--format=%B",
+        changes[1]["commit"].as_str().unwrap(),
+    ]);
+    let mirror = r.git(&["show", "-s", "--format=%B", ltip]);
+    assert_eq!(orig, mirror);
+    // A base off the first-parent line is refused before anything forges.
+    r.git(&["branch", "div", &base]);
+    r.git(&["checkout", "-q", "div"]);
+    r.write("d.txt", "divergent\n");
+    r.commit_all("divergent");
+    r.git(&["checkout", "-q", "feat"]);
+    let (code, json, _raw) = r.ism(&["slice", "--base", "div", &id(0)]);
+    assert_ne!(code, 0);
+    assert_eq!(json.unwrap()["errors"][0]["code"], "E101");
+}
+
+#[test]
 fn error_paths_have_stable_codes() {
     let r = messy_repo();
     let snap = inspect(&r);
