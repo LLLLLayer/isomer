@@ -183,7 +183,7 @@ pub fn apply(git: &Git, plan: &Plan) -> Result<ApplyOutcome> {
         let author_ref = author
             .as_ref()
             .map(|(n, e, d)| (n.as_str(), e.as_str(), d.as_str()));
-        let commit = git.commit_tree(&tree, &[&parent_commit], &message, author_ref, sign)?;
+        let commit = git.commit_tree(&tree, &[&parent_commit], &message, author_ref, None, sign)?;
 
         applied.push(AppliedChange {
             id: change_id.clone(),

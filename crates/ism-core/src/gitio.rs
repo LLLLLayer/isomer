@@ -265,6 +265,10 @@ impl Git {
         parents: &[&str],
         message: &str,
         author: Option<(&str, &str, &str)>,
+        // committer_date pins the committer timestamp (name/email stay the
+        // user's). Deterministic forging — identical inputs, identical
+        // sha — needs it; wall-clock otherwise.
+        committer_date: Option<&str>,
         sign: bool,
     ) -> Result<String> {
         let mut args: Vec<String> = vec!["commit-tree".into(), tree.into()];
@@ -283,6 +287,9 @@ impl Git {
             envs.push(("GIT_AUTHOR_NAME", name));
             envs.push(("GIT_AUTHOR_EMAIL", email));
             envs.push(("GIT_AUTHOR_DATE", date));
+        }
+        if let Some(date) = committer_date {
+            envs.push(("GIT_COMMITTER_DATE", date));
         }
         let out = self
             .run_with(&argrefs, Some(message.as_bytes()), &envs)
