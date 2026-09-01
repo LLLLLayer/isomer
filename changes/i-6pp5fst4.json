@@ -1,0 +1,6 @@
+{
+  "id": "i-6pp5fst4",
+  "name": "shot-evidence",
+  "summary": "The shot carries its own evidence",
+  "body": "Document the computed-style probe: a drive script can append a <pre> of getComputedStyle/clientWidth/scrollWidth readings to the DOM so the numbers land inside the capture — vitest is layout-blind and a picture alone can lie at a different pane width."
+}

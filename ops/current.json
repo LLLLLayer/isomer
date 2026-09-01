@@ -1,93 +1,49 @@
 {
   "kind": "apply",
-  "branch": "feat/stack-tree",
-  "old_head": "bd7c7926066ab0f60141b547c25d4a66aa185ac2",
-  "new_head": "f4217d0f49f1cfc4787d71338cb0247478c2083e",
-  "base": "995dc606d190236302f1a9824f6167de462ce5cd",
-  "old_tree": "711516625c41d65ea8ff54e6dde35fdf1bdd08c6",
-  "new_tree": "711516625c41d65ea8ff54e6dde35fdf1bdd08c6",
-  "plan_digest": "sha256:da5f1ec1e8dfd45f0f82bd3b96499d88b99f3efeb1d7548f7b854bda02feff2a",
-  "snapshot_digest": "sha256:e8baf40ef4032cf740e6c8253a812f8bee624428f4247b98c01f8f7f545c0b6e",
+  "branch": "docs/round-five",
+  "old_head": "78a107242f3cc56d07eeaeb26ad772a5c05e5a9d",
+  "new_head": "137c34672972817fb8794b24c130e79375e95759",
+  "base": "184c4356cc7bf010b3d97929b9f0372e0cdf7d5b",
+  "old_tree": "b613541eb8566b458cb2fb8d81a46db2312e258c",
+  "new_tree": "b613541eb8566b458cb2fb8d81a46db2312e258c",
+  "plan_digest": "sha256:59f89be6c64d01f0f2667471cbd8b99a333379e8caaa1658462c42600686de7c",
+  "snapshot_digest": "sha256:aeef16ec71b94b5f97111bc7577d20b9c48d7286751ffc24a8154da8e2fa47a0",
   "plan": {
     "version": 1,
-    "snapshot_digest": "sha256:e8baf40ef4032cf740e6c8253a812f8bee624428f4247b98c01f8f7f545c0b6e",
+    "snapshot_digest": "sha256:aeef16ec71b94b5f97111bc7577d20b9c48d7286751ffc24a8154da8e2fa47a0",
     "nodes": [
       {
-        "name": "tree-model",
-        "change": "i-fvvgtgyv",
-        "summary": "The stack learns to be an outline",
-        "body": "stackTree replaces the rail layout: the stack stays a linearization (landing order is the spine), and dependency structure becomes indentation — a change nests under its deepest dependency (git-nearest on ties), diamond arms beyond the tree edge are kept as annotations, and every row carries its 1-based landing position so grouping by structure never loses the order. File-tree guide columns and elbow flags are computed here, pure and tested; malformed forward/self/unknown deps are dropped so the tree cannot cycle.",
+        "name": "tree-doc",
+        "summary": "CLAUDE.md learns the tree view",
+        "body": "The renderer bullet now tells future sessions where the Change Stack outline lives: stacktree.ts derives it, StackTree.tsx renders it.",
         "from": [
-          "apps/desktop/src/renderer/stackgraph.test.ts:0#7ec1",
-          "apps/desktop/src/renderer/stackgraph.ts:0#2f6e",
-          "apps/desktop/src/renderer/stacktree.test.ts:1#034d",
-          "apps/desktop/src/renderer/stacktree.ts:1#ae58"
+          "CLAUDE.md:65#aaf1"
         ]
       },
       {
-        "name": "tree-view",
-        "change": "i-nrqx3qcz",
-        "summary": "Graph mode grows rings, not wires",
-        "body": "The rail rendering answered no user question, so tree mode now draws the outline the stacked-PR world settled on: full-width cards indented under what they build on, guide lines and elbows like a file tree, a #n landing-position badge per row, clickable \"+ needs\" chips for diamond arms (labels truncate, tooltips keep the evidence), and lineage coloring that only adds — upstream accent, downstream graph-5, nothing dimmed into looking disabled. The toggle reads List | Tree; the legacy graph preference maps to tree.",
+        "name": "scars",
+        "summary": "Two scars join the gotcha list",
+        "body": "Chromium's UA stylesheet gives <button> align-items: flex-start, so ellipsis on a column-flex button's children never fires without an explicit stretch; and app.css is one global sheet where the later equal-specificity rule wins — the .tree-row collision zeroed the outline's guide lines while restyling the file tree. The CLAUDE.md tree-view sentence gains the grep-before-naming rule, which is why this change builds on it.",
         "from": [
-          "README.md:73#3f79",
-          "apps/desktop/README.md:51#f039",
-          "apps/desktop/src/renderer/app.css:332#6f79",
-          "apps/desktop/src/renderer/app.css:340#852b",
-          "apps/desktop/src/renderer/app.css:346#c9ab",
-          "apps/desktop/src/renderer/app.css:351#a645",
-          "apps/desktop/src/renderer/app.css:356#ed70",
-          "apps/desktop/src/renderer/app.css:362#7660",
-          "apps/desktop/src/renderer/app.css:372#fbb2",
-          "apps/desktop/src/renderer/app.css:384#b3b8",
-          "apps/desktop/src/renderer/app.css:393#54d8",
-          "apps/desktop/src/renderer/app.css:423#a128",
-          "apps/desktop/src/renderer/app.css:438#8eee",
-          "apps/desktop/src/renderer/app.css:475#1415",
-          "apps/desktop/src/renderer/components/StackGraph.tsx:0#a59f",
-          "apps/desktop/src/renderer/components/StackTree.tsx:1#03b6",
-          "apps/desktop/src/renderer/components/StackView.tsx:20#5da6",
-          "apps/desktop/src/renderer/components/StackView.tsx:37#2ae5",
-          "apps/desktop/src/renderer/components/StackView.tsx:41#4fbc",
-          "apps/desktop/src/renderer/components/StackView.tsx:104#9ad4",
-          "apps/desktop/src/renderer/components/StackView.tsx:107#146a",
-          "apps/desktop/src/renderer/components/StackView.tsx:135#3887",
-          "apps/desktop/src/renderer/i18n/locales/en.json:44#7cdc",
-          "apps/desktop/src/renderer/i18n/locales/en.json:47#9240",
-          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:44#97d5",
-          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:47#920c",
-          "apps/desktop/src/renderer/app.css:332#ecb0",
-          "apps/desktop/src/renderer/app.css:340#5767",
-          "apps/desktop/src/renderer/app.css:347#7b94",
-          "apps/desktop/src/renderer/app.css:351#a8ba",
-          "apps/desktop/src/renderer/app.css:354#8fd1",
-          "apps/desktop/src/renderer/app.css:357#9ace",
-          "apps/desktop/src/renderer/app.css:365#1052",
-          "apps/desktop/src/renderer/app.css:371#1daf",
-          "apps/desktop/src/renderer/app.css:378#9172",
-          "apps/desktop/src/renderer/app.css:390#0000",
-          "apps/desktop/src/renderer/app.css:399#23ec",
-          "apps/desktop/src/renderer/app.css:405#d797",
-          "apps/desktop/src/renderer/components/StackTree.tsx:8#ec3a",
-          "apps/desktop/src/renderer/components/StackTree.tsx:45#8be2",
-          "apps/desktop/src/renderer/components/StackTree.tsx:60#4ef1",
-          "apps/desktop/src/renderer/components/StackTree.tsx:67#fcb9",
-          "apps/desktop/src/renderer/components/StackTree.tsx:69#dee2",
-          "apps/desktop/src/renderer/components/StackTree.tsx:72#84b1",
-          "apps/desktop/src/renderer/components/StackTree.tsx:80#6fc2",
-          "apps/desktop/src/renderer/components/StackTree.tsx:85#5720",
-          "apps/desktop/src/renderer/components/StackTree.tsx:93#21af",
-          "apps/desktop/src/renderer/components/StackTree.tsx:113#b197",
-          "apps/desktop/src/renderer/i18n/locales/en.json:47#4f07",
-          "apps/desktop/src/renderer/i18n/locales/zh-CN.json:47#ae76"
+          "CLAUDE.md:65#ed45",
+          "apps/desktop/README.md:65#fab0"
+        ]
+      },
+      {
+        "name": "shot-evidence",
+        "summary": "The shot carries its own evidence",
+        "body": "Document the computed-style probe: a drive script can append a <pre> of getComputedStyle/clientWidth/scrollWidth readings to the DOM so the numbers land inside the capture — vitest is layout-blind and a picture alone can lie at a different pane width.",
+        "from": [
+          "apps/desktop/README.md:32#93b3"
         ]
       }
     ],
     "order": [
-      "tree-model",
-      "tree-view"
+      "tree-doc",
+      "scars",
+      "shot-evidence"
     ]
   },
   "tool_version": "0.1.0",
-  "timestamp": "1788230881"
+  "timestamp": "1788231907"
 }

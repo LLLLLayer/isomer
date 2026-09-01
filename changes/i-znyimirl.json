@@ -1,0 +1,6 @@
+{
+  "id": "i-znyimirl",
+  "name": "scars",
+  "summary": "Two scars join the gotcha list",
+  "body": "Chromium's UA stylesheet gives <button> align-items: flex-start, so ellipsis on a column-flex button's children never fires without an explicit stretch; and app.css is one global sheet where the later equal-specificity rule wins — the .tree-row collision zeroed the outline's guide lines while restyling the file tree. The CLAUDE.md tree-view sentence gains the grep-before-naming rule, which is why this change builds on it."
+}

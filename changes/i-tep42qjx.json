@@ -1,0 +1,6 @@
+{
+  "id": "i-tep42qjx",
+  "name": "tree-doc",
+  "summary": "CLAUDE.md learns the tree view",
+  "body": "The renderer bullet now tells future sessions where the Change Stack outline lives: stacktree.ts derives it, StackTree.tsx renders it."
+}
