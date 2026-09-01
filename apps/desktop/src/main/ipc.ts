@@ -21,7 +21,7 @@ import { ProjectRegistry, projectsFile } from './services/projects'
 import { PtyService } from './services/pty'
 import { SettingsStore, settingsFile } from './services/settings'
 import { StackService } from './services/stack'
-import { type StackChange, planStack } from './services/stackplan'
+import { type StackChange, changeNeeds, planStack } from './services/stackplan'
 import { checkForUpdate } from './services/updates'
 import { RepoWatcher } from './services/watcher'
 
@@ -559,6 +559,13 @@ export function registerIpc(exec: Exec): { dispose(): void } {
         sha: c.sha,
       })
     }
+    // Hard deps decide the PR forest: parallel components, tree bases,
+    // diamond components degraded to chains — all inside planStack.
+    const needs = changeNeeds(
+      snap.data.commits.map((c) => ({ change_id: c.change_id as string, hunks: c.hunks })),
+      snap.data.deps,
+    )
+    for (const c of changes) c.needs = needs.get(c.id) ?? []
     return { ok: true, data: changes }
   }
 
@@ -615,10 +622,31 @@ export function registerIpc(exec: Exec): { dispose(): void } {
         hint: gh === 'missing' ? 'brew install gh' : 'run `gh auth login` in a terminal',
       })
     }
+    // Mirror branches must contain ONLY their component's history — pushing
+    // the stack's own shas would drag every earlier change along and let a
+    // "parallel" PR merge the whole prefix. Components are dependency-closed
+    // by construction, so the slice is constructively safe.
+    const forged = new Map<string, string>()
+    for (const component of plan.components) {
+      const sliced = await ism.run<{ commits: { id: string; commit: string }[] }>(dir, [
+        'slice',
+        ...component,
+      ])
+      if (!sliced.ok) return sliced
+      for (const c of sliced.data.commits) forged.set(c.id, c.commit)
+    }
     const results: StackSubmitOutcome['results'] = []
     // Bottom-up: a PR's base branch must exist before the PR is created.
     for (const action of plan.actions) {
-      const pushed = await stack.pushBranch(dir, action.push.change.sha, action.push.branch)
+      const mirror = forged.get(action.push.change.id)
+      if (mirror === undefined) {
+        return err({
+          code: 'SLICE_MISSING',
+          message: `no forged mirror for ${action.push.change.id}`,
+          hint: 'the slice output is out of step with the plan — report this',
+        })
+      }
+      const pushed = await stack.pushBranch(dir, mirror, action.push.branch)
       if (!pushed.ok) return pushed
       if (action.kind === 'create') {
         const created = await stack.createPr(dir, {
