@@ -62,6 +62,14 @@ Gotchas that cost real time once (do not relearn them):
 
 - `git rev-parse --git-path=X` (equals form) is echoed back verbatim with
   exit 0 — always pass `--git-path X` as two arguments.
+- Chromium's UA stylesheet gives `<button>` `align-items: flex-start`:
+  children of a column-flex button keep their content width, so
+  `text-overflow: ellipsis` on them never fires — set `align-items:
+  stretch` explicitly.
+- `app.css` is one global sheet and the later rule wins at equal
+  specificity: `.tree-row` already belonged to the file tree when the
+  stack outline reused the name, which silently zeroed the outline's
+  guide lines and restyled the file tree. Grep before naming.
 - The terminal pty session lives outside the React tree; dock switches
   remount the drawer across parents and must not kill the shell.
 - node-pty ships NAPI prebuilds; never let electron-builder rebuild it
