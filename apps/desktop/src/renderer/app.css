@@ -329,63 +329,81 @@
   background: var(--bg-raised);
 }
 
-.stack-graph svg {
-  display: block;
-}
-
-.sg-edge {
-  fill: none;
-  stroke: color-mix(in srgb, var(--fg-muted) 55%, transparent);
-  transition: opacity 120ms, stroke 120ms;
-}
-
-.sg-edge.up {
-  stroke: var(--accent);
-}
-
-.sg-edge.down {
-  stroke: var(--graph-5);
-}
-
-.sg-edge.dim {
-  opacity: 0.15;
-}
-
-#sg-arrow path {
-  fill: color-mix(in srgb, var(--fg-muted) 75%, transparent);
-}
-
-#sg-arrow-up path {
-  fill: var(--accent);
-}
-
-#sg-arrow-down path {
-  fill: var(--graph-5);
-}
-
-.sg-body {
-  display: flex;
-  align-items: flex-start;
-  padding: 10px 10px 10px 0;
-}
-
-.sg-rail {
-  flex: none;
-  display: block;
-}
-
-.sg-cards {
+.outline-list {
   list-style: none;
   margin: 0;
-  padding: 0;
-  flex: 1;
-  min-width: 0;
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
-/* Fixed-height variant of the list card so rail edges align with centers. */
+.outline-row {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+}
+
+/* Rows carry their own bottom spacing so guide lines can span the gaps. */
+.outline-row:not(:last-child) {
+  padding-bottom: 8px;
+}
+
+.outline-guide {
+  flex: none;
+  width: 20px;
+  position: relative;
+}
+
+/* The line lives on a pseudo-element overflowing into the row's bottom
+   padding, so consecutive guide rows draw one unbroken vertical. */
+.outline-guide.line::before {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 0;
+  bottom: -8px;
+  border-left: 1.5px solid var(--border);
+}
+
+/* Elbow: vertical drop from the parent (bridging the row gap above) that
+   turns toward the card at its vertical center; .mid keeps falling for
+   the next sibling. */
+.outline-elbow {
+  flex: none;
+  width: 11px;
+  margin-left: 9px;
+  position: relative;
+}
+
+.outline-elbow::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -8px;
+  width: 11px;
+  height: 36px;
+  border-left: 1.5px solid var(--border);
+  border-bottom: 1.5px solid var(--border);
+  border-bottom-left-radius: 8px;
+}
+
+.outline-elbow.mid::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 28px;
+  bottom: -8px;
+  border-left: 1.5px solid var(--border);
+}
+
+.outline-pos {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-muted);
+}
+
+/* Fixed-height card: the outline elbow constants (-8/28/36) assume the
+   56px box, so the height is load-bearing — change them together. */
 .sg-card {
   height: 56px;
   padding: 8px 12px;
@@ -409,6 +427,7 @@
 
 .sg-card .badges {
   min-width: 0;
+  overflow: hidden;
 }
 
 .sg-card.active {
@@ -422,10 +441,6 @@
 
 .sg-card.down {
   border-left-color: var(--graph-5);
-}
-
-.sg-card.dim {
-  opacity: 0.45;
 }
 
 .sg-approved {
@@ -465,9 +480,6 @@
   background: var(--graph-5);
 }
 
-.sg-key.free {
-  background: var(--ok);
-}
 
 .organize-hunk.violated {
   border-color: color-mix(in srgb, var(--warn) 45%, transparent);

@@ -17,7 +17,7 @@ import { changeDeps } from '../stackdeps'
 import { storage } from '../storage'
 import { useAppStore } from '../store/store'
 import { relTime } from '../time'
-import { StackGraph } from './StackGraph'
+import { StackTree } from './StackTree'
 import { SubmitStackModal } from './SubmitStack'
 
 /** The change stack: base→head as cards with the evidence only ism has —
@@ -34,10 +34,11 @@ export function StackView(): React.JSX.Element {
   const projectId = useAppStore((s) => s.currentProjectId)
   const [latestOp, setLatestOp] = useState<IsmOp | null>(null)
   const [submitOpen, setSubmitOpen] = useState(false)
-  const [view, setViewState] = useState<'list' | 'graph'>(() =>
-    storage.get('isomer.stackView') === 'graph' ? 'graph' : 'list',
+  // 'graph' is the legacy stored value from the retired rail/canvas modes.
+  const [view, setViewState] = useState<'list' | 'tree'>(() =>
+    ['tree', 'graph'].includes(storage.get('isomer.stackView') ?? '') ? 'tree' : 'list',
   )
-  const setView = (v: 'list' | 'graph'): void => {
+  const setView = (v: 'list' | 'tree'): void => {
     setViewState(v)
     storage.set('isomer.stackView', v)
   }
@@ -100,10 +101,10 @@ export function StackView(): React.JSX.Element {
             {t('stack.viewList')}
           </button>
           <button
-            className={view === 'graph' ? 'active' : ''}
-            onClick={() => setView('graph')}
+            className={view === 'tree' ? 'active' : ''}
+            onClick={() => setView('tree')}
           >
-            {t('stack.viewGraph')}
+            {t('stack.viewTree')}
           </button>
         </div>
         <button
@@ -131,8 +132,8 @@ export function StackView(): React.JSX.Element {
           </button>
         </div>
       )}
-      {view === 'graph' && deps && (
-        <StackGraph
+      {view === 'tree' && deps && (
+        <StackTree
           commits={snapshot.commits}
           deps={deps}
           selected={selected}

@@ -42,12 +42,13 @@
     "doneNote": "完成——PR 链与变更栈一致。",
     "viewPr": "打开",
     "viewList": "列表",
-    "viewGraph": "图",
-    "edgeTip": "“{{to}}”依赖“{{from}}”——{{count}} 处改动块依赖",
     "legendUp": "上游（它依赖的）",
     "legendDown": "下游（依赖它的）",
-    "legendFlow": "base ↑ head",
-    "legendTip": "边由依赖指向依赖它的变更（自下而上）；边越粗，钉住的改动块依赖越多。"
+    "legendFlow": "缩进 = 建立在其上 · #n = 落地顺序",
+    "legendTip": "选中或悬停一个变更会为其上游（蓝）与下游（紫）血缘着色；行按子树分组，#n 徽章才是落地顺序。",
+    "viewTree": "树",
+    "extraNeeds": "+ 依赖“{{target}}”",
+    "posTip": "落地顺序第 {{n}} 位——apply 产出的次序"
   },
   "review": {
     "title": "评审",
