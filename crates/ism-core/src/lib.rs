@@ -14,6 +14,7 @@ pub mod model;
 pub mod oplog;
 pub mod parse;
 pub mod plancheck;
+pub mod slice;
 pub mod verify;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

@@ -294,6 +294,82 @@ fn pick_reorders_whole_commits_and_preserves_ids() {
 }
 
 #[test]
+fn slice_forges_dep_closed_subsets_onto_base() {
+    // Chain c1←c2 in a.txt plus an independent c3 in b.txt.
+    let r = Repo::new();
+    r.write("a.txt", "one\ntwo\nthree\n");
+    r.write("keep.txt", "anchor\n");
+    let base = r.commit_all("base");
+    r.git(&["checkout", "-q", "-b", "feat"]);
+    r.write("a.txt", "one\nTWO\nthree\n");
+    r.commit_all("c1: rewrite two");
+    r.write("a.txt", "one\nTWO!\nthree\n");
+    r.commit_all("c2: emphasize");
+    r.write("b.txt", "solo\n");
+    r.commit_all("c3: add b");
+
+    // Organize so every change has an identity.
+    let snap = inspect(&r);
+    let a = hunks_of(&snap, "a.txt");
+    let b = hunks_of(&snap, "b.txt");
+    assert_eq!((a.len(), b.len()), (2, 1));
+    let plan = serde_json::json!({
+        "version": 1,
+        "snapshot_digest": snap["snapshot_digest"],
+        "nodes": [
+            {"name": "c1", "from": [a[0]], "summary": "Rewrite two"},
+            {"name": "c2", "from": [a[1]], "summary": "Emphasize"},
+            {"name": "c3", "from": b, "summary": "Add b"}
+        ],
+        "order": ["c1", "c2", "c3"]
+    });
+    let plan_path = r.write_plan(&plan);
+    let (code, json, raw) = r.ism(&["apply", plan_path.to_str().unwrap()]);
+    assert_eq!(code, 0, "apply failed: {raw}");
+    let changes = json.unwrap()["changes"].as_array().unwrap().to_vec();
+    let id = |i: usize| changes[i]["id"].as_str().unwrap().to_string();
+
+    // Slice the independent change: one commit, parented on base, whose
+    // tree differs from base ONLY by b.txt.
+    let (code, json, raw) = r.ism(&["slice", &id(2)]);
+    assert_eq!(code, 0, "slice failed: {raw}");
+    let out = json.unwrap();
+    assert_eq!(out["base"].as_str().unwrap(), base);
+    let tip = out["tip"].as_str().unwrap().to_string();
+    let parent = r.git(&["rev-parse", &format!("{tip}^")]);
+    assert_eq!(parent, base);
+    let diff = r.git(&["diff", "--name-only", &format!("{base}..{tip}")]);
+    assert_eq!(diff, "b.txt");
+    // The mirror keeps the identity trailer.
+    let msg = r.git(&["show", "-s", "--format=%B", &tip]);
+    assert!(msg.contains(&format!("Isomer-Change: {}", id(2))));
+
+    // Slice the chain: two commits, tips diff touches only a.txt and the
+    // final content matches the head's version of the file.
+    let (code, json, raw) = r.ism(&["slice", &id(0), &id(1)]);
+    assert_eq!(code, 0, "chain slice failed: {raw}");
+    let out = json.unwrap();
+    assert_eq!(out["commits"].as_array().unwrap().len(), 2);
+    let tip = out["tip"].as_str().unwrap().to_string();
+    let diff = r.git(&["diff", "--name-only", &format!("{base}..{tip}")]);
+    assert_eq!(diff, "a.txt");
+    let content = r.git(&["show", &format!("{tip}:a.txt")]);
+    assert_eq!(content, "one\nTWO!\nthree");
+
+    // A slice that excludes a hard dependency is refused with E030, and
+    // forges nothing.
+    let (code, json, _raw) = r.ism(&["slice", &id(1)]);
+    assert_ne!(code, 0);
+    let err = json.unwrap();
+    assert_eq!(err["ok"], false);
+    assert_eq!(err["errors"][0]["code"], "E030");
+
+    // The branch never moved: slice is refs-untouched by construction.
+    let head = r.git(&["rev-parse", "HEAD"]);
+    assert_eq!(head, changes[2]["commit"].as_str().unwrap());
+}
+
+#[test]
 fn error_paths_have_stable_codes() {
     let r = messy_repo();
     let snap = inspect(&r);

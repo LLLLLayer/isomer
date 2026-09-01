@@ -59,6 +59,15 @@ enum Cmd {
         #[arg(long)]
         op: Option<String>,
     },
+    /// Forge selected changes onto the stack base as loose commits (no
+    /// refs touched) — branch mirrors for stacked-PR submission.
+    Slice {
+        /// Change ids (i-xxxxxxxx); landing order is taken from the stack.
+        changes: Vec<String>,
+        /// Explicit base revision (defaults to merge-base with the trunk).
+        #[arg(long)]
+        base: Option<String>,
+    },
     /// Revert the latest ism operation on this branch (append-only op log).
     Undo,
     /// List op-log records for this repo as JSON, newest first.
@@ -268,6 +277,11 @@ fn run() -> Result<(), IsmError> {
             if !outcome.ok {
                 std::process::exit(1);
             }
+            Ok(())
+        }
+        Cmd::Slice { changes, base } => {
+            let outcome = ism_core::slice::slice(&git, base.as_deref(), &changes)?;
+            println!("{}", serde_json::to_string_pretty(&outcome)?);
             Ok(())
         }
         Cmd::Undo => {
