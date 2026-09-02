@@ -32,6 +32,9 @@ pub struct RawHunk {
     pub new_len: u32,
     pub removed: Vec<Vec<u8>>,
     pub added: Vec<Vec<u8>>,
+    /// The enclosing-function heading git appends to the hunk header
+    /// (`@@ … @@ fn apply(`), when its funcname heuristic found one.
+    pub context: Option<String>,
 }
 
 fn parse_range(s: &str) -> Option<(u32, u32)> {
@@ -158,12 +161,12 @@ pub fn parse_diff(raw: &[u8]) -> Result<Vec<FileDiff>> {
             }
         } else if text.starts_with("@@ ") {
             // "@@ -a[,b] +c[,d] @@ ..."
-            let header = text
+            let (header, heading) = text
                 .trim_start_matches("@@ ")
-                .split(" @@")
-                .next()
-                .unwrap_or("")
-                .to_string();
+                .split_once(" @@")
+                .unwrap_or(("", ""));
+            let header = header.to_string();
+            let context = Some(heading.trim().to_string()).filter(|s| !s.is_empty());
             let mut parts = header.split_whitespace();
             let old = parts
                 .next()
@@ -217,6 +220,7 @@ pub fn parse_diff(raw: &[u8]) -> Result<Vec<FileDiff>> {
                 new_len: nl,
                 removed,
                 added,
+                context,
             });
             continue;
         }
@@ -271,6 +275,34 @@ index 1111111111111111111111111111111111111111..22222222222222222222222222222222
         assert_eq!(f.hunks[0].removed, vec![b"old".to_vec()]);
         assert_eq!(f.hunks[0].added.len(), 2);
         assert_eq!((f.hunks[1].old_start, f.hunks[1].old_len), (5, 0));
+        assert_eq!(f.hunks[0].context, None);
+    }
+
+    #[test]
+    fn keeps_the_funcname_heading_off_the_ranges() {
+        let diff = b"diff --git a/m.rs b/m.rs\n\
+index 1111111111111111111111111111111111111111..2222222222222222222222222222222222222222 100644\n\
+--- a/m.rs\n\
++++ b/m.rs\n\
+@@ -186 +186 @@ pub fn apply(git: &Git) -> Result<()> {\n\
+-a\n\
++b\n\
+@@ -4,0 +5,1 @@ fn odd @@ name() {\n\
++c\n";
+        let files = parse_diff(diff).unwrap();
+        let h = &files[0].hunks;
+        assert_eq!(
+            (h[0].old_start, h[0].old_len, h[0].new_start, h[0].new_len),
+            (186, 1, 186, 1)
+        );
+        assert_eq!(
+            h[0].context.as_deref(),
+            Some("pub fn apply(git: &Git) -> Result<()> {")
+        );
+        // The heading is everything after the first " @@", even if it
+        // contains another "@@".
+        assert_eq!(h[1].context.as_deref(), Some("fn odd @@ name() {"));
+        assert_eq!((h[1].new_start, h[1].new_len), (5, 1));
     }
 
     #[test]

@@ -32,6 +32,8 @@ export interface HunkMeta {
   old_range: [number, number]
   new_range: [number, number]
   lines: { add: number; del: number }
+  /** Enclosing-function heading from git's hunk header, when it found one. */
+  context?: string
   patch?: string
 }
 
