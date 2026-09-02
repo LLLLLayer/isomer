@@ -717,6 +717,36 @@
   font-size: 10.5px;
 }
 
+.file-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px 6px;
+  flex: 0 1 auto;
+  min-width: 0;
+  font-family: var(--font-ui);
+  font-size: 11px;
+}
+
+/* Folded hunk tail: one row that unfolds the rest (DiffView foldAfter). */
+.hunk-fold {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 2px 12px 2px 108px;
+  font-size: 11px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+  border: none;
+  border-top: 1px dashed var(--border);
+  cursor: pointer;
+}
+
+.hunk-fold:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
 .diff-table > .hunk-head:first-child,
 .diff-table > div:first-child > .hunk-head {
   border-top: none;
@@ -3278,7 +3308,44 @@ button.side-header {
 .organize-hunk .hunk-id {
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.hunk-actions .assign select,
+.file-actions .assign select {
+  font-size: 10.5px;
+  line-height: 18px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.hunk-pick {
+  display: inline-flex;
+  align-items: center;
+}
+
+.hunk-pick input {
+  margin: 0;
+  width: 12px;
+  height: 12px;
+  accent-color: var(--accent);
+}
+
+/* Hunk headers on the board carry chips + a picker; let them wrap under
+   the header text rather than shove it to zero width. */
+.organize-hunks .hunk-head-text {
+  min-width: 80px;
+}
+
+.organize-hunks .hunk-actions {
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  row-gap: 2px;
+}
+
+.hunk-actions .org-chip {
+  max-width: 240px;
 }
 
 .ops-timeline {

@@ -172,7 +172,8 @@
   },
   "diff": {
     "empty": "No textual changes.",
-    "files": "{{count}} files"
+    "files": "{{count}} files",
+    "foldMore": "… {{count}} more lines"
   },
   "history": {
     "author": "Author",

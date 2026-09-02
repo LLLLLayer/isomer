@@ -172,7 +172,8 @@
   },
   "diff": {
     "empty": "没有文本变更。",
-    "files": "{{count}} 个文件"
+    "files": "{{count}} 个文件",
+    "foldMore": "… 还有 {{count}} 行"
   },
   "history": {
     "author": "作者",
