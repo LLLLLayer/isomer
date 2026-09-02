@@ -81,6 +81,8 @@ export interface AppState {
   openProject(id: string): Promise<void>
   refreshProject(initial?: boolean): Promise<void>
   selectChange(id: string | null): void
+  /** Fetch patch text for the given hunk ids not yet cached. */
+  loadPatches(ids: string[], base?: string): Promise<void>
   setCommentAnchor(anchor: { path: string; line: number } | null): void
   setView(view: ViewMode): void
   setDetailTab(tab: DetailTab): void
@@ -494,25 +496,32 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   selectChange(id) {
     set({ selectedChangeId: id, commentAnchor: null })
-    const projectId = get().currentProjectId
     const snapshot = get().snapshot
-    if (!projectId || !snapshot || !id) return
+    if (!snapshot || !id) return
     const commit = snapshot.commits.find((c) => c.sha === id)
-    if (!commit) return
-    const missing = commit.hunks.filter((h) => !(h in get().patches))
-    if (missing.length === 0) return
-    void window.isomer
-      .invoke('ism:hunks', { projectId, ids: missing })
-      .then((r) => {
-        if (get().currentProjectId !== projectId) return
-        if (!r.ok) {
-          set({ lastError: r.error })
-          return
-        }
-        const patches = { ...get().patches }
-        for (const hp of r.data) patches[hp.id] = hp.patch
-        set({ patches })
+    if (commit) void get().loadPatches(commit.hunks)
+  },
+
+  async loadPatches(ids, base) {
+    const projectId = get().currentProjectId
+    if (!projectId) return
+    const missing = ids.filter((h) => !(h in get().patches))
+    // Hunk ids travel as CLI arguments; a big stack must not hit ARG_MAX.
+    for (let i = 0; i < missing.length; i += 200) {
+      const r = await window.isomer.invoke('ism:hunks', {
+        projectId,
+        ids: missing.slice(i, i + 200),
+        ...(base ? { base } : {}),
       })
+      if (get().currentProjectId !== projectId) return
+      if (!r.ok) {
+        set({ lastError: r.error })
+        return
+      }
+      const patches = { ...get().patches }
+      for (const hp of r.data) patches[hp.id] = hp.patch
+      set({ patches })
+    }
   },
 
   setCommentAnchor(anchor) {

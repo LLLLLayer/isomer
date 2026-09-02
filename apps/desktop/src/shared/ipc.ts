@@ -265,7 +265,12 @@ export interface InvokeContracts {
   'git:submodule-update': { req: { projectId: string }; res: Result<string> }
   'git:reflog': { req: { projectId: string; limit: number }; res: Result<ReflogEntry[]> }
   'ism:snapshot': { req: { projectId: string; base?: string }; res: Result<Snapshot> }
-  'ism:hunks': { req: { projectId: string; ids: string[] }; res: Result<HunkPatch[]> }
+  /** `base` re-anchors the analysis, for hunk ids taken from a snapshot
+   * against an explicit base (the trunk case). */
+  'ism:hunks': {
+    req: { projectId: string; ids: string[]; base?: string }
+    res: Result<HunkPatch[]>
+  }
   'ism:verify': { req: { projectId: string }; res: Result<VerifyOutcome> }
   /** Plan objects are serialized to a temp file by main; the CLI stays the
    * only interface (D23) and the renderer never touches the filesystem. */

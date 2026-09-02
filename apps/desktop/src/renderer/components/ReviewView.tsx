@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { Comment } from '../../shared/ism-types'
 import type { FileDiff } from '../diff'
 import { parseHunkPatch, parseUnifiedDiff } from '../diff'
+import { hunkHeader } from '../organize'
 import { useAppStore } from '../store/store'
 import type { ReviewHooks } from './DiffView'
 import { DiffView } from './DiffView'
@@ -63,7 +64,7 @@ export function ReviewView(): React.JSX.Element {
         f.note = patch.trim()
         continue
       }
-      f.rows.push({ kind: 'gap', oldNo: null, newNo: null, text: patch.split('\n')[0] })
+      f.rows.push({ kind: 'gap', oldNo: null, newNo: null, text: hunkHeader(h) })
       parsed.removed.forEach((text, i) =>
         f.rows.push({ kind: 'del', oldNo: parsed.oldStart + i, newNo: null, text }),
       )

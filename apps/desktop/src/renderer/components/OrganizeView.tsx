@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  AlertTriangle,
   ArrowDown,
   ArrowUp,
   BadgeCheck,
@@ -16,10 +15,12 @@ import {
 import type { IsmOp } from '../../shared/ipc'
 import type { Snapshot } from '../../shared/ism-types'
 import type { AppError } from '../../shared/result'
+import { fileGroups, groupDiff, hunkDeps } from '../organize'
 import { opProven, verifyCommands } from '../proof'
-import { orderViolations } from '../stackdeps'
+import { changeDeps } from '../stackdeps'
 import { useAppStore } from '../store/store'
 import { relTime } from '../time'
+import { DiffView } from './DiffView'
 
 interface DraftNode {
   key: string
@@ -40,15 +41,33 @@ function slugify(text: string): string {
   return slug || 'change'
 }
 
-/** The stack editor: draft changes on the left, the selected draft's hunks
- * on the right, hunks movable between drafts. Check runs the CLI's full
- * R1–R8 validation; apply rebuilds the chain and shows the tree proof. */
+/** Drafts cycle through the graph palette; the class sets `--draft`. */
+const colorClass = (index: number): string => `draft-c${(index % 6) + 1}`
+
+/** Body rows a hunk shows before folding behind "… more lines". */
+const FOLD_AFTER = 6
+
+interface Chip {
+  tone: 'ok' | 'bad' | 'muted'
+  label: string
+  tip: string
+}
+
+/** The stack editor. Left: the drafts in landing order (the plan's `order`
+ * — a linear authority, annotated with live dependency evidence). Right:
+ * every hunk of the stack grouped by file with its code visible, each one
+ * assignable in place; hard deps always live inside one file, so a file
+ * group is also the neighbourhood where they can be shown. Check runs the
+ * CLI's full R1–R8 validation; apply rebuilds the chain and shows the
+ * tree proof. */
 export function OrganizeView(): React.JSX.Element {
   const { t } = useTranslation()
   const storeSnapshot = useAppStore((s) => s.snapshot)
   const status = useAppStore((s) => s.status)
   const projectId = useAppStore((s) => s.currentProjectId)
   const refreshProject = useAppStore((s) => s.refreshProject)
+  const patches = useAppStore((s) => s.patches)
+  const loadPatches = useAppStore((s) => s.loadPatches)
   const [altSnapshot, setAltSnapshot] = useState<Snapshot | null>(null)
 
   // On the trunk the default analysis sees an empty stack; the work to
@@ -68,9 +87,13 @@ export function OrganizeView(): React.JSX.Element {
   }, [projectId, storeEmpty, status?.upstream, status?.ahead])
 
   const snapshot = !storeEmpty ? storeSnapshot : altSnapshot
+  // Hunk ids of a re-anchored snapshot only resolve against that base.
+  const patchBase = storeEmpty ? (status?.upstream ?? undefined) : undefined
   const [nodes, setNodes] = useState<DraftNode[]>([])
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [seededFor, setSeededFor] = useState<string | null>(null)
+  const [filter, setFilter] = useState<string>('all')
+  const [picked, setPicked] = useState<Set<string>>(() => new Set())
   const [busy, setBusy] = useState<'check' | 'apply' | null>(null)
   const [checkResult, setCheckResult] = useState<{ ok: boolean; errors?: AppError[] } | null>(null)
   const [proof, setProof] = useState<IsmOp | null>(null)
@@ -105,10 +128,31 @@ export function OrganizeView(): React.JSX.Element {
     const fresh = stackId === null ? [] : seed()
     setNodes(fresh)
     setSelectedKey(fresh.length > 0 ? fresh[fresh.length - 1].key : null)
+    setFilter('all')
+    setPicked(new Set())
     setCheckResult(null)
     setProof(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stackId, seededFor])
+
+  // The board shows code, not ids: fetch every hunk's patch up front. A
+  // failed fetch surfaces through the store's error; the board just stops
+  // saying "loading".
+  const [fetching, setFetching] = useState(false)
+  useEffect(() => {
+    if (!snapshot) return
+    let stale = false
+    setFetching(true)
+    void loadPatches(
+      snapshot.hunks.map((h) => h.id),
+      patchBase,
+    ).finally(() => {
+      if (!stale) setFetching(false)
+    })
+    return () => {
+      stale = true
+    }
+  }, [snapshot, patchBase, loadPatches])
 
   useEffect(() => {
     if (!projectId) return
@@ -117,29 +161,54 @@ export function OrganizeView(): React.JSX.Element {
       .then((r) => setOps(r.ok ? r.data : []))
   }, [projectId, opsTick])
 
-  const hunkById = useMemo(() => {
-    const map = new Map<string, { kind: string; add: number; del: number }>()
-    for (const h of snapshot?.hunks ?? []) {
-      map.set(h.id, { kind: h.kind, add: h.lines.add, del: h.lines.del })
-    }
+  const groups = useMemo(() => (snapshot ? fileGroups(snapshot.hunks) : []), [snapshot])
+  const adjacency = useMemo(() => hunkDeps(snapshot?.deps ?? []), [snapshot])
+  /** Draft index owning each hunk. */
+  const ownerIdx = useMemo(() => {
+    const map = new Map<string, number>()
+    nodes.forEach((n, i) => {
+      for (const h of n.from) map.set(h, i)
+    })
     return map
-  }, [snapshot])
-
-  // Live advisory: which assigned hunks depend on a LATER draft. The CLI
-  // check stays authoritative; this explains the failure before it happens.
-  const violations = useMemo(
-    () => (snapshot ? orderViolations(nodes, snapshot.deps) : []),
+  }, [nodes])
+  // Drafts are pseudo-commits to the change-level lift: same evidence the
+  // stack view shows after apply, computed live while editing.
+  const draftDeps = useMemo(
+    () =>
+      changeDeps({
+        commits: nodes.map((n) => ({ sha: n.key, hunks: n.from })),
+        deps: snapshot?.deps ?? [],
+      }),
     [nodes, snapshot],
   )
-  const violationsByNode = useMemo(() => {
-    const map = new Map<string, typeof violations>()
-    for (const v of violations) map.set(v.nodeKey, [...(map.get(v.nodeKey) ?? []), v])
-    return map
-  }, [violations])
-  const violatingHunks = useMemo(() => new Set(violations.map((v) => v.hunk)), [violations])
-  const nodeName = (key: string): string => nodes.find((n) => n.key === key)?.name ?? key
+  const indexOf = (key: string): number => nodes.findIndex((n) => n.key === key)
 
-  const selected = nodes.find((n) => n.key === selectedKey) ?? null
+  const filterIdx = filter === 'all' ? -1 : indexOf(filter)
+  const visible = useMemo(
+    () =>
+      groups
+        .map((g) =>
+          filterIdx < 0
+            ? g
+            : { ...g, hunks: g.hunks.filter((h) => ownerIdx.get(h.id) === filterIdx) },
+        )
+        .filter((g) => g.hunks.length > 0),
+    [groups, filterIdx, ownerIdx],
+  )
+  const files = useMemo(() => visible.map((g) => groupDiff(g, patches)), [visible, patches])
+  const idsByPath = useMemo(() => new Map(files.map((f) => [f.path, f.hunkIds])), [files])
+  /** Degraded whole-file units by path — one per commit touching a
+   * degraded path, never mixed with line hunks — the file header is
+   * their row. */
+  const unitsByPath = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const g of visible) {
+      for (const h of g.hunks) {
+        if (h.kind === 'file') map.set(g.path, [...(map.get(g.path) ?? []), h.id])
+      }
+    }
+    return map
+  }, [visible])
 
   const patch = (key: string, p: Partial<DraftNode>): void => {
     setNodes((ns) => ns.map((n) => (n.key === key ? { ...n, ...p } : n)))
@@ -171,18 +240,30 @@ export function OrganizeView(): React.JSX.Element {
   const removeNode = (key: string): void => {
     setNodes((ns) => ns.filter((n) => n.key !== key))
     if (selectedKey === key) setSelectedKey(null)
+    if (filter === key) setFilter('all')
     setCheckResult(null)
   }
-  const moveHunk = (hunkId: string, toKey: string): void => {
+  const moveHunks = (ids: string[], toKey: string): void => {
+    const moving = new Set(ids)
     setNodes((ns) =>
       ns.map((n) => {
-        const has = n.from.includes(hunkId)
-        if (n.key === toKey && !has) return { ...n, from: [...n.from, hunkId] }
-        if (n.key !== toKey && has) return { ...n, from: n.from.filter((h) => h !== hunkId) }
-        return n
+        if (n.key === toKey) {
+          const add = ids.filter((h) => !n.from.includes(h))
+          return add.length === 0 ? n : { ...n, from: [...n.from, ...add] }
+        }
+        const kept = n.from.filter((h) => !moving.has(h))
+        return kept.length === n.from.length ? n : { ...n, from: kept }
       }),
     )
     setCheckResult(null)
+  }
+  const togglePick = (id: string, on: boolean): void => {
+    setPicked((s) => {
+      const next = new Set(s)
+      if (on) next.add(id)
+      else next.delete(id)
+      return next
+    })
   }
 
   const plan = (): unknown => ({
@@ -247,6 +328,184 @@ export function OrganizeView(): React.JSX.Element {
 
   const total = snapshot.hunks.length
   const assigned = nodes.reduce((n, node) => n + node.from.length, 0)
+
+  /** Draft picker: the current owner's colour dot, or a placeholder when
+   * the select is an action ("whole file →", "move to…"). */
+  const assignSelect = (
+    current: number | undefined,
+    onPick: (key: string) => void,
+    placeholder: string,
+  ): React.JSX.Element => (
+    <span className={`select-wrap assign${current === undefined ? '' : ` ${colorClass(current)}`}`}>
+      <select
+        value={current === undefined ? '' : nodes[current].key}
+        onChange={(e) => {
+          if (e.target.value !== '') onPick(e.target.value)
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {current === undefined && <option value="">{placeholder}</option>}
+        {nodes.map((n) => (
+          <option key={n.key} value={n.key}>
+            {n.name}
+          </option>
+        ))}
+      </select>
+    </span>
+  )
+
+  /** Cross-draft hard deps of one hunk, as chips. Intra-draft deps are
+   * silent (they cannot break); a dep on a LATER draft is the violation
+   * the CLI would report, shown where the hunk is. */
+  const hunkChips = (id: string, mine: number | undefined): Chip[] => {
+    const adj = adjacency.get(id)
+    if (!adj) return []
+    const chips: Chip[] = []
+    const seen = new Set<string>()
+    const push = (c: Chip): void => {
+      const k = `${c.tone}|${c.label}`
+      if (seen.has(k)) return
+      seen.add(k)
+      chips.push(c)
+    }
+    for (const dep of adj.needs) {
+      const o = ownerIdx.get(dep)
+      if (o === undefined) push({ tone: 'muted', label: t('organize.needsUnassigned'), tip: dep })
+      else if (mine !== undefined && o === mine) continue
+      else if (mine !== undefined && o > mine)
+        push({
+          tone: 'bad',
+          label: t('organize.needsLater', { name: nodes[o].name }),
+          tip: t('organize.depConflictTip', { hunk: id, dep, name: nodes[o].name }),
+        })
+      else push({ tone: 'ok', label: t('organize.needs', { name: nodes[o].name }), tip: dep })
+    }
+    for (const by of adj.neededBy) {
+      const o = ownerIdx.get(by)
+      if (o === undefined || (mine !== undefined && o === mine)) continue
+      if (mine !== undefined && o < mine)
+        push({
+          tone: 'bad',
+          label: t('organize.neededByEarlier', { name: nodes[o].name }),
+          tip: t('organize.depConflictTip', { hunk: by, dep: id, name: nodes[mine].name }),
+        })
+      else push({ tone: 'muted', label: t('organize.neededBy', { name: nodes[o].name }), tip: by })
+    }
+    return chips
+  }
+
+  const assignBar = (id: string): React.JSX.Element => {
+    const mine = ownerIdx.get(id)
+    return (
+      <>
+        <label className="hunk-pick" onClick={(e) => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={picked.has(id)}
+            onChange={(e) => togglePick(id, e.target.checked)}
+          />
+        </label>
+        {hunkChips(id, mine).map((c) => (
+          <span key={`${c.tone}|${c.label}`} className={`org-chip ${c.tone}`} title={c.tip}>
+            {c.label}
+          </span>
+        ))}
+        {assignSelect(mine, (key) => moveHunks([id], key), t('organize.unassigned'))}
+      </>
+    )
+  }
+
+  const hunkBar = (path: string, ord: number): React.ReactNode => {
+    const id = idsByPath.get(path)?.[ord]
+    return id === undefined ? null : assignBar(id)
+  }
+
+  const fileBar = (path: string): React.ReactNode => {
+    const units = unitsByPath.get(path)
+    if (units) {
+      return units.map((u) => (
+        <span key={u} className="file-unit" title={u}>
+          {assignBar(u)}
+        </span>
+      ))
+    }
+    const all = groups.find((x) => x.path === path)
+    const shown = visible.find((x) => x.path === path)
+    if (!all || !shown) return null
+    // "Whole file" means the whole file, filter or not; the count says
+    // how much of it is on screen.
+    return (
+      <>
+        <span className="muted">
+          {shown.hunks.length === all.hunks.length
+            ? t('review.hunks', { count: all.hunks.length })
+            : t('organize.hunksShown', { shown: shown.hunks.length, count: all.hunks.length })}
+        </span>
+        {assignSelect(
+          undefined,
+          (key) =>
+            moveHunks(
+              all.hunks.map((h) => h.id),
+              key,
+            ),
+          t('organize.wholeFile'),
+        )}
+      </>
+    )
+  }
+
+  /** Draft-level evidence: independent, or which drafts it leans on /
+   * carries — red when the landing order contradicts an edge. */
+  const draftChips = (n: DraftNode, i: number): React.JSX.Element[] => {
+    const dd = draftDeps.bySha.get(n.key)
+    if (!dd) return []
+    if (draftDeps.independent.has(n.key) && n.from.length > 0) {
+      // The lift ignores edges into unassigned hunks; a draft leaning on
+      // one is not independent yet, only undecided.
+      const dangling = n.from.some((h) =>
+        (adjacency.get(h)?.needs ?? []).some((d) => ownerIdx.get(d) === undefined),
+      )
+      return [
+        dangling ? (
+          <span key="dangling" className="org-chip muted">
+            {t('organize.needsUnassigned')}
+          </span>
+        ) : (
+          <span key="ind" className="org-chip ok" title={t('organize.independentTip')}>
+            {t('organize.independent')}
+          </span>
+        ),
+      ]
+    }
+    const out: React.JSX.Element[] = []
+    for (const e of dd.needs) {
+      const j = indexOf(e.target)
+      if (j < 0) continue
+      const bad = j > i
+      out.push(
+        <span
+          key={`n${e.target}`}
+          className={`org-chip ${bad ? 'bad' : 'ok'}`}
+          title={e.via
+            .map(([hunk, dep]) => t('organize.depConflictTip', { hunk, dep, name: nodes[j].name }))
+            .join('\n')}
+        >
+          {t(bad ? 'organize.needsLater' : 'organize.needs', { name: nodes[j].name })}
+        </span>,
+      )
+    }
+    for (const by of dd.neededBy) {
+      const j = indexOf(by)
+      if (j < 0) continue
+      const bad = j < i
+      out.push(
+        <span key={`b${by}`} className={`org-chip ${bad ? 'bad' : 'muted'}`}>
+          {t(bad ? 'organize.neededByEarlier' : 'organize.neededBy', { name: nodes[j].name })}
+        </span>,
+      )
+    }
+    return out
+  }
 
   return (
     <div className="organize-view">
@@ -317,10 +576,13 @@ export function OrganizeView(): React.JSX.Element {
           {nodes.map((n, i) => (
             <div
               key={n.key}
-              className={`draft-node${n.key === selectedKey ? ' active' : ''}`}
+              className={`draft-node ${colorClass(i)}${n.key === selectedKey ? ' active' : ''}`}
               onClick={() => setSelectedKey(n.key)}
             >
               <div className="draft-head">
+                <span className="draft-pos mono" title={t('organize.posTip')}>
+                  #{i + 1}
+                </span>
                 <input
                   className="draft-name mono"
                   value={n.name}
@@ -332,26 +594,16 @@ export function OrganizeView(): React.JSX.Element {
                   onBlur={(e) => patch(n.key, { name: slugify(e.target.value) })}
                 />
                 <span className="spacer" />
-                {violationsByNode.has(n.key) && (
-                  <span
-                    className="badge warn"
-                    title={(violationsByNode.get(n.key) ?? [])
-                      .map((v) =>
-                        t('organize.depConflictTip', {
-                          hunk: v.hunk,
-                          dep: v.dep,
-                          name: nodeName(v.depNodeKey),
-                        }),
-                      )
-                      .join('\n')}
-                  >
-                    <AlertTriangle size={10} strokeWidth={2} />{' '}
-                    {t('organize.depConflicts', {
-                      count: (violationsByNode.get(n.key) ?? []).length,
-                    })}
-                  </span>
-                )}
-                <span className="muted">{t('review.hunks', { count: n.from.length })}</span>
+                <button
+                  className={`count-link${filter === n.key ? ' active' : ''}`}
+                  title={t('organize.filterTip')}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setFilter(filter === n.key ? 'all' : n.key)
+                  }}
+                >
+                  {t('review.hunks', { count: n.from.length })}
+                </button>
                 <button className="icon-btn" disabled={i === 0} onClick={() => move(n.key, -1)}>
                   <ArrowUp size={12} strokeWidth={1.8} />
                 </button>
@@ -371,6 +623,7 @@ export function OrganizeView(): React.JSX.Element {
                   <Trash2 size={12} strokeWidth={1.8} />
                 </button>
               </div>
+              <div className="draft-chips">{draftChips(n, i)}</div>
               <input
                 className="draft-summary"
                 placeholder={t('organize.summaryPlaceholder')}
@@ -391,49 +644,41 @@ export function OrganizeView(): React.JSX.Element {
           <OpsTimeline ops={ops} onUndo={() => void undo()} />
         </div>
         <div className="organize-hunks">
-          <header className="pane-title">
-            {selected
-              ? t('organize.hunksOf', { name: selected.name })
-              : t('organize.pickChange')}
+          <header className="board-head">
+            <span className="board-title">{t('organize.board')}</span>
+            {fetching && <span className="muted">{t('organize.loading')}</span>}
+            <span className="spacer" />
+            {picked.size > 0 && (
+              <span className="pick-bar">
+                <span>{t('organize.pickedCount', { count: picked.size })}</span>
+                {assignSelect(
+                  undefined,
+                  (key) => {
+                    moveHunks([...picked], key)
+                    setPicked(new Set())
+                  },
+                  t('organize.moveTo'),
+                )}
+                <button className="ghost-btn" onClick={() => setPicked(new Set())}>
+                  {t('organize.clearPicked')}
+                </button>
+              </span>
+            )}
+            <span className="select-wrap">
+              <select value={filterIdx < 0 ? 'all' : filter} onChange={(e) => setFilter(e.target.value)}>
+                <option value="all">{t('organize.filterAll')}</option>
+                {nodes.map((n) => (
+                  <option key={n.key} value={n.key}>
+                    {n.name}
+                  </option>
+                ))}
+              </select>
+            </span>
           </header>
-          {selected?.from.map((id) => {
-            const meta = hunkById.get(id)
-            const path = id.split(':')[0]
-            const violated = violatingHunks.has(id)
-            return (
-              <div key={id} className={`organize-hunk${violated ? ' violated' : ''}`}>
-                {violated && (
-                  <span className="dep-warn" title={t('organize.depNeedsLater')}>
-                    <AlertTriangle size={11} strokeWidth={2} />
-                  </span>
-                )}
-                <span className="hunk-id" title={id}>
-                  {path}
-                </span>
-                {meta && (
-                  <span className="linestat">
-                    {meta.add > 0 && <span className="plus">+{meta.add}</span>}
-                    {meta.del > 0 && <span className="minus">-{meta.del}</span>}
-                  </span>
-                )}
-                <span className="spacer" />
-                <div className="select-wrap">
-                  <select
-                    value={selected.key}
-                    onChange={(e) => moveHunk(id, e.target.value)}
-                  >
-                    {nodes.map((n) => (
-                      <option key={n.key} value={n.key}>
-                        {n.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )
-          })}
-          {selected && selected.from.length === 0 && (
+          {files.length === 0 ? (
             <p className="empty">{t('organize.noHunks')}</p>
+          ) : (
+            <DiffView files={files} hunkBar={hunkBar} fileBar={fileBar} foldAfter={FOLD_AFTER} />
           )}
         </div>
       </div>
