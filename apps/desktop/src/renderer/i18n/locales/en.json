@@ -172,7 +172,8 @@
   },
   "diff": {
     "empty": "No textual changes.",
-    "files": "{{count}} files"
+    "files": "{{count}} files",
+    "foldMore": "… {{count}} more lines"
   },
   "history": {
     "author": "Author",
@@ -319,13 +320,27 @@
     "deleteHint": "Only empty changes can be removed",
     "summaryPlaceholder": "Commit summary (one line)",
     "descriptionPlaceholder": "Why this change exists (body)…",
-    "hunksOf": "Hunks of {{name}}",
-    "pickChange": "Select a change",
-    "noHunks": "No hunks — move some here or remove this change.",
+    "noHunks": "No hunks here — move some in, or remove this change.",
     "opsTitle": "Operations",
-    "depConflicts": "{{count}} dependency conflicts",
     "depConflictTip": "{{hunk}} needs {{dep}}, which sits in the later draft “{{name}}”",
-    "depNeedsLater": "Hard dependency sits in a later draft — apply would fail."
+    "board": "Hunks by file",
+    "loading": "Loading code…",
+    "filterAll": "All changes",
+    "filterTip": "Show only this change's hunks",
+    "posTip": "Landing position",
+    "wholeFile": "Whole file →",
+    "hunksShown": "{{shown}} of {{count}} hunks",
+    "pickedCount": "{{count}} hunks picked",
+    "moveTo": "Move to…",
+    "clearPicked": "Clear",
+    "unassigned": "Unassigned",
+    "independent": "independent",
+    "independentTip": "No hard dependency either way — this change can land alone.",
+    "needs": "needs {{name}}",
+    "needsLater": "needs {{name}} — later in order",
+    "neededBy": "needed by {{name}}",
+    "neededByEarlier": "needed by {{name}} — earlier in order",
+    "needsUnassigned": "needs an unassigned hunk"
   },
   "manager": {
     "title": "Repositories",

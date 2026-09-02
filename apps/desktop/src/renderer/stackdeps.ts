@@ -58,34 +58,3 @@ export function changeDeps(snapshot: {
   }
   return { bySha, independent }
 }
-
-/** A draft-order violation: `hunk` (in draft `nodeKey`) hard-depends on
- * `dep`, which sits in a LATER draft (`depNodeKey`) — apply would fail. */
-export interface OrderViolation {
-  nodeKey: string
-  hunk: string
-  dep: string
-  depNodeKey: string
-}
-
-/** Live advisory for the stack editor. Hunks whose dependency is not
- * assigned anywhere are NOT flagged (mid-edit is normal); the CLI's R1–R8
- * check remains the authority — this only explains failures before they
- * happen, in terms of which line identities pin which draft. */
-export function orderViolations(
-  nodes: { key: string; from: string[] }[],
-  deps: [string, string][],
-): OrderViolation[] {
-  const nodeOf = new Map<string, { key: string; index: number }>()
-  nodes.forEach((n, index) => {
-    for (const h of n.from) nodeOf.set(h, { key: n.key, index })
-  })
-  const out: OrderViolation[] = []
-  for (const [dependent, dependency] of deps) {
-    const a = nodeOf.get(dependent)
-    const b = nodeOf.get(dependency)
-    if (!a || !b || b.index <= a.index) continue
-    out.push({ nodeKey: a.key, hunk: dependent, dep: dependency, depNodeKey: b.key })
-  }
-  return out
-}

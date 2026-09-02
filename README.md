@@ -64,10 +64,14 @@ talks to ism exclusively by spawning the CLI and parsing its JSON:
   compare, file history and blame, repo-wide search, reflog, a real commit
   graph, a repository manager (pin, group, clone, per-repo health badges),
   and a Cmd+P quick launcher.
-- The **stack editor**: draft changes seeded from your pending commits, hunks
-  dragged between them, validated by the CLI's full R1–R8 check ("check
-  passed ⇒ apply succeeds"), applied with the tree-equality proof shown
-  in the UI — provably safe interactive rebase.
+- The **stack editor**: draft changes seeded from your pending commits on
+  the left, in landing order with live dependency chips; every hunk of the
+  stack on the right, grouped by file with its code visible and its owner
+  pickable in place (whole-file and multi-select moves included), hard
+  deps drawn where they live and turning red the moment the order breaks
+  them; validated by the CLI's full R1–R8 check ("check passed ⇒ apply
+  succeeds"), applied with the tree-equality proof shown in the UI —
+  provably safe interactive rebase.
 - The stack shows its **evidence**: change-level dependency edges derived
   from line identities (an `independent` chip is a proof the change can
   land alone), a tree view that shows the stack as an outline — indent =

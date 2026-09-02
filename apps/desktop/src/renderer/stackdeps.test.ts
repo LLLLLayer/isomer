@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { changeDeps, orderViolations } from './stackdeps'
+import { changeDeps } from './stackdeps'
 
 const snap = {
   commits: [
@@ -42,37 +42,5 @@ describe('changeDeps', () => {
       deps: [['f.ts:1#aaaa', 'gone.ts:1#dead']],
     })
     expect(bySha.get('A')?.needs).toHaveLength(0)
-  })
-})
-
-describe('orderViolations', () => {
-  const deps: [string, string][] = [['h2', 'h1']]
-
-  it('flags a dependency assigned to a later draft', () => {
-    const v = orderViolations(
-      [
-        { key: 'n0', from: ['h2'] },
-        { key: 'n1', from: ['h1'] },
-      ],
-      deps,
-    )
-    expect(v).toEqual([{ nodeKey: 'n0', hunk: 'h2', dep: 'h1', depNodeKey: 'n1' }])
-  })
-
-  it('accepts dependency in an earlier or the same draft', () => {
-    expect(
-      orderViolations(
-        [
-          { key: 'n0', from: ['h1'] },
-          { key: 'n1', from: ['h2'] },
-        ],
-        deps,
-      ),
-    ).toHaveLength(0)
-    expect(orderViolations([{ key: 'n0', from: ['h1', 'h2'] }], deps)).toHaveLength(0)
-  })
-
-  it('stays quiet while the dependency is still unassigned', () => {
-    expect(orderViolations([{ key: 'n0', from: ['h2'] }], deps)).toHaveLength(0)
   })
 })

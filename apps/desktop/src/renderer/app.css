@@ -481,17 +481,6 @@
 }
 
 
-.organize-hunk.violated {
-  border-color: color-mix(in srgb, var(--warn) 45%, transparent);
-  background: color-mix(in srgb, var(--warn) 6%, transparent);
-}
-
-.dep-warn {
-  display: inline-flex;
-  color: var(--warn);
-  flex: none;
-}
-
 /* ---- stacked-PR submit ------------------------------------------------ */
 
 .stackpr .stackpr-error {
@@ -675,6 +664,8 @@
   font-size: 12px;
   padding: 8px 10px;
   margin: 0;
+  /* One whole-file unit per line. */
+  white-space: pre-line;
 }
 
 .diff-table {
@@ -715,6 +706,36 @@
 .hunk-actions .ghost-btn {
   padding: 0 8px;
   font-size: 10.5px;
+}
+
+.file-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px 6px;
+  flex: 0 1 auto;
+  min-width: 0;
+  font-family: var(--font-ui);
+  font-size: 11px;
+}
+
+/* Folded hunk tail: one row that unfolds the rest (DiffView foldAfter). */
+.hunk-fold {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 2px 12px 2px 108px;
+  font-size: 11px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+  border: none;
+  border-top: 1px dashed var(--border);
+  cursor: pointer;
+}
+
+.hunk-fold:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .diff-table > .hunk-head:first-child,
@@ -3186,8 +3207,7 @@ button.side-header {
 }
 
 .organize-nodes {
-  width: 380px;
-  flex: none;
+  flex: 0 0 clamp(240px, 34%, 380px);
   overflow-y: auto;
   padding: 12px;
   border-right: 1px solid var(--border);
@@ -3198,6 +3218,7 @@ button.side-header {
 
 .draft-node {
   border: 1px solid var(--border);
+  border-left: 3px solid var(--draft, var(--border));
   border-radius: var(--radius-l);
   padding: 10px 12px;
   display: flex;
@@ -3208,7 +3229,82 @@ button.side-header {
 
 .draft-node.active {
   border-color: var(--accent);
-  box-shadow: inset 3px 0 0 var(--accent);
+  border-left-color: var(--draft, var(--accent));
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+
+/* Draft colours cycle the graph palette; the same dot marks a hunk's
+   owner on the board. */
+.draft-c1 { --draft: var(--graph-1); }
+.draft-c2 { --draft: var(--graph-2); }
+.draft-c3 { --draft: var(--graph-3); }
+.draft-c4 { --draft: var(--graph-4); }
+.draft-c5 { --draft: var(--graph-5); }
+.draft-c6 { --draft: var(--graph-6); }
+
+.draft-pos {
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--draft, var(--fg-muted));
+}
+
+.draft-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.draft-chips:empty {
+  display: none;
+}
+
+/* Organize-board chips (`.dep-chip` belongs to the stack view). */
+.org-chip {
+  font-size: 10.5px;
+  line-height: 16px;
+  padding: 0 6px;
+  border-radius: var(--radius-s);
+  white-space: nowrap;
+  /* Flex items refuse to shrink below their text unless told so. */
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--fg-muted);
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
+}
+
+.org-chip.ok {
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 10%, transparent);
+}
+
+.org-chip.bad {
+  color: var(--err);
+  background: color-mix(in srgb, var(--err) 10%, transparent);
+}
+
+.count-link {
+  border: none;
+  background: none;
+  color: var(--fg-muted);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  padding: 0 4px;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.count-link:hover {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
+}
+
+.count-link.active {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .draft-head {
@@ -3218,7 +3314,9 @@ button.side-header {
 }
 
 .draft-name {
-  width: 150px;
+  flex: 1 1 auto;
+  min-width: 60px;
+  width: auto;
   background: none;
   border: none;
   border-bottom: 1px dashed transparent;
@@ -3264,21 +3362,101 @@ button.side-header {
   padding: 12px 16px;
 }
 
-.organize-hunk {
+.board-head {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  margin-bottom: 6px;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
   font-size: 12px;
 }
 
-.organize-hunk .hunk-id {
+.board-title {
+  font-weight: 600;
+}
+
+.pick-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px 2px 8px;
+  border-radius: var(--radius);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* Owner picker on hunk and file headers: the owner's colour dot sits
+   inside the select; action selects (whole file →, move to…) have none. */
+.assign {
+  flex: none;
+}
+
+.assign[class*='draft-c']::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--draft);
+  pointer-events: none;
+}
+
+.assign[class*='draft-c'] select {
+  padding-left: 18px;
+}
+
+.assign select {
+  max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.hunk-actions .assign select,
+.file-actions .assign select {
+  font-size: 10.5px;
+  line-height: 18px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.hunk-pick {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* One assign bar per whole-file unit in a degraded file's header. */
+.file-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hunk-pick input {
+  margin: 0;
+  width: 12px;
+  height: 12px;
+  accent-color: var(--accent);
+}
+
+/* Hunk headers on the board carry chips + a picker; let them wrap under
+   the header text rather than shove it to zero width. */
+.organize-hunks .hunk-head-text {
+  min-width: 80px;
+}
+
+.organize-hunks .hunk-actions {
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  row-gap: 2px;
+}
+
+.hunk-actions .org-chip {
+  max-width: 240px;
 }
 
 .ops-timeline {

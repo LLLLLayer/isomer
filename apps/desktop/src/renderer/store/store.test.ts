@@ -104,6 +104,84 @@ describe('app store', () => {
     expect(useAppStore.getState().status?.branch).not.toBe('stale-A')
   })
 
+  it('loadPatches fetches only the uncached ids and forwards the base', async () => {
+    const reqs: unknown[] = []
+    const calls = fakeBridge({
+      'ism:hunks': (req) => {
+        reqs.push(req)
+        const { ids } = req as { ids: string[] }
+        return { ok: true, data: ids.map((id) => ({ id, commit: 'c1', patch: `patch ${id}` })) }
+      },
+    })
+    useAppStore.setState({ currentProjectId: 'p1', patches: { 'a.ts:1#aaaa': 'cached' } })
+    await useAppStore.getState().loadPatches(['a.ts:1#aaaa', 'b.ts:2#bbbb'], 'origin/main')
+    expect(reqs).toEqual([{ projectId: 'p1', ids: ['b.ts:2#bbbb'], base: 'origin/main' }])
+    expect(useAppStore.getState().patches).toEqual({
+      'a.ts:1#aaaa': 'cached',
+      'b.ts:2#bbbb': 'patch b.ts:2#bbbb',
+    })
+    // Everything cached: no CLI spawn at all.
+    await useAppStore.getState().loadPatches(['a.ts:1#aaaa', 'b.ts:2#bbbb'])
+    expect(calls.filter((c) => c === 'ism:hunks')).toHaveLength(1)
+  })
+
+  it('selectChange loads the commit hunks without a base', async () => {
+    const reqs: unknown[] = []
+    fakeBridge({
+      'ism:hunks': (req) => {
+        reqs.push(req)
+        return { ok: true, data: [{ id: 'h1', commit: 'c1', patch: 'p' }] }
+      },
+    })
+    useAppStore.setState({
+      currentProjectId: 'p1',
+      patches: {},
+      snapshot: { commits: [{ sha: 'c1', hunks: ['h1'] }], hunks: [], deps: [] } as never,
+    })
+    useAppStore.getState().selectChange('c1')
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(reqs).toEqual([{ projectId: 'p1', ids: ['h1'] }])
+    expect(useAppStore.getState().patches).toEqual({ h1: 'p' })
+    expect(useAppStore.getState().selectedChangeId).toBe('c1')
+  })
+
+  it('loadPatches drops a response that lands after a project switch', async () => {
+    let release: () => void = () => {}
+    const gate = new Promise<void>((res) => (release = res))
+    fakeBridge({
+      'ism:hunks': async () => {
+        await gate
+        return { ok: true, data: [{ id: 'h1', commit: 'c1', patch: 'stale' }] }
+      },
+    })
+    useAppStore.setState({ currentProjectId: 'A', patches: {} })
+    const pending = useAppStore.getState().loadPatches(['h1'])
+    useAppStore.setState({ currentProjectId: 'B', patches: {} })
+    release()
+    await pending
+    expect(useAppStore.getState().patches).toEqual({})
+  })
+
+  it('overlapping loadPatches calls merge rather than clobber each other', async () => {
+    const gates: (() => void)[] = []
+    fakeBridge({
+      'ism:hunks': async (req) => {
+        const { ids } = req as { ids: string[] }
+        await new Promise<void>((res) => gates.push(res))
+        return { ok: true, data: ids.map((id) => ({ id, commit: 'c1', patch: `p-${id}` })) }
+      },
+    })
+    useAppStore.setState({ currentProjectId: 'p1', patches: {} })
+    const first = useAppStore.getState().loadPatches(['h1'])
+    const second = useAppStore.getState().loadPatches(['h2'])
+    gates[0]()
+    await first
+    gates[1]()
+    await second
+    expect(useAppStore.getState().patches).toEqual({ h1: 'p-h1', h2: 'p-h2' })
+  })
+
   it('toggleTerminal flips the drawer', () => {
     expect(useAppStore.getState().terminalOpen).toBe(false)
     useAppStore.getState().toggleTerminal()

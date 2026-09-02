@@ -25,11 +25,17 @@ export function DiffView({
   files,
   review,
   hunkBar,
+  fileBar,
+  foldAfter,
 }: {
   files: FileDiff[]
   review?: ReviewHooks
   /** Optional per-hunk action bar (stage/discard surgery), by hunk ordinal. */
   hunkBar?: (path: string, hunkIndex: number) => React.ReactNode
+  /** Optional per-file action bar, rendered in the file header. */
+  fileBar?: (path: string) => React.ReactNode
+  /** Fold hunks longer than this many rows behind a "more lines" row. */
+  foldAfter?: number
 }): React.JSX.Element {
   const { t } = useTranslation()
   const layout = useAppStore((s) => s.settings.diffLayout)
@@ -174,6 +180,8 @@ export function DiffView({
           review={review}
           threads={threads}
           hunkBar={hunkBar}
+          fileBar={fileBar}
+          foldAfter={foldAfter}
           draftAt={draftAt}
           onCloseDraft={() => setDraftAt(null)}
         />
@@ -234,6 +242,8 @@ function FileCard({
   review,
   threads,
   hunkBar,
+  fileBar,
+  foldAfter,
   draftAt,
   onCloseDraft,
 }: {
@@ -242,10 +252,16 @@ function FileCard({
   review?: ReviewHooks
   threads: Map<string, Comment[]>
   hunkBar?: (path: string, hunkIndex: number) => React.ReactNode
+  fileBar?: (path: string) => React.ReactNode
+  foldAfter?: number
   draftAt: { path: string; line: number; quote: string } | null
   onCloseDraft: () => void
 }): React.JSX.Element {
+  const { t } = useTranslation()
   const [collapsed, setCollapsed] = useState(false)
+  // Hunks the user unfolded, keyed by header text so the state follows the
+  // hunk when rows are rebuilt (filters, moves), not its ordinal.
+  const [unfolded, setUnfolded] = useState<Set<string>>(() => new Set())
   const lang = langFor(f.path)
   const emph = useMemo(() => emphasisRanges(f.rows), [f.rows])
   const stat = useMemo(() => {
@@ -328,6 +344,68 @@ function FileCard({
     </div>
   )
 
+  /** Fold long hunks: keep the first `foldAfter` body rows of a hunk and
+   * replace the rest with one row that unfolds it. Generic over the row
+   * list so both layouts share it; `gapText` identifies hunk headers (and
+   * keys the unfold state), `lines` says how many source lines a row holds
+   * (a split row can hold two) so the fold row reports lines, not rows.
+   * A hunk one row over the limit is never folded (the fold row would
+   * replace exactly one row). */
+  const folded = <R,>(
+    rows: R[],
+    gapText: (r: R) => string | undefined,
+    lines: (r: R) => number,
+    render: (r: R, i: number) => React.JSX.Element,
+  ): React.JSX.Element[] => {
+    if (foldAfter === undefined) return rows.map(render)
+    const key: string[] = []
+    const bodyRows: number[] = []
+    const hiddenLines: number[] = []
+    let ord = -1
+    for (const r of rows) {
+      const g = gapText(r)
+      if (g !== undefined) {
+        key[++ord] = g
+        bodyRows[ord] = 0
+        hiddenLines[ord] = 0
+      } else if (ord >= 0) {
+        if (bodyRows[ord] >= foldAfter) hiddenLines[ord] += lines(r)
+        bodyRows[ord]++
+      }
+    }
+    const out: React.JSX.Element[] = []
+    ord = -1
+    let shown = 0
+    rows.forEach((r, i) => {
+      if (gapText(r) !== undefined) {
+        ord++
+        shown = 0
+        out.push(render(r, i))
+        return
+      }
+      const fold = ord >= 0 && !unfolded.has(key[ord]) && bodyRows[ord] > foldAfter + 1
+      if (fold && shown >= foldAfter) {
+        if (shown === foldAfter) {
+          const at = key[ord]
+          out.push(
+            <button
+              key={`fold-${i}`}
+              className="hunk-fold mono"
+              onClick={() => setUnfolded((s) => new Set(s).add(at))}
+            >
+              {t('diff.foldMore', { count: hiddenLines[ord] })}
+            </button>,
+          )
+        }
+        shown++
+        return
+      }
+      shown++
+      out.push(render(r, i))
+    })
+    return out
+  }
+
   const unifiedRow = (row: UnifiedRow, i: number): React.JSX.Element => {
     if (row.kind === 'gap') {
       return hunkHead(i, row.text, gapOrdinals.get(i) ?? 0)
@@ -360,7 +438,11 @@ function FileCard({
     let gapOrd = -1
     return (
     <div className="diff-table split">
-      {splitRows(f.rows).map((row, i) => {
+      {folded(
+        splitRows(f.rows),
+        (row) => row.gap,
+        (row) => (row.left ? 1 : 0) + (row.right ? 1 : 0),
+        (row, i) => {
         if (row.gap !== undefined) {
           gapOrd++
           return hunkHead(i, row.gap, gapOrd)
@@ -409,6 +491,7 @@ function FileCard({
         </button>
         <span className="hunk-id">{f.path}</span>
         <span className="spacer" />
+        {fileBar && <span className="file-actions">{fileBar(f.path)}</span>}
         <span className="linestat">
           {stat.add > 0 && <span className="plus">+{stat.add}</span>}
           {stat.del > 0 && <span className="minus">-{stat.del}</span>}
@@ -416,7 +499,14 @@ function FileCard({
       </header>
       {!collapsed && f.note && <p className="diff-note muted">{f.note}</p>}
       {!collapsed && !f.note && (split ? splitBody() : (
-        <div className="diff-table unified">{f.rows.map(unifiedRow)}</div>
+        <div className="diff-table unified">
+          {folded(
+            f.rows,
+            (row) => (row.kind === 'gap' ? row.text : undefined),
+            () => 1,
+            unifiedRow,
+          )}
+        </div>
       ))}
     </article>
   )

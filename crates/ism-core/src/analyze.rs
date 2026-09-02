@@ -287,6 +287,7 @@ pub fn analyze(git: &Git, base_override: Option<&str>, full: bool) -> Result<Ana
                     old_range: (0, 0),
                     new_range: (0, 0),
                     lines: LineStat { add: 0, del: 0 },
+                    context: None,
                     patch: None,
                 });
                 patches.push(format!(
@@ -370,6 +371,7 @@ pub fn analyze(git: &Git, base_override: Option<&str>, full: bool) -> Result<Ana
                             add: rh.added.len() as u32,
                             del: rh.removed.len() as u32,
                         },
+                        context: rh.context.clone(),
                         patch: None,
                     });
                     patches.push(patch);

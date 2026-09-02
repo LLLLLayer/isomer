@@ -76,6 +76,10 @@ pub struct HunkMeta {
     /// (start, len) in the post-image.
     pub new_range: (u32, u32),
     pub lines: LineStat,
+    /// Enclosing-function heading from the hunk header (git's funcname
+    /// heuristic), for humans locating the hunk; absent when git found none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub context: Option<String>,
     /// Patch text; populated only in `--full` mode (design D17).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub patch: Option<String>,

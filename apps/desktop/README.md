@@ -57,8 +57,11 @@ Three processes, strict contracts:
   the stack as an outline — indentation = builds on it, base first, every
   row keeps its #n landing position, diamond arms become "+ needs" chips,
   selection colors upstream/downstream lineage — legible at any pane
-  width), Organize (the stack editor:
-  drafts → R1–R8 check → apply → tree-equality proof), plus a full-page
+  width), Organize (the stack editor: drafts in landing order with live
+  dependency chips on the left; every hunk of the stack on the right,
+  grouped by file with its code, an owner picker per hunk, whole-file and
+  multi-select moves, long hunks folded — then R1–R8 check → apply →
+  tree-equality proof), plus a full-page
   Settings and a Cmd+P quick launcher. All colors come from
   `src/renderer/theme/tokens.css`; a test rejects raw hex anywhere else.
   i18n (en / zh-CN) has a key-parity test.
